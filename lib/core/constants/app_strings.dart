@@ -262,6 +262,12 @@ class AppStrings {
   static const String validationPassword =
       'پاس ورڈ کم از کم آٹھ حروف کا ہونا چاہیے۔';
   static const String validationPasswordMatch = 'دونوں پاس ورڈ یکساں نہیں ہیں۔';
+  static const String emailNotConfirmed =
+      'آپ کا ای میل پتہ ابھی تصدیق شدہ نہیں ہے۔ تصدیقی پیغام دیکھیں۔';
+  static const String networkError =
+      'انٹرنیٹ سے رابطہ نہیں ہو سکا۔ اپنا کنکشن دیکھ کر دوبارہ کوشش کریں۔';
+  static const String tooManyAttempts =
+      'بہت زیادہ کوششیں۔ کچھ دیر بعد دوبارہ کوشش کریں۔';
   static const String authFailed =
       'ای میل یا پاس ورڈ درست نہیں ہے۔';
   static const String noRoleAssigned =

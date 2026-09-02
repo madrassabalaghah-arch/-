@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/routing/app_routes.dart';
@@ -62,10 +61,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
         ..showSnackBar(const SnackBar(content: Text(AppStrings.signUpSuccess)));
-    } on AuthException catch (error) {
-      setState(() => _error = error.message);
-    } catch (_) {
-      setState(() => _error = AppStrings.somethingWentWrong);
+    } catch (error) {
+      setState(() => _error = authErrorMessage(error));
     } finally {
       if (mounted) {
         setState(() => _busy = false);

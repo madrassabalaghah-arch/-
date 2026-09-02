@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for the release build to reach Supabase. Flutter's template
+         declares this only in the debug and profile manifests, so without it
+         a release APK has no network access at all and every request fails. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="madrassa_graduate_app"
         android:name="${applicationName}"

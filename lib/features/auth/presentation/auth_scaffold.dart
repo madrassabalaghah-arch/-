@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/constants/app_strings.dart';
 
 import '../../../core/routing/app_routes.dart';
 
@@ -189,4 +192,44 @@ class AuthErrorBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Turns an authentication failure into an accurate Urdu message.
+///
+/// Reporting every failure as "wrong email or password" is actively harmful:
+/// it sends the user off to reset a password that was never the problem. A
+/// release build with no network, an unconfirmed address and a genuinely wrong
+/// password all need different responses, so they get different messages.
+String authErrorMessage(Object error) {
+  if (error is AuthException) {
+    final String code = (error.code ?? '').toLowerCase();
+    final String message = error.message.toLowerCase();
+
+    if (code.contains('email_not_confirmed') ||
+        message.contains('not confirmed')) {
+      return AppStrings.emailNotConfirmed;
+    }
+    if (code.contains('over_request_rate_limit') ||
+        message.contains('rate limit') ||
+        error.statusCode == '429') {
+      return AppStrings.tooManyAttempts;
+    }
+    if (code.contains('invalid_credentials') ||
+        message.contains('invalid login')) {
+      return AppStrings.authFailed;
+    }
+    // Anything else is shown as reported rather than guessed at.
+    return error.message.isEmpty ? AppStrings.somethingWentWrong : error.message;
+  }
+
+  // A dropped connection, a blocked socket, or a release build without the
+  // INTERNET permission all land here rather than in AuthException.
+  final String text = error.toString().toLowerCase();
+  if (text.contains('socket') ||
+      text.contains('failed host lookup') ||
+      text.contains('connection') ||
+      text.contains('network')) {
+    return AppStrings.networkError;
+  }
+  return AppStrings.somethingWentWrong;
 }
