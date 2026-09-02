@@ -1,0 +1,321 @@
+/// Every user-facing string in the application, in Urdu.
+///
+/// The interface is Urdu-first. No screen may hardcode a user-facing string;
+/// all of them are declared here so wording stays consistent and can be
+/// reviewed in one place.
+///
+/// Identifiers stay in professional English because they are code, not
+/// interface text.
+class AppStrings {
+  const AppStrings._();
+
+  // ---------------------------------------------------------------------
+  // Common actions
+  // ---------------------------------------------------------------------
+  static const String welcome = 'خوش آمدید';
+  static const String continueAction = 'جاری رکھیں';
+  static const String submit = 'جمع کروائیں';
+  static const String save = 'محفوظ کریں';
+  static const String cancel = 'منسوخ کریں';
+  static const String delete = 'حذف کریں';
+  static const String edit = 'ترمیم کریں';
+  static const String search = 'تلاش کریں';
+  static const String filter = 'چھانٹیں';
+  static const String viewDetails = 'تفصیلات دیکھیں';
+  static const String back = 'واپس';
+  static const String next = 'آگے';
+  static const String previous = 'پچھلا';
+  static const String viewAll = 'سب دیکھیں';
+  static const String close = 'بند کریں';
+  static const String confirm = 'تصدیق کریں';
+  static const String review = 'جائزہ کریں';
+  static const String add = 'شامل کریں';
+
+  // ---------------------------------------------------------------------
+  // States
+  // ---------------------------------------------------------------------
+  static const String loading = 'لوڈ ہو رہا ہے...';
+  static const String noData = 'کوئی معلومات دستیاب نہیں';
+  static const String somethingWentWrong = 'کچھ خرابی پیش آ گئی ہے';
+  static const String tryAgain = 'دوبارہ کوشش کریں';
+  static const String noDataDetail =
+      'اس وقت اس حصے میں دکھانے کے لیے کوئی معلومات موجود نہیں ہیں۔';
+  static const String errorDetail =
+      'معلومات حاصل کرتے ہوئے مسئلہ درپیش ہوا۔ براہِ کرم دوبارہ کوشش کریں۔';
+  static const String noSearchResults = 'تلاش کا کوئی نتیجہ نہیں ملا';
+  // ---------------------------------------------------------------------
+  // Report editing and evidence upload
+  // ---------------------------------------------------------------------
+  static const String newReport = 'نئی کارگزاری';
+  static const String editReport = 'کارگزاری میں ترمیم';
+  static const String saveDraft = 'مسودہ محفوظ کریں';
+  static const String submitReport = 'کارگزاری جمع کروائیں';
+  static const String deleteDraft = 'مسودہ حذف کریں';
+  static const String deleteConfirm =
+      'کیا آپ واقعی یہ مسودہ حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں ہو سکتا۔';
+  static const String reportSubmitted = 'کارگزاری جمع کروا دی گئی ہے۔';
+  static const String reportSaved = 'مسودہ محفوظ کر لیا گیا ہے۔';
+  static const String reportDeleted = 'مسودہ حذف کر دیا گیا ہے۔';
+  static const String selectActivityFirst =
+      'براہِ کرم پہلے عملی سرگرمی منتخب کریں۔';
+  static const String noActivitiesAssigned =
+      'آپ کے لیے ابھی کوئی عملی سرگرمی مقرر نہیں کی گئی';
+  static const String uploadEvidence = 'ثبوت شامل کریں';
+  static const String uploading = 'فائل اپ لوڈ ہو رہی ہے...';
+  static const String uploadSuccess = 'فائل کامیابی سے شامل کر دی گئی ہے۔';
+  static const String uploadFailed = 'فائل شامل نہیں کی جا سکی۔';
+  static const String evidenceDeleted = 'ثبوت حذف کر دیا گیا ہے۔';
+  static const String openFile = 'فائل کھولیں';
+  static const String onlyDraftsEditable =
+      'جمع شدہ کارگزاری میں ترمیم نہیں کی جا سکتی۔';
+
+  // ---------------------------------------------------------------------
+  // User administration
+  // ---------------------------------------------------------------------
+  static const String manageUser = 'صارف کا انتظام';
+  static const String currentRole = 'موجودہ حیثیت';
+  static const String changeRole = 'حیثیت تبدیل کریں';
+  static const String assignedMentor = 'تفویض کردہ مربی';
+  static const String assignMentor = 'مربی تفویض کریں';
+  static const String noMentorAssigned = 'کوئی مربی تفویض نہیں';
+  static const String removeMentor = 'مربی ہٹا دیں';
+  static const String noMentorsAvailable =
+      'ابھی کوئی مربی موجود نہیں۔ پہلے کسی صارف کو مربی بنائیں۔';
+  static const String roleChanged = 'حیثیت تبدیل کر دی گئی ہے۔';
+  static const String mentorAssigned = 'مربی تفویض کر دیا گیا ہے۔';
+  static const String mentorRemoved = 'مربی ہٹا دیا گیا ہے۔';
+  static const String cannotChangeOwnRole =
+      'آپ اپنی حیثیت خود تبدیل نہیں کر سکتے۔';
+  static const String supervisedGraduates = 'زیرِ رہنمائی فاضلہ / فاضل';
+  static const String roleChangeNote =
+      'حیثیت تبدیل ہونے کے بعد صارف کو دوبارہ داخل ہونا ہوگا۔';
+
+  // ---------------------------------------------------------------------
+  // Wifaq and institute selection
+  // ---------------------------------------------------------------------
+  static const String selectWifaq = 'اپنا وفاق منتخب کریں';
+  static const String selectInstitute = 'اپنا ادارہ منتخب کریں';
+  static const String noWifaqSelected = 'وفاق منتخب نہیں کیا گیا';
+  static const String noInstituteSelected = 'ادارہ منتخب نہیں کیا گیا';
+  static const String addInstitute = 'نیا ادارہ شامل کریں';
+  static const String newInstituteName = 'ادارے کا نام درج کریں';
+  static const String instituteAdded = 'ادارہ شامل کر دیا گیا ہے۔';
+  static const String selectWifaqFirst =
+      'ادارہ منتخب کرنے سے پہلے وفاق منتخب کریں۔';
+  static const String noWifaqsYet =
+      'ابھی کوئی وفاق شامل نہیں کیا گیا۔ منتظم سے رابطہ کریں۔';
+  static const String noInstitutesYet =
+      'اس وفاق کے تحت ابھی کوئی ادارہ نہیں۔ نیا ادارہ شامل کریں۔';
+  static const String addWifaq = 'نیا وفاق شامل کریں';
+  static const String wifaqName = 'وفاق کا نام';
+  static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
+  static const String cityOptional = 'شہر (اختیاری)';
+
+  // ---------------------------------------------------------------------
+  // Activity administration
+  // ---------------------------------------------------------------------
+  static const String manageActivities = 'عملی سرگرمیوں کا انتظام';
+  static const String addActivity = 'نئی عملی سرگرمی شامل کریں';
+  static const String activityTitle = 'سرگرمی کا عنوان';
+  static const String activityDetail = 'سرگرمی کی تفصیل';
+  static const String activitySteps = 'کل مراحل';
+  static const String activityAdded = 'عملی سرگرمی شامل کر دی گئی ہے۔';
+  static const String activityRetired = 'سرگرمی غیر فعال کر دی گئی ہے۔';
+  static const String activityRestored = 'سرگرمی دوبارہ فعال کر دی گئی ہے۔';
+  static const String retireActivity = 'غیر فعال کریں';
+  static const String restoreActivity = 'دوبارہ فعال کریں';
+
+  // ---------------------------------------------------------------------
+  // Empty states, one per section so the wording is specific
+  // ---------------------------------------------------------------------
+  static const String noPendingTasks = 'کوئی زیرِ التوا کام نہیں';
+  static const String noGuidanceYet = 'ابھی کوئی رہنمائی موصول نہیں ہوئی';
+  static const String noRecognitionsYet = 'ابھی کوئی اعزاز حاصل نہیں ہوا';
+  static const String noFollowUpYet = 'کوئی پیروی مقرر نہیں';
+  static const String noNotificationsYet = 'کوئی اطلاع موجود نہیں';
+  static const String noGraduatesYet = 'ابھی کوئی فاضلہ / فاضل تفویض نہیں';
+  static const String noReportsYet = 'ابھی کوئی کارگزاری موجود نہیں';
+  static const String noEvidenceYet = 'ابھی کوئی ثبوت منسلک نہیں';
+  static const String noEvaluationsYet = 'ابھی کوئی جائزہ مکمل نہیں ہوا';
+  static const String noRecordsYet = 'ابھی کوئی اندراج موجود نہیں';
+
+  static const String saveSuccess = 'تبدیلیاں محفوظ کر دی گئی ہیں۔';
+  static const String submitSuccess = 'کامیابی سے جمع کروا دیا گیا ہے۔';
+  static const String awaitingAccess =
+      'آپ کا اکاؤنٹ بن چکا ہے۔ منتظم کی جانب سے حیثیت مقرر ہوتے ہی رسائی مل جائے گی۔';
+
+  // ---------------------------------------------------------------------
+  // Greetings and shared headings
+  // ---------------------------------------------------------------------
+  static const String salaam = 'السلام علیکم';
+  static const String dashboard = 'ڈیش بورڈ';
+  static const String profile = 'میرا پروفائل';
+  static const String notifications = 'اطلاعات';
+  static const String settings = 'ترتیبات';
+  static const String reports = 'کارگزاری';
+  static const String evidence = 'ثبوت';
+  static const String evaluation = 'جائزہ';
+  static const String evaluations = 'جائزے';
+  static const String recognition = 'اعزاز';
+  static const String recognitions = 'اعزازات';
+  static const String selectRole = 'اپنی حیثیت منتخب کریں';
+  static const String selectRoleDetail =
+      'ابتدائی نمونے کے لیے کوئی ایک حیثیت منتخب کریں۔ بعد میں یہ حصہ باقاعدہ '
+      'داخلے سے تبدیل کر دیا جائے گا۔';
+
+  // ---------------------------------------------------------------------
+  // Bottom navigation
+  // ---------------------------------------------------------------------
+  static const String navDashboard = 'ڈیش بورڈ';
+  static const String navReports = 'کارگزاری';
+  static const String navEvidence = 'ثبوت';
+  static const String navNotifications = 'اطلاعات';
+  static const String navProfile = 'پروفائل';
+  static const String navGraduates = 'زیرِ رہنمائی';
+  static const String navReviews = 'جائزے';
+  static const String navMentors = 'مربی';
+
+  // ---------------------------------------------------------------------
+  // Graduate dashboard
+  // ---------------------------------------------------------------------
+  static const String myJourney = 'میرا سفر';
+  static const String trainingStage = 'تربیتی مرحلہ';
+  static const String currentStanding = 'موجودہ حیثیت';
+  static const String pendingTasks = 'میرے زیرِ التوا کام';
+
+  /// Shorter form used inside statistic tiles, where the full heading
+  /// would not fit.
+  static const String pendingTasksShort = 'زیرِ التوا کام';
+  static const String quickActions = 'فوری رسائی';
+  static const String mentorGuidance = 'مربی کی رہنمائی';
+  static const String recognitionSection = 'اعزازات اور حوصلہ افزائی';
+  static const String followUp = 'اگلی پیروی';
+  static const String recentNotifications = 'حالیہ اطلاعات';
+  static const String practicalActivities = 'عملی سرگرمیاں';
+  static const String myReports = 'میری کارگزاری';
+  static const String evaluationResults = 'جائزے کے نتائج';
+  static const String nextStep = 'اگلا مرحلہ';
+  static const String completedSteps = 'مکمل مراحل';
+
+  // ---------------------------------------------------------------------
+  // Mentor dashboard
+  // ---------------------------------------------------------------------
+  static const String myGraduates = 'میرے زیرِ رہنمائی فاضلہ / فاضل';
+  static const String newReports = 'نئی کارگزاریاں';
+  static const String awaitingReview = 'جائزے کے لیے منتظر';
+  static const String underReview = 'زیرِ جائزہ';
+  static const String completedReviews = 'مکمل جائزے';
+  static const String lateSubmissions = 'تاخیر سے جمع ہونے والی';
+  static const String pendingReviews = 'زیرِ التوا جائزے';
+  static const String recentGraduates = 'حالیہ فاضلہ / فاضل';
+  static const String graduateName = 'فاضلہ / فاضل کا نام';
+  static const String instituteName = 'ادارے کا نام';
+  static const String reportStatus = 'کارگزاری کی حیثیت';
+  static const String graduateDetails = 'فاضلہ / فاضل کی تفصیلات';
+  static const String reportDetails = 'کارگزاری کی تفصیلات';
+  static const String reportReview = 'کارگزاری کا جائزہ';
+  static const String assessment = 'جانچ';
+
+  // ---------------------------------------------------------------------
+  // Admin dashboard
+  // ---------------------------------------------------------------------
+  static const String totalGraduates = 'کل فاضلہ / فاضل';
+  static const String activeGraduates = 'فعال فاضلہ / فاضل';
+  static const String totalMentors = 'کل مربی';
+  static const String pendingReports = 'زیرِ التوا کارگزاریاں';
+  static const String managementAreas = 'انتظامی حصے';
+  static const String graduateManagement = 'فاضلہ / فاضل کا انتظام';
+  static const String mentorManagement = 'مربیوں کا انتظام';
+  static const String wifaqManagement = 'وفاق کا انتظام';
+  static const String courses = 'کورسز';
+  static const String assignments = 'ذمہ داریاں';
+  static const String allReports = 'کارگزاریاں';
+  static const String standards = 'جانچ کے معیارات';
+  static const String graduates = 'فاضلہ / فاضل';
+  static const String mentors = 'مربی';
+  static const String wifaqs = 'وفاق';
+  static const String systemOverview = 'نظام کا خلاصہ';
+
+  // ---------------------------------------------------------------------
+  // Authentication
+  // ---------------------------------------------------------------------
+  static const String signIn = 'داخل ہوں';
+  static const String signUp = 'اکاؤنٹ بنائیں';
+  static const String signOut = 'باہر نکلیں';
+  static const String signInTitle = 'اپنے اکاؤنٹ میں داخل ہوں';
+  static const String signUpTitle = 'نیا اکاؤنٹ بنائیں';
+  static const String signInSubtitle =
+      'اپنا ای میل پتہ اور پاس ورڈ درج کریں۔';
+  static const String signUpSubtitle =
+      'اندراج کے بعد آپ کو فاضلہ / فاضل کی حیثیت دی جائے گی۔';
+  static const String noAccountYet = 'اکاؤنٹ نہیں ہے؟';
+  static const String alreadyHaveAccount = 'پہلے سے اکاؤنٹ موجود ہے؟';
+  static const String labelPassword = 'پاس ورڈ';
+  static const String labelConfirmPassword = 'پاس ورڈ کی تصدیق کریں';
+  static const String hintPassword = 'کم از کم آٹھ حروف';
+  static const String forgotPassword = 'پاس ورڈ بھول گئے؟';
+  static const String resetLinkSent =
+      'پاس ورڈ تبدیل کرنے کا لنک آپ کے ای میل پر بھیج دیا گیا ہے۔';
+  static const String signUpSuccess =
+      'اکاؤنٹ بن گیا ہے۔ اگر تصدیقی ای میل موصول ہو تو اس کی تصدیق کریں۔';
+  static const String signOutConfirm = 'کیا آپ واقعی باہر نکلنا چاہتے ہیں؟';
+  static const String validationPassword =
+      'پاس ورڈ کم از کم آٹھ حروف کا ہونا چاہیے۔';
+  static const String validationPasswordMatch = 'دونوں پاس ورڈ یکساں نہیں ہیں۔';
+  static const String authFailed =
+      'ای میل یا پاس ورڈ درست نہیں ہے۔';
+  static const String noRoleAssigned =
+      'آپ کے اکاؤنٹ کے لیے ابھی کوئی حیثیت مقرر نہیں کی گئی۔ براہِ کرم منتظم سے رابطہ کریں۔';
+  static const String sessionLoading = 'آپ کی معلومات حاصل کی جا رہی ہیں...';
+
+  // ---------------------------------------------------------------------
+  // Form section headings
+  // ---------------------------------------------------------------------
+  static const String personalDetails = 'ذاتی معلومات';
+  static const String contactDetails = 'رابطہ کی تفصیلات';
+
+  // ---------------------------------------------------------------------
+  // Form labels
+  // ---------------------------------------------------------------------
+  static const String labelName = 'اپنا نام درج کریں';
+  static const String labelFatherName = 'والد کا نام';
+  static const String labelCity = 'شہر کا نام';
+  static const String labelInstitute = 'ادارے کا نام';
+  static const String labelPhone = 'رابطہ نمبر';
+  static const String labelEmail = 'ای میل پتہ';
+  static const String labelReportTitle = 'کارگزاری کا عنوان';
+  static const String labelReportDetail = 'کارگزاری کی تفصیل';
+  static const String labelSelectActivity = 'عملی سرگرمی کا انتخاب کریں';
+  static const String labelAddImages = 'تصاویر شامل کریں';
+  static const String labelAddVideo = 'ویڈیو شامل کریں';
+  static const String labelAddDocument = 'دستاویز شامل کریں';
+  static const String labelWifaq = 'وفاق کا نام';
+  static const String labelStage = 'تربیتی مرحلہ';
+  static const String labelReviewNote = 'جائزے کا تبصرہ';
+
+  // ---------------------------------------------------------------------
+  // Hints
+  // ---------------------------------------------------------------------
+  static const String hintName = 'اپنا پورا نام';
+  static const String hintCity = 'مثلاً: لاہور';
+  static const String hintPhone = 'مثلاً: ۰۳۰۰۱۲۳۴۵۶۷';
+  static const String hintEmail = 'مثلاً: name@example.com';
+  static const String hintReportDetail =
+      'اپنی عملی سرگرمی کی مکمل تفصیل یہاں تحریر کریں۔';
+  static const String hintSearchGraduate = 'فاضلہ / فاضل کا نام تلاش کریں';
+  static const String hintSearchReport = 'کارگزاری تلاش کریں';
+  static const String hintSearchGeneral = 'تلاش کریں';
+
+  // ---------------------------------------------------------------------
+  // Validation messages
+  // ---------------------------------------------------------------------
+  static const String validationRequired = 'یہ خانہ بھرنا ضروری ہے۔';
+  static const String validationInvalid = 'براہِ کرم درست معلومات درج کریں۔';
+  static const String validationPhone = 'رابطہ نمبر درست نہیں ہے۔';
+  static const String validationReportDetail = 'کارگزاری کی تفصیل درج کریں۔';
+  static const String validationFileRequired =
+      'براہِ کرم ایک فائل منتخب کریں۔';
+  static const String validationFileSize =
+      'فائل کا حجم مقررہ حد سے زیادہ ہے۔';
+  static const String validationEmail = 'ای میل پتہ درست نہیں ہے۔';
+}
