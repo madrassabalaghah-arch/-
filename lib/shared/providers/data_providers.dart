@@ -309,6 +309,22 @@ final instituteListProvider =
   return ref.watch(referenceRepositoryProvider).institutes(wifaqId: wifaqId);
 });
 
+/// The curated اہم لنکس list every signed-in role can read.
+final FutureProvider<List<ImportantLink>> importantLinksProvider =
+    FutureProvider<List<ImportantLink>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(referenceRepositoryProvider).importantLinks();
+});
+
+/// Every link including retired ones, for the administration view.
+final FutureProvider<List<ImportantLink>> allImportantLinksProvider =
+    FutureProvider<List<ImportantLink>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref
+      .watch(referenceRepositoryProvider)
+      .importantLinks(includeInactive: true);
+});
+
 /// The shared activity catalogue a graduate picks from when filing a report.
 final FutureProvider<List<ActivityItem>> activityCatalogueProvider =
     FutureProvider<List<ActivityItem>>((Ref ref) {

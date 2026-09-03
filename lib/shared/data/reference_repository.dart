@@ -106,4 +106,57 @@ class ReferenceRepository {
         .update(<String, dynamic>{'status': active ? 'active' : 'inactive'})
         .eq('id', id);
   }
+
+  /// The curated اہم لنکس list.
+  ///
+  /// Retired links are withheld from readers by default; the administration
+  /// view passes [includeInactive] so it can restore one.
+  Future<List<ImportantLink>> importantLinks({
+    bool includeInactive = false,
+  }) async {
+    final PostgrestFilterBuilder<List<Map<String, dynamic>>> query =
+        _client.from('important_links').select();
+    final List<Map<String, dynamic>> rows = includeInactive
+        ? await query.order('sort_order').order('title')
+        : await query
+            .eq('status', 'active')
+            .order('sort_order')
+            .order('title');
+    return rows.map(ImportantLink.fromMap).toList();
+  }
+
+  /// Adds a link. Administrators only; the `important_links` policies reject
+  /// anyone else.
+  Future<ImportantLink> createImportantLink({
+    required String title,
+    required String url,
+    String? detail,
+    String iconKey = 'link',
+    int sortOrder = 0,
+  }) async {
+    final Map<String, dynamic> row = await _client
+        .from('important_links')
+        .insert(<String, dynamic>{
+          'title': title.trim(),
+          'url': url.trim(),
+          'detail': detail?.trim().isEmpty ?? true ? null : detail!.trim(),
+          'icon_key': iconKey,
+          'sort_order': sortOrder,
+          'status': 'active',
+        })
+        .select()
+        .single();
+    return ImportantLink.fromMap(row);
+  }
+
+  /// Retires or restores a link.
+  Future<void> setImportantLinkStatus({
+    required String id,
+    required bool active,
+  }) async {
+    await _client
+        .from('important_links')
+        .update(<String, dynamic>{'status': active ? 'active' : 'inactive'})
+        .eq('id', id);
+  }
 }

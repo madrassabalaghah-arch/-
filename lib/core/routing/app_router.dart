@@ -40,6 +40,7 @@ import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
+import '../../shared/presentation/important_links_screen.dart';
 import '../../shared/models/directory_entries.dart';
 import '../../shared/models/people.dart';
 import '../../shared/models/work_items.dart';
@@ -215,26 +216,6 @@ final StatefulShellRoute _graduateShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.graduateReports,
-          name: AppRoutes.graduateReportsName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const GraduateReportsScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
-          path: AppRoutes.graduateEvidence,
-          name: AppRoutes.graduateEvidenceName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const GraduateEvidenceScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
           path: AppRoutes.graduateNotifications,
           name: AppRoutes.graduateNotificationsName,
           builder: (BuildContext context, GoRouterState state) =>
@@ -252,11 +233,33 @@ final StatefulShellRoute _graduateShell = StatefulShellRoute.indexedStack(
         ),
       ],
     ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.graduateLinks,
+          name: AppRoutes.graduateLinksName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ImportantLinksScreen(),
+        ),
+      ],
+    ),
   ],
 );
 
 /// Graduate screens that cover the bottom navigation.
 final List<RouteBase> _graduateFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.graduateReports,
+    name: AppRoutes.graduateReportsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const GraduateReportsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.graduateEvidence,
+    name: AppRoutes.graduateEvidenceName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const GraduateEvidenceScreen(),
+  ),
   GoRoute(
     path: AppRoutes.graduateReportEditor,
     name: AppRoutes.graduateReportEditorName,
@@ -309,30 +312,35 @@ final StatefulShellRoute _mentorShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorGraduates,
-          name: AppRoutes.mentorGraduatesName,
+          path: AppRoutes.mentorNotifications,
+          name: AppRoutes.mentorNotificationsName,
+          // Renders the signed-in account's own notifications. The provider
+          // behind it filters on the current user id, so it is correct for a
+          // mentor even though the class carries the graduate name.
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorGraduatesScreen(),
+              const GraduateNotificationsScreen(),
         ),
       ],
     ),
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorReviews,
-          name: AppRoutes.mentorReviewsName,
+          path: AppRoutes.mentorProfile,
+          name: AppRoutes.mentorProfileName,
+          // Edits the caller's own `profiles` row, which every role has and
+          // row level security restricts to that row.
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorReviewsScreen(),
+              const GraduateProfileScreen(),
         ),
       ],
     ),
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorEvidence,
-          name: AppRoutes.mentorEvidenceName,
+          path: AppRoutes.mentorLinks,
+          name: AppRoutes.mentorLinksName,
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorEvidenceScreen(),
+              const ImportantLinksScreen(),
         ),
       ],
     ),
@@ -341,6 +349,24 @@ final StatefulShellRoute _mentorShell = StatefulShellRoute.indexedStack(
 
 /// Mentor screens that cover the bottom navigation.
 final List<RouteBase> _mentorFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.mentorGraduates,
+    name: AppRoutes.mentorGraduatesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorGraduatesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.mentorReviews,
+    name: AppRoutes.mentorReviewsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorReviewsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.mentorEvidence,
+    name: AppRoutes.mentorEvidenceName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorEvidenceScreen(),
+  ),
   GoRoute(
     path: AppRoutes.mentorGraduateDetails,
     name: AppRoutes.mentorGraduateDetailsName,
@@ -393,30 +419,32 @@ final StatefulShellRoute _adminShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.adminGraduates,
-          name: AppRoutes.adminGraduatesName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const AdminGraduatesScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
-          path: AppRoutes.adminMentors,
-          name: AppRoutes.adminMentorsName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const AdminMentorsScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
           path: AppRoutes.adminNotifications,
           name: AppRoutes.adminNotificationsName,
           builder: (BuildContext context, GoRouterState state) =>
               const AdminNotificationsScreen(),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.adminProfile,
+          name: AppRoutes.adminProfileName,
+          // Edits the caller's own `profiles` row, which every role has and
+          // row level security restricts to that row.
+          builder: (BuildContext context, GoRouterState state) =>
+              const GraduateProfileScreen(),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.adminLinks,
+          name: AppRoutes.adminLinksName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ImportantLinksScreen(),
         ),
       ],
     ),
@@ -425,6 +453,18 @@ final StatefulShellRoute _adminShell = StatefulShellRoute.indexedStack(
 
 /// Administration screens that cover the bottom navigation.
 final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.adminGraduates,
+    name: AppRoutes.adminGraduatesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminGraduatesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminMentors,
+    name: AppRoutes.adminMentorsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminMentorsScreen(),
+  ),
   GoRoute(
     path: AppRoutes.adminWorkshop,
     name: AppRoutes.adminWorkshopName,

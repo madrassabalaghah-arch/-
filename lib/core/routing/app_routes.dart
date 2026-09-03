@@ -45,6 +45,9 @@ class AppRoutes {
   static const String graduateProfile = '/graduate/profile';
   static const String graduateProfileName = 'graduateProfile';
 
+  static const String graduateLinks = '/graduate/links';
+  static const String graduateLinksName = 'graduateLinks';
+
   static const String graduateReportEditor = '/graduate/report-editor';
   static const String graduateReportEditorName = 'graduateReportEditor';
 
@@ -72,6 +75,15 @@ class AppRoutes {
 
   static const String mentorEvidence = '/mentor/evidence';
   static const String mentorEvidenceName = 'mentorEvidence';
+
+  static const String mentorNotifications = '/mentor/notifications';
+  static const String mentorNotificationsName = 'mentorNotifications';
+
+  static const String mentorProfile = '/mentor/profile';
+  static const String mentorProfileName = 'mentorProfile';
+
+  static const String mentorLinks = '/mentor/links';
+  static const String mentorLinksName = 'mentorLinks';
 
   /// Full screen mentor routes.
   static const String mentorGraduateDetails = '/mentor/graduate-details';
@@ -109,6 +121,12 @@ class AppRoutes {
 
   static const String adminUser = '/admin/user';
   static const String adminUserName = 'adminUser';
+
+  static const String adminProfile = '/admin/profile';
+  static const String adminProfileName = 'adminProfile';
+
+  static const String adminLinks = '/admin/links';
+  static const String adminLinksName = 'adminLinks';
 
   /// Full screen administration routes.
   static const String adminWifaqs = '/admin/wifaqs';
@@ -148,6 +166,16 @@ class AppRoutes {
   /// switched rather than stacked. Navigation goes through this set so a
   /// screen never has to remember which kind of destination it is opening.
   static const Set<String> fullScreenRoutes = <String>{
+    // Screens that used to be bottom-navigation branches. They are opened
+    // from the dashboard now, so they push and carry a back button rather
+    // than switching the bar underneath the user.
+    graduateReports,
+    graduateEvidence,
+    mentorGraduates,
+    mentorReviews,
+    mentorEvidence,
+    adminGraduates,
+    adminMentors,
     graduateActivities,
     graduateReportEditor,
     graduateEvaluations,

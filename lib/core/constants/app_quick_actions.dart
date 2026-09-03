@@ -13,12 +13,10 @@ import 'app_strings.dart';
 class AppQuickActions {
   const AppQuickActions._();
 
+  // میری پروفائل and اہم لنکس are bottom-navigation destinations, so they are
+  // deliberately absent here — a tile that duplicates the bar underneath it
+  // is one more thing to read and no new way to get anywhere.
   static const List<QuickAction> graduate = <QuickAction>[
-    QuickAction(
-      title: AppStrings.profile,
-      icon: Icons.person_outline,
-      route: AppRoutes.graduateProfile,
-    ),
     QuickAction(
       title: AppStrings.practicalActivities,
       icon: Icons.volunteer_activism_outlined,
@@ -125,12 +123,6 @@ class AppQuickActions {
       subtitle: 'اعزازات اور حوصلہ افزائی کا نظام۔',
       icon: Icons.workspace_premium_outlined,
       route: AppRoutes.adminRecognition,
-    ),
-    ManagementArea(
-      title: AppStrings.notifications,
-      subtitle: 'اطلاعات اور اعلانات کا انتظام۔',
-      icon: Icons.notifications_none_outlined,
-      route: AppRoutes.adminNotifications,
     ),
   ];
 }

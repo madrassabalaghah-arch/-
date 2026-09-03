@@ -107,10 +107,10 @@ class MentorDashboardScreen extends ConsumerWidget {
               roleTitle: AppRole.mentor.urduTitle,
               subtitle: profile?.instituteName,
               notificationCount: unread,
-              onProfileTap: () => context.goToRoute(AppRoutes.mentorGraduates),
+              onProfileTap: () => context.goToRoute(AppRoutes.mentorProfile),
               actions: const <Widget>[SignOutAction()],
               onNotificationsTap: () =>
-                  context.goToRoute(AppRoutes.mentorReviews),
+                  context.goToRoute(AppRoutes.mentorNotifications),
             ),
             Padding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -154,6 +154,11 @@ class _MentorBody extends ConsumerWidget {
               graduates.value!,
               reports.value!,
               evaluations.value!,
+            ),
+            // Each figure opens the screen it was counted from: the first is
+            // the assigned graduates, the rest are all report queues.
+            onTap: (int index) => context.goToRoute(
+              index == 0 ? AppRoutes.mentorGraduates : AppRoutes.mentorReviews,
             ),
           )
         else if (graduates.hasError || reports.hasError)

@@ -54,7 +54,7 @@ class AdminDashboardScreen extends ConsumerWidget {
             notificationCount: unread,
             gradient: AppGradients.darkGreen,
             actions: const <Widget>[SignOutAction()],
-            onProfileTap: () => context.goToRoute(AppRoutes.adminGraduates),
+            onProfileTap: () => context.goToRoute(AppRoutes.adminProfile),
             onNotificationsTap: () => context.goToRoute(AppRoutes.adminNotifications),
           ),
           Padding(
@@ -70,7 +70,14 @@ class AdminDashboardScreen extends ConsumerWidget {
                   value: statistics,
                   onRetry: () => ref.invalidate(adminStatisticsProvider),
                   builder: (BuildContext context, Map<String, int> counts) =>
-                      StatGrid(stats: _statsFrom(counts)),
+                      StatGrid(
+                    stats: _statsFrom(counts),
+                    // Every figure opens the screen it was counted from, so a
+                    // number the administrator wants to act on is one tap
+                    // away instead of being a dead end.
+                    onTap: (int index) =>
+                        context.goToRoute(_statRoutes[index]),
+                  ),
                 ),
                 AppSpacing.gapXl,
                 const SectionHeader(title: AppStrings.managementAreas),
@@ -117,6 +124,17 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 }
+
+/// Where each figure in [_statsFrom] leads when it is tapped. Kept beside the
+/// tiles so the two lists cannot drift apart.
+const List<String> _statRoutes = <String>[
+  AppRoutes.adminGraduates,
+  AppRoutes.adminGraduates,
+  AppRoutes.adminMentors,
+  AppRoutes.adminReports,
+  AppRoutes.adminReports,
+  AppRoutes.adminReports,
+];
 
 /// Turns the counted rows into statistic tiles. Every figure is a real
 /// count from Postgres; nothing here is stored or hardcoded.

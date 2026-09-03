@@ -16,8 +16,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:madrassa_graduate_app/app.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
 import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
+import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
 import 'package:madrassa_graduate_app/core/routing/app_router.dart';
 import 'package:madrassa_graduate_app/core/routing/app_routes.dart';
+import 'package:madrassa_graduate_app/shared/widgets/app_bottom_navigation.dart';
 import 'package:madrassa_graduate_app/core/theme/app_colors.dart';
 import 'package:madrassa_graduate_app/shared/models/app_role.dart';
 
@@ -194,5 +196,66 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.signInTitle), findsOneWidget);
+  });
+
+  test('every role shares the same four navigation destinations', () {
+    const List<String> expected = <String>[
+      AppStrings.navHome,
+      AppStrings.navNotifications,
+      AppStrings.navMyProfile,
+      AppStrings.navLinks,
+    ];
+
+    for (final MapEntry<String, List<AppNavItem>> role
+        in <String, List<AppNavItem>>{
+      'graduate': AppNavItems.graduate,
+      'mentor': AppNavItems.mentor,
+      'admin': AppNavItems.admin,
+    }.entries) {
+      expect(
+        role.value.map((AppNavItem item) => item.label).toList(),
+        expected,
+        reason:
+            '${role.key} must show ہوم / نوٹیفکیشن / میری پروفائل / اہم لنکس',
+      );
+    }
+  });
+
+  test('screens taken out of the bottom bar still open with a back button', () {
+    // Each of these used to be a navigation branch. A branch is switched with
+    // `go` and leaves nothing to go back to, so once they are reached from the
+    // dashboard instead they have to be pushed.
+    for (final String path in <String>[
+      AppRoutes.graduateReports,
+      AppRoutes.graduateEvidence,
+      AppRoutes.mentorGraduates,
+      AppRoutes.mentorReviews,
+      AppRoutes.mentorEvidence,
+      AppRoutes.adminGraduates,
+      AppRoutes.adminMentors,
+    ]) {
+      expect(AppRoutes.isFullScreen(path), isTrue,
+          reason: '$path is opened from a dashboard and needs a back button');
+    }
+
+    // The four destinations of the bar are the opposite case: they must stay
+    // branches, or the bar would stack on top of itself.
+    for (final String path in <String>[
+      AppRoutes.graduateDashboard,
+      AppRoutes.graduateNotifications,
+      AppRoutes.graduateProfile,
+      AppRoutes.graduateLinks,
+      AppRoutes.mentorDashboard,
+      AppRoutes.mentorNotifications,
+      AppRoutes.mentorProfile,
+      AppRoutes.mentorLinks,
+      AppRoutes.adminDashboard,
+      AppRoutes.adminNotifications,
+      AppRoutes.adminProfile,
+      AppRoutes.adminLinks,
+    ]) {
+      expect(AppRoutes.isFullScreen(path), isFalse,
+          reason: '$path is a bottom navigation destination');
+    }
   });
 }

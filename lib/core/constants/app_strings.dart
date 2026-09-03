@@ -111,6 +111,21 @@ class AppStrings {
   static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
   static const String cityOptional = 'شہر (اختیاری)';
   static const String institutes = 'ادارے';
+
+  // ---------------------------------------------------------------------
+  // Important links
+  // ---------------------------------------------------------------------
+  static const String importantLinks = 'اہم لنکس';
+  static const String addLink = 'نیا لنک شامل کریں';
+  static const String linkTitle = 'لنک کا عنوان';
+  static const String linkUrl = 'لنک کا پتہ (URL)';
+  static const String linkDetail = 'مختصر وضاحت (اختیاری)';
+  static const String linkAdded = 'لنک شامل کر دیا گیا ہے۔';
+  static const String noLinksYet =
+      'ابھی کوئی لنک شامل نہیں کیا گیا۔ منتظم اسے شامل کرے گا۔';
+  static const String couldNotOpenLink = 'لنک کھولا نہیں جا سکا۔';
+  static const String linkMustBeHttp =
+      'لنک http:// یا https:// سے شروع ہونا چاہیے۔';
   static const String maleLabel = 'فاضل';
   static const String femaleLabel = 'فاضلہ';
   static const String unassignedWifaq = 'غیر منسلک وفاق';
@@ -215,6 +230,9 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Bottom navigation
   // ---------------------------------------------------------------------
+  static const String navHome = 'ہوم';
+  static const String navMyProfile = 'میری پروفائل';
+  static const String navLinks = 'اہم لنکس';
   static const String navDashboard = 'ڈیش بورڈ';
   static const String navReports = 'کارگزاری';
   static const String navEvidence = 'ثبوت';
