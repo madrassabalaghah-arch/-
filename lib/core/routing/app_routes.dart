@@ -48,6 +48,10 @@ class AppRoutes {
   static const String graduateLinks = '/graduate/links';
   static const String graduateLinksName = 'graduateLinks';
 
+  /// One practical activity's own screen, opened from the activity list.
+  static const String graduateActivityDetail = '/graduate/activity-detail';
+  static const String graduateActivityDetailName = 'graduateActivityDetail';
+
   static const String graduateReportEditor = '/graduate/report-editor';
   static const String graduateReportEditorName = 'graduateReportEditor';
 
@@ -128,6 +132,12 @@ class AppRoutes {
   static const String adminLinks = '/admin/links';
   static const String adminLinksName = 'adminLinks';
 
+  static const String adminEvidence = '/admin/evidence';
+  static const String adminEvidenceName = 'adminEvidence';
+
+  static const String adminReportDetail = '/admin/report-detail';
+  static const String adminReportDetailName = 'adminReportDetail';
+
   /// Full screen administration routes.
   static const String adminWifaqs = '/admin/wifaqs';
   static const String adminWifaqsName = 'adminWifaqs';
@@ -171,6 +181,9 @@ class AppRoutes {
     // than switching the bar underneath the user.
     graduateReports,
     graduateEvidence,
+    graduateActivityDetail,
+    adminEvidence,
+    adminReportDetail,
     mentorGraduates,
     mentorReviews,
     mentorEvidence,

@@ -30,7 +30,8 @@ class MentorReviewsScreen extends ConsumerWidget {
         icon: Icons.description_outlined,
         status: item.status,
         accentColor: AppColors.tealGreen,
-        onTap: () => context.goToRoute(AppRoutes.mentorReportDetails),
+        onTap: () => context.goToRoute(AppRoutes.mentorReportDetails,
+            extra: item),
         trailing: TextButton(
           onPressed: () => context.goToRoute(AppRoutes.mentorReportReview),
           child: const Text(AppStrings.review),

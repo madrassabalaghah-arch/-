@@ -6,10 +6,12 @@ import '../../features/admin/presentation/activities/admin_activities_screen.dar
 import '../../features/admin/presentation/assignments/admin_assignments_screen.dart';
 import '../../features/admin/presentation/courses/admin_courses_screen.dart';
 import '../../features/admin/presentation/dashboard/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/evidence/admin_evidence_screen.dart';
 import '../../features/admin/presentation/graduates/admin_graduates_screen.dart';
 import '../../features/admin/presentation/mentors/admin_mentors_screen.dart';
 import '../../features/admin/presentation/notifications/admin_notifications_screen.dart';
 import '../../features/admin/presentation/recognition/admin_recognition_screen.dart';
+import '../../features/admin/presentation/reports/admin_report_detail_screen.dart';
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
 import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
@@ -22,6 +24,7 @@ import '../../features/graduate/presentation/evaluations/graduate_evaluations_sc
 import '../../features/graduate/presentation/evidence/graduate_evidence_screen.dart';
 import '../../features/graduate/presentation/notifications/graduate_notifications_screen.dart';
 import '../../features/graduate/presentation/performance_reports/graduate_reports_screen.dart';
+import '../../features/graduate/presentation/practical_activities/activity_detail_screen.dart';
 import '../../features/graduate/presentation/practical_activities/practical_activities_screen.dart';
 import '../../features/graduate/presentation/profile/graduate_profile_screen.dart';
 import '../../features/graduate/presentation/recognition/graduate_recognition_screen.dart';
@@ -270,6 +273,12 @@ final List<RouteBase> _graduateFullScreenRoutes = <RouteBase>[
         const GraduateEvidenceScreen(),
   ),
   GoRoute(
+    path: AppRoutes.graduateActivityDetail,
+    name: AppRoutes.graduateActivityDetailName,
+    builder: (BuildContext context, GoRouterState state) =>
+        ActivityDetailScreen(activity: state.extra! as ActivityItem),
+  ),
+  GoRoute(
     path: AppRoutes.graduateReportEditor,
     name: AppRoutes.graduateReportEditorName,
     builder: (BuildContext context, GoRouterState state) =>
@@ -386,7 +395,7 @@ final List<RouteBase> _mentorFullScreenRoutes = <RouteBase>[
     path: AppRoutes.mentorReportDetails,
     name: AppRoutes.mentorReportDetailsName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorReportDetailsScreen(),
+        MentorReportDetailsScreen(report: state.extra! as ReportItem),
   ),
   GoRoute(
     path: AppRoutes.mentorReportReview,
@@ -473,6 +482,18 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminMentorsName,
     builder: (BuildContext context, GoRouterState state) =>
         const AdminMentorsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminReportDetail,
+    name: AppRoutes.adminReportDetailName,
+    builder: (BuildContext context, GoRouterState state) =>
+        AdminReportDetailScreen(report: state.extra! as ReportItem),
+  ),
+  GoRoute(
+    path: AppRoutes.adminEvidence,
+    name: AppRoutes.adminEvidenceName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminEvidenceScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminWorkshop,

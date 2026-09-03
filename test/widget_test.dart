@@ -7,6 +7,8 @@
 // No mock data exists in the application any more, so there is nothing to
 // stub — an unauthenticated client simply has no rows it may read.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +24,54 @@ import 'package:madrassa_graduate_app/core/routing/app_router.dart';
 import 'package:madrassa_graduate_app/core/routing/app_routes.dart';
 import 'package:madrassa_graduate_app/shared/widgets/app_bottom_navigation.dart';
 import 'package:madrassa_graduate_app/core/theme/app_colors.dart';
+import 'package:madrassa_graduate_app/features/auth/application/auth_providers.dart';
+import 'package:madrassa_graduate_app/features/auth/data/auth_repository.dart';
 import 'package:madrassa_graduate_app/shared/models/app_role.dart';
+import 'package:madrassa_graduate_app/shared/models/people.dart';
+
+
+/// An authenticated account whose profile and role reads fail, which is what
+/// losing connectivity looks like from inside the app: the Supabase SDK still
+/// holds the persisted session, but every query throws.
+class _OfflineAuthRepository extends AuthRepository {
+  _OfflineAuthRepository(super.client);
+
+  /// Flipped on once the first load has succeeded, so a test can go offline
+  /// after a good session exists.
+  bool offline = false;
+
+  static const User _user = User(
+    id: '11111111-1111-1111-1111-111111111111',
+    appMetadata: <String, dynamic>{},
+    userMetadata: <String, dynamic>{},
+    aud: 'authenticated',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    email: 'someone@example.org',
+  );
+
+  @override
+  User? get currentUser => _user;
+
+  @override
+  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
+
+  @override
+  Future<AppUser?> loadProfile(String userId) async {
+    if (offline) {
+      throw const SocketException('offline');
+    }
+    return const AppUser(id: '11111111-1111-1111-1111-111111111111',
+        fullName: 'محمد عثمان');
+  }
+
+  @override
+  Future<List<AppRole>> loadRoles(String userId) async {
+    if (offline) {
+      throw const SocketException('offline');
+    }
+    return const <AppRole>[AppRole.graduate];
+  }
+}
 
 Future<void> _pumpApp(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1200, 3000);
@@ -320,5 +369,40 @@ void main() {
     await tester.tap(find.byIcon(Icons.visibility_off_outlined).last);
     await tester.pumpAndSettle();
     expect(field().obscureText, isTrue, reason: 'tapping again must hide it');
+  });
+
+  test('losing the connection keeps the session instead of signing out', () async {
+    final _OfflineAuthRepository repository =
+        _OfflineAuthRepository(Supabase.instance.client);
+    final ProviderContainer container = ProviderContainer(
+      // The element type is inferred: riverpod's Override is not exported
+      // from flutter_riverpod, so it cannot be written out here.
+      overrides: [
+        authRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    // A good load first, so there is a session to lose.
+    final AppSession? online = await container.read(appSessionProvider.future);
+    expect(online, isNotNull);
+    expect(online!.roles, <AppRole>[AppRole.graduate]);
+    expect(online.isStale, isFalse);
+
+    // Now the network goes away and the session is refreshed.
+    repository.offline = true;
+    await container.read(appSessionProvider.notifier).refresh();
+
+    final AsyncValue<AppSession?> after = container.read(appSessionProvider);
+    expect(after.hasError, isFalse,
+        reason: 'a network failure must not become an authentication error');
+
+    final AppSession? offline = after.value;
+    expect(offline, isNotNull,
+        reason: 'the user must still be signed in while offline');
+    expect(offline!.isStale, isTrue,
+        reason: 'the values are the previous load, and must say so');
+    expect(offline.roles, <AppRole>[AppRole.graduate],
+        reason: 'the role must survive, or routing would send them to noRole');
   });
 }

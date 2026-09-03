@@ -111,6 +111,14 @@ class AppStrings {
   static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
   static const String cityOptional = 'شہر (اختیاری)';
   static const String institutes = 'ادارے';
+  static const String relatedReports = 'متعلقہ کارگزاریاں';
+  static const String noEvidenceForReport =
+      'اس کارگزاری کے ساتھ کوئی ثبوت منسلک نہیں۔';
+  static const String noReportsForActivity =
+      'اس سرگرمی کے لیے ابھی کوئی کارگزاری درج نہیں کی گئی۔';
+  static const String noEvidenceForActivity =
+      'اس سرگرمی کی کارگزاریوں کے ساتھ ابھی کوئی ثبوت منسلک نہیں۔';
+  static const String evidenceManagement = 'ثبوتوں کا انتظام';
   static const String showPassword = 'پاس ورڈ دکھائیں';
   static const String hidePassword = 'پاس ورڈ چھپائیں';
   static const String offlineNotice =

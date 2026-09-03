@@ -232,6 +232,33 @@ class GraduateRepository {
         .update(<String, dynamic>{'is_read': true}).eq('id', id);
   }
 
+  /// This graduate's own کارگزاری filed against one activity.
+  ///
+  /// Scoped to `_uid` so the activity screen shows the reader their own work;
+  /// the `reports select permitted` policy would refuse anyone else's anyway.
+  Future<List<ReportItem>> reportsForActivity(String activityId) async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('reports')
+        .select('*, activities(title)')
+        .eq('graduate_id', _uid)
+        .eq('activity_id', activityId)
+        .order('created_at', ascending: false);
+    return rows.map(ReportItem.fromMap).toList();
+  }
+
+  /// The evidence attached to the given کارگزاری.
+  Future<List<EvidenceItem>> evidenceForReports(List<String> reportIds) async {
+    if (reportIds.isEmpty) {
+      return const <EvidenceItem>[];
+    }
+    final List<Map<String, dynamic>> rows = await _client
+        .from('evidence')
+        .select()
+        .inFilter('report_id', reportIds)
+        .order('created_at', ascending: false);
+    return rows.map(EvidenceItem.fromMap).toList();
+  }
+
   /// A time-limited URL for a private evidence object.
   Future<String> signedEvidenceUrl(String storagePath) {
     return _client.storage

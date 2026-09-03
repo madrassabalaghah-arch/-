@@ -11,11 +11,13 @@ extension AppNavigation on BuildContext {
   /// visible and preserves each branch's own history. Secondary screens are
   /// pushed, so the app bar shows a back button and the user returns to the
   /// dashboard exactly where they left it.
-  void goToRoute(String path) {
+  /// [extra] carries the record the destination is about, so a detail screen
+  /// shows the row that was actually tapped rather than guessing at one.
+  void goToRoute(String path, {Object? extra}) {
     if (AppRoutes.isFullScreen(path)) {
-      push<void>(path);
+      push<void>(path, extra: extra);
     } else {
-      go(path);
+      go(path, extra: extra);
     }
   }
 }

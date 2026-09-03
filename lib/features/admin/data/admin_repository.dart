@@ -158,6 +158,21 @@ class AdminRepository {
     }).toList();
   }
 
+  /// Every uploaded evidence file.
+  ///
+  /// No ownership filter is applied because the `evidence select permitted`
+  /// policy already decides who may read a row: it calls
+  /// `private.can_view_graduate()`, which admits the graduate who uploaded it,
+  /// their mentor, and an administrator. A non-admin running this same query
+  /// therefore receives only the rows they were already entitled to.
+  Future<List<EvidenceItem>> evidence() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('evidence')
+        .select()
+        .order('created_at', ascending: false);
+    return rows.map(EvidenceItem.fromMap).toList();
+  }
+
   Future<List<WifaqItem>> wifaqs() async {
     final List<Map<String, dynamic>> rows =
         await _client.from('wifaqs').select().order('name');

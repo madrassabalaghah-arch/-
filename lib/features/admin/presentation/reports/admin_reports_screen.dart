@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_navigation.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
@@ -25,6 +27,10 @@ class AdminReportsScreen extends ConsumerWidget {
         detail: '${item.activityType} • ${item.dateLabel}',
         icon: Icons.description_outlined,
         status: item.status,
+        onTap: () => context.goToRoute(
+          AppRoutes.adminReportDetail,
+          extra: item,
+        ),
       ),
     );
   }

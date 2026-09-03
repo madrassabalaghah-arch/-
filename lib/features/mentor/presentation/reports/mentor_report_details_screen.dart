@@ -13,24 +13,20 @@ import '../../../../shared/widgets/widgets.dart';
 
 /// The full content of a single report together with its evidence.
 class MentorReportDetailsScreen extends ConsumerWidget {
-  const MentorReportDetailsScreen({super.key});
+  const MentorReportDetailsScreen({required this.report, super.key});
+
+  /// The report that was tapped. Previously this screen read the first report
+  /// in the mentor's queue no matter which row opened it, so every row showed
+  /// the same content.
+  final ReportItem report;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
-    final List<ReportItem> reports =
-        ref.watch(mentorReportsProvider).value ?? const <ReportItem>[];
     final List<EvidenceItem> evidence =
-        ref.watch(mentorEvidenceProvider).value ?? const <EvidenceItem>[];
-
-    if (reports.isEmpty) {
-      return const AppScaffold(
-        title: AppStrings.reportDetails,
-        body: EmptyState(),
-      );
-    }
-
-    final ReportItem report = reports.first;
+        (ref.watch(mentorEvidenceProvider).value ?? const <EvidenceItem>[])
+            .where((EvidenceItem e) => e.reportId == report.id)
+            .toList();
 
     return AppScaffold(
       title: AppStrings.reportDetails,

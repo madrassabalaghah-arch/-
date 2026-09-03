@@ -226,8 +226,10 @@ class _MentorBody extends ConsumerWidget {
                     icon: Icons.description_outlined,
                     status: report.status,
                     accentColor: AppColors.tealGreen,
-                    onTap: () =>
-                        context.goToRoute(AppRoutes.mentorReportDetails),
+                    onTap: () => context.goToRoute(
+                      AppRoutes.mentorReportDetails,
+                      extra: report,
+                    ),
                   ),
                 ),
             ],

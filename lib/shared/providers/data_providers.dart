@@ -175,6 +175,37 @@ final FutureProvider<List<WifaqItem>> adminWifaqsProvider =
   return ref.watch(adminRepositoryProvider).wifaqs();
 });
 
+/// Every uploaded evidence file, for the administration view. Row level
+/// security still decides which rows come back.
+final FutureProvider<List<EvidenceItem>> adminEvidenceProvider =
+    FutureProvider<List<EvidenceItem>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).evidence();
+});
+
+/// The evidence attached to one کارگزاری. Row level security decides whether
+/// the caller may see it, so the same provider serves every role.
+final reportEvidenceProvider =
+    FutureProvider.family<List<EvidenceItem>, String>((Ref ref, String id) {
+  _dependOnSession(ref);
+  return ref.watch(graduateRepositoryProvider).evidenceForReports(<String>[id]);
+});
+
+/// One activity's own کارگزاری and the evidence attached to them.
+final activityWorkProvider = FutureProvider.family<
+    ({List<ReportItem> reports, List<EvidenceItem> evidence}), String>(
+  (Ref ref, String activityId) async {
+    _dependOnSession(ref);
+    final GraduateRepository repository = ref.watch(graduateRepositoryProvider);
+    final List<ReportItem> reports =
+        await repository.reportsForActivity(activityId);
+    final List<EvidenceItem> evidence = await repository.evidenceForReports(
+      reports.map((ReportItem r) => r.id).toList(),
+    );
+    return (reports: reports, evidence: evidence);
+  },
+);
+
 /// Every wifaq with its institute and فاضل / فاضلہ counts.
 final FutureProvider<List<WifaqDirectoryEntry>> adminWifaqDirectoryProvider =
     FutureProvider<List<WifaqDirectoryEntry>>((Ref ref) {

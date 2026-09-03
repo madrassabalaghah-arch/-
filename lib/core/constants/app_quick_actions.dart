@@ -107,6 +107,12 @@ class AppQuickActions {
       route: AppRoutes.adminAssignments,
     ),
     ManagementArea(
+      title: AppStrings.evidenceManagement,
+      subtitle: 'فاضل / فاضلہ کے جمع کردہ ثبوت دیکھیں۔',
+      icon: Icons.folder_open_outlined,
+      route: AppRoutes.adminEvidence,
+    ),
+    ManagementArea(
       title: AppStrings.allReports,
       subtitle: 'تمام کارگزاریوں کا مجموعی جائزہ۔',
       icon: Icons.description_outlined,
