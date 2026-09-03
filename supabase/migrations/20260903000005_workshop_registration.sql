@@ -1,0 +1,46 @@
+-- =====================================================================
+-- Workshop registration gate  (APPLIED)
+--
+-- Registration is no longer public. An account may only be created by
+-- someone who completed the five-day workshop, identified by their
+-- registration number.
+--
+-- Applied as three migrations in the Supabase history:
+--   workshop_participants
+--   gate_signup_on_workshop_registration
+--
+-- 1. public.workshop_participants
+--    The register. registration_key is a generated, normalised column
+--    (upper-cased, non-alphanumerics stripped) with a unique index, so
+--    "WS-2026/001", "ws 2026 001" and "WS2026001" are one record and cannot
+--    become duplicates. Attendance (completed) and permission (eligible) are
+--    separate booleans: someone may have attended and still be barred.
+--    account_created / user_id / claimed_at are written only by the trigger.
+--
+--    RLS: administrators read and write; a participant may read their own
+--    linked row once their account exists. Applicants read nothing.
+--
+-- 2. public.verify_workshop_registration(text)
+--    Pre-signup check. This is the one SECURITY DEFINER function deliberately
+--    left in `public` rather than `private`, because the caller has no account
+--    yet and must reach it as `anon`. It answers only about the number
+--    supplied and returns a verdict, never the register, so it cannot be used
+--    to enumerate participants. The name is returned solely on an exact valid
+--    match so the applicant can confirm the record is theirs.
+--
+--    The Supabase linter flags it for exactly this reason; the exposure is
+--    intended and the function is written to be safe under it.
+--
+-- 3. private.handle_new_user()
+--    The enforcement. Verification in the app is a courtesy — this trigger
+--    re-checks the number and raises if it is missing, unknown, incomplete,
+--    ineligible or already claimed, so calling the Supabase signup API
+--    directly cannot bypass the gate. SELECT ... FOR UPDATE prevents two
+--    simultaneous signups claiming one number. Addresses in
+--    private.bootstrap_admins remain exempt, since the founding
+--    administrator predates the register.
+--
+-- Verified: no number, unknown number, incomplete, ineligible and reused all
+-- raise; a valid number in different formatting is accepted, takes its name
+-- from the register and is marked claimed.
+-- =====================================================================

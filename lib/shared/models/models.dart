@@ -12,3 +12,4 @@ export 'people.dart';
 export 'urdu_dates.dart';
 export 'recognition_item.dart';
 export 'work_items.dart';
+export 'workshop_participant.dart';

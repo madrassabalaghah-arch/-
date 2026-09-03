@@ -14,6 +14,7 @@ import '../../features/admin/presentation/reports/admin_reports_screen.dart';
 import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaqs_screen.dart';
+import '../../features/admin/presentation/workshop/admin_workshop_screen.dart';
 import '../../features/graduate/presentation/dashboard/graduate_dashboard_screen.dart';
 import '../../features/graduate/presentation/evaluations/graduate_evaluations_screen.dart';
 import '../../features/graduate/presentation/evidence/graduate_evidence_screen.dart';
@@ -421,6 +422,12 @@ final StatefulShellRoute _adminShell = StatefulShellRoute.indexedStack(
 
 /// Administration screens that cover the bottom navigation.
 final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.adminWorkshop,
+    name: AppRoutes.adminWorkshopName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminWorkshopScreen(),
+  ),
   GoRoute(
     path: AppRoutes.adminActivities,
     name: AppRoutes.adminActivitiesName,

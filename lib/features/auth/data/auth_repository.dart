@@ -40,11 +40,18 @@ class AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String registrationNumber,
   }) {
     return _auth.signUp(
       email: email.trim(),
       password: password,
-      data: <String, dynamic>{'full_name': fullName.trim()},
+      // The registration number is re-verified by the signup trigger. The
+      // check the app performs first is a courtesy; this is what the database
+      // actually enforces, so calling the API directly cannot bypass it.
+      data: <String, dynamic>{
+        'full_name': fullName.trim(),
+        'registration_number': registrationNumber.trim(),
+      },
     );
   }
 

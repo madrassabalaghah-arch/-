@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
+import '../../features/auth/data/workshop_repository.dart';
 import '../../features/graduate/data/graduate_repository.dart';
 import '../../features/mentor/data/mentor_repository.dart';
 import '../data/reference_repository.dart';
@@ -290,4 +291,21 @@ final FutureProvider<List<ActivityItem>> allActivitiesProvider =
     FutureProvider<List<ActivityItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(referenceRepositoryProvider).allActivities();
+});
+
+// ---------------------------------------------------------------------------
+// Workshop register
+// ---------------------------------------------------------------------------
+
+final Provider<WorkshopRepository> workshopRepositoryProvider =
+    Provider<WorkshopRepository>(
+  (Ref ref) => WorkshopRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// The whole register, for administration. Only an administrator can read it;
+/// applicants verify a single number through the RPC instead.
+final FutureProvider<List<WorkshopParticipant>> workshopParticipantsProvider =
+    FutureProvider<List<WorkshopParticipant>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(workshopRepositoryProvider).participants();
 });

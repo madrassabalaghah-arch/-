@@ -126,6 +126,49 @@ class AppStrings {
   static const String restoreActivity = 'دوبارہ فعال کریں';
 
   // ---------------------------------------------------------------------
+  // Workshop registration gate
+  // ---------------------------------------------------------------------
+  static const String workshopGateTitle = 'ورکشاپ کی تصدیق';
+  static const String workshopGateSubtitle =
+      'اکاؤنٹ بنانے کے لیے پانچ روزہ ورکشاپ کا رجسٹریشن نمبر درج کریں۔';
+  static const String registrationNumber = 'رجسٹریشن نمبر';
+  static const String hintRegistrationNumber = 'مثلاً: WS-2026/001';
+  static const String verifyNumber = 'تصدیق کریں';
+  static const String verifying = 'تصدیق کی جا رہی ہے...';
+  static const String verifiedAs = 'تصدیق ہو گئی';
+  static const String changeNumber = 'نمبر تبدیل کریں';
+  static const String regNotFound =
+      'یہ رجسٹریشن نمبر ریکارڈ میں موجود نہیں ہے۔';
+  static const String regNotCompleted =
+      'اس نمبر کے لیے پانچ روزہ ورکشاپ مکمل درج نہیں ہے۔';
+  static const String regNotEligible =
+      'یہ نمبر اکاؤنٹ بنانے کے لیے اہل نہیں ہے۔ منتظم سے رابطہ کریں۔';
+  static const String regAlreadyUsed =
+      'اس رجسٹریشن نمبر سے پہلے ہی اکاؤنٹ بن چکا ہے۔';
+  static const String regRequired = 'رجسٹریشن نمبر درج کرنا ضروری ہے۔';
+  static const String publicSignupClosed =
+      'عام رجسٹریشن دستیاب نہیں۔ صرف ورکشاپ کے شرکاء اکاؤنٹ بنا سکتے ہیں۔';
+
+  // Workshop administration
+  static const String manageWorkshop = 'ورکشاپ شرکاء کا انتظام';
+  static const String addParticipant = 'نیا شریک شامل کریں';
+  static const String importParticipants = 'فائل سے درآمد کریں';
+  static const String participantName = 'شریک کا نام';
+  static const String workshopBatch = 'بیچ';
+  static const String workshopCompleted = 'ورکشاپ مکمل';
+  static const String eligibleForApp = 'اکاؤنٹ کے لیے اہل';
+  static const String accountCreated = 'اکاؤنٹ بن چکا ہے';
+  static const String accountNotCreated = 'اکاؤنٹ نہیں بنا';
+  static const String participantAdded = 'شریک شامل کر دیا گیا ہے۔';
+  static const String participantUpdated = 'ریکارڈ تبدیل کر دیا گیا ہے۔';
+  static const String importDone = 'درآمد مکمل';
+  static const String importSummary = 'شامل کیے گئے';
+  static const String importSkipped = 'پہلے سے موجود، چھوڑ دیے گئے';
+  static const String csvFormatHint =
+      'CSV کالم: registration_number, full_name, father_name, gender, phone, batch';
+  static const String noParticipantsYet = 'ابھی کوئی شریک درج نہیں';
+
+  // ---------------------------------------------------------------------
   // Empty states, one per section so the wording is specific
   // ---------------------------------------------------------------------
   static const String noPendingTasks = 'کوئی زیرِ التوا کام نہیں';

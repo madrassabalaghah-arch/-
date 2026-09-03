@@ -101,6 +101,9 @@ class AppRoutes {
   static const String adminNotifications = '/admin/notifications';
   static const String adminNotificationsName = 'adminNotifications';
 
+  static const String adminWorkshop = '/admin/workshop';
+  static const String adminWorkshopName = 'adminWorkshop';
+
   static const String adminActivities = '/admin/activities';
   static const String adminActivitiesName = 'adminActivities';
 
@@ -144,6 +147,7 @@ class AppRoutes {
     mentorReportDetails,
     mentorReportReview,
     mentorEvaluations,
+    adminWorkshop,
     adminActivities,
     adminUser,
     adminWifaqs,

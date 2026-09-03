@@ -109,7 +109,7 @@ void main() {
     }
   });
 
-  testWidgets('sign up is reachable and validates in Urdu',
+  testWidgets('sign up is gated behind workshop verification',
       (WidgetTester tester) async {
     await _pumpApp(tester);
 
@@ -120,10 +120,21 @@ void main() {
 
     expect(find.text(AppStrings.signUpTitle), findsOneWidget);
 
-    // Submitting an empty form surfaces the Urdu required-field message.
-    await tester.tap(find.text(AppStrings.signUp).first);
+    // Step one is the registration number and nothing else. Public signup is
+    // closed, so the account fields must not be reachable yet.
+    expect(find.text(AppStrings.registrationNumber), findsOneWidget);
+    expect(find.text(AppStrings.verifyNumber), findsOneWidget);
+    expect(find.text(AppStrings.publicSignupClosed), findsOneWidget);
+
+    expect(find.text(AppStrings.labelPassword), findsNothing,
+        reason: 'password must not be offered before verification');
+    expect(find.text(AppStrings.labelConfirmPassword), findsNothing);
+    expect(find.text(AppStrings.labelEmail), findsNothing);
+
+    // Verifying with an empty number is refused in Urdu.
+    await tester.tap(find.text(AppStrings.verifyNumber));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.validationRequired), findsWidgets);
+    expect(find.text(AppStrings.regRequired), findsWidgets);
   });
 
   testWidgets('protected routes are unreachable without a session',
