@@ -13,6 +13,8 @@ import '../../features/admin/presentation/recognition/admin_recognition_screen.d
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
 import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
+import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
+import '../../features/admin/presentation/wifaqs/admin_wifaq_institutes_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaqs_screen.dart';
 import '../../features/admin/presentation/workshop/admin_workshop_screen.dart';
 import '../../features/graduate/presentation/dashboard/graduate_dashboard_screen.dart';
@@ -38,6 +40,7 @@ import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
+import '../../shared/models/directory_entries.dart';
 import '../../shared/models/people.dart';
 import '../../shared/models/work_items.dart';
 import '../constants/app_strings.dart';
@@ -445,6 +448,25 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminWifaqsName,
     builder: (BuildContext context, GoRouterState state) =>
         const AdminWifaqsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminWifaqInstitutes,
+    name: AppRoutes.adminWifaqInstitutesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        AdminWifaqInstitutesScreen(wifaq: state.extra! as WifaqDirectoryEntry),
+  ),
+  GoRoute(
+    path: AppRoutes.adminWifaqGraduates,
+    name: AppRoutes.adminWifaqGraduatesName,
+    builder: (BuildContext context, GoRouterState state) {
+      final ({String title, String? instituteId, String? wifaqId}) target =
+          state.extra! as ({String title, String? instituteId, String? wifaqId});
+      return AdminWifaqGraduatesScreen(
+        title: target.title,
+        instituteId: target.instituteId,
+        wifaqId: target.wifaqId,
+      );
+    },
   ),
   GoRoute(
     path: AppRoutes.adminCourses,

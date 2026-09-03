@@ -114,6 +114,15 @@ class AppRoutes {
   static const String adminWifaqs = '/admin/wifaqs';
   static const String adminWifaqsName = 'adminWifaqs';
 
+  /// Institutes inside one wifaq, opened from [adminWifaqs].
+  static const String adminWifaqInstitutes = '/admin/wifaqs/institutes';
+  static const String adminWifaqInstitutesName = 'adminWifaqInstitutes';
+
+  /// Graduates at one institute (or the unassigned-institute bucket),
+  /// opened from [adminWifaqInstitutes].
+  static const String adminWifaqGraduates = '/admin/wifaqs/graduates';
+  static const String adminWifaqGraduatesName = 'adminWifaqGraduates';
+
   static const String adminCourses = '/admin/courses';
   static const String adminCoursesName = 'adminCourses';
 
@@ -151,6 +160,8 @@ class AppRoutes {
     adminActivities,
     adminUser,
     adminWifaqs,
+    adminWifaqInstitutes,
+    adminWifaqGraduates,
     adminCourses,
     adminAssignments,
     adminReports,

@@ -164,6 +164,90 @@ class AdminRepository {
     return rows.map(WifaqItem.fromMap).toList();
   }
 
+  /// Every wifaq with its institute and فاضل / فاضلہ counts, plus one row
+  /// for graduates and institutes attached to no wifaq at all.
+  ///
+  /// This goes through the `wifaq_directory` RPC rather than a client-side
+  /// join. `user_roles` is only readable by its own owner or an
+  /// administrator, so a plain join done here would silently show zero
+  /// graduates to a non-admin caller instead of failing — the database
+  /// function raises instead of returning a wrong number.
+  Future<List<WifaqDirectoryEntry>> wifaqDirectory() async {
+    final List<dynamic> rows =
+        await _client.rpc<List<dynamic>>('wifaq_directory');
+    return rows
+        .map((dynamic row) =>
+            WifaqDirectoryEntry.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// The institutes inside one wifaq, with their graduate counts, plus one
+  /// row for graduates in that wifaq who named no institute. Pass `null` for
+  /// the unassigned-wifaq bucket at the top of the hierarchy.
+  Future<List<InstituteDirectoryEntry>> instituteDirectory(
+      String? wifaqId) async {
+    final List<dynamic> rows = await _client.rpc<List<dynamic>>(
+      'institute_directory',
+      params: <String, dynamic>{'p_wifaq_id': wifaqId},
+    );
+    return rows
+        .map((dynamic row) =>
+            InstituteDirectoryEntry.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// The graduates at one leaf of the hierarchy the directory functions
+  /// count: everyone attached to [instituteId], or — when
+  /// [includeUnassignedInstitute] is set instead — everyone in [wifaqId] (or
+  /// in no wifaq, when that is also null) who named no institute.
+  Future<List<GraduateSummary>> graduatesIn({
+    String? instituteId,
+    bool includeUnassignedInstitute = false,
+    String? wifaqId,
+  }) async {
+    final Map<String, AppRole> roles = await rolesByUser();
+    final List<String> graduateIds = roles.entries
+        .where((MapEntry<String, AppRole> e) => e.value == AppRole.graduate)
+        .map((MapEntry<String, AppRole> e) => e.key)
+        .toList();
+    if (graduateIds.isEmpty) {
+      return const <GraduateSummary>[];
+    }
+
+    final PostgrestFilterBuilder<List<Map<String, dynamic>>> base = _client
+        .from('profiles')
+        .select('id, full_name, city, stage, status, institutes(name)')
+        .inFilter('id', graduateIds);
+
+    final List<Map<String, dynamic>> rows;
+    if (instituteId != null) {
+      rows = await base.eq('institute_id', instituteId).order('full_name');
+    } else if (includeUnassignedInstitute) {
+      final PostgrestFilterBuilder<List<Map<String, dynamic>>>
+          withoutInstitute = base.isFilter('institute_id', null);
+      rows = await (wifaqId == null
+              ? withoutInstitute.isFilter('wifaq_id', null)
+              : withoutInstitute.eq('wifaq_id', wifaqId))
+          .order('full_name');
+    } else {
+      rows = await base.order('full_name');
+    }
+
+    return rows.map((Map<String, dynamic> row) {
+      final Object? institute = row['institutes'];
+      return GraduateSummary(
+        id: row['id'] as String,
+        name: (row['full_name'] as String?) ?? '',
+        instituteName: institute is Map<String, dynamic>
+            ? institute['name'] as String?
+            : null,
+        city: row['city'] as String?,
+        stage: row['stage'] as String?,
+        status: AppStatusX.fromDb(row['status'] as String?),
+      );
+    }).toList();
+  }
+
   Future<List<CourseItem>> courses() async {
     final List<Map<String, dynamic>> rows =
         await _client.from('courses').select().order('title');

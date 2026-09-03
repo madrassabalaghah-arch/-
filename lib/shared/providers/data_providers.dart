@@ -175,6 +175,36 @@ final FutureProvider<List<WifaqItem>> adminWifaqsProvider =
   return ref.watch(adminRepositoryProvider).wifaqs();
 });
 
+/// Every wifaq with its institute and فاضل / فاضلہ counts.
+final FutureProvider<List<WifaqDirectoryEntry>> adminWifaqDirectoryProvider =
+    FutureProvider<List<WifaqDirectoryEntry>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).wifaqDirectory();
+});
+
+/// The institutes inside one wifaq, counted. `null` is the unassigned-wifaq
+/// bucket at the top of the hierarchy.
+final adminInstituteDirectoryProvider =
+    FutureProvider.family<List<InstituteDirectoryEntry>, String?>(
+        (Ref ref, String? wifaqId) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).instituteDirectory(wifaqId);
+});
+
+/// The graduates at one leaf of the wifaq hierarchy.
+final adminHierarchyGraduatesProvider = FutureProvider.family<
+    List<GraduateSummary>,
+    ({String? instituteId, bool includeUnassignedInstitute, String? wifaqId})>(
+  (Ref ref, ({String? instituteId, bool includeUnassignedInstitute, String? wifaqId}) target) {
+    _dependOnSession(ref);
+    return ref.watch(adminRepositoryProvider).graduatesIn(
+          instituteId: target.instituteId,
+          includeUnassignedInstitute: target.includeUnassignedInstitute,
+          wifaqId: target.wifaqId,
+        );
+  },
+);
+
 final FutureProvider<List<CourseItem>> adminCoursesProvider =
     FutureProvider<List<CourseItem>>((Ref ref) {
   _dependOnSession(ref);

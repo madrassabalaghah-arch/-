@@ -7,6 +7,7 @@ export 'admin_records.dart';
 export 'app_role.dart';
 export 'app_status.dart';
 export 'dashboard_items.dart';
+export 'directory_entries.dart';
 export 'notification_item.dart';
 export 'people.dart';
 export 'urdu_dates.dart';

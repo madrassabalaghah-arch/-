@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
@@ -67,6 +70,7 @@ class AdminWifaqsScreen extends ConsumerWidget {
           .read(adminRepositoryProvider)
           .createWifaq(name: name.text, city: city.text);
       ref.invalidate(adminWifaqsProvider);
+      ref.invalidate(adminWifaqDirectoryProvider);
       ref.invalidate(wifaqListProvider);
       messenger
         ..clearSnackBars()
@@ -84,11 +88,12 @@ class AdminWifaqsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SearchableListScreen<WifaqItem>(
+    return SearchableListScreen<WifaqDirectoryEntry>(
       title: AppStrings.wifaqs,
-      items: ref.watch(adminWifaqsProvider),
-      onRefresh: () => ref.refresh(adminWifaqsProvider.future),
-      searchText: (WifaqItem item) => '${item.name} ${item.city ?? ""}',
+      items: ref.watch(adminWifaqDirectoryProvider),
+      onRefresh: () => ref.refresh(adminWifaqDirectoryProvider.future),
+      searchText: (WifaqDirectoryEntry item) =>
+          '${item.displayName} ${item.city ?? ""}',
       emptyIcon: Icons.account_balance_outlined,
       emptyTitle: AppStrings.noRecordsYet,
       actions: <Widget>[
@@ -98,14 +103,23 @@ class AdminWifaqsScreen extends ConsumerWidget {
           onPressed: () => _addWifaq(context, ref),
         ),
       ],
-      itemBuilder: (BuildContext context, WifaqItem item) => AppListTile(
-        title: item.name,
-        subtitle: item.city,
-        detail: item.city,
+      itemBuilder: (BuildContext context, WifaqDirectoryEntry item) =>
+          AppListTile(
+        title: item.displayName,
+        subtitle:
+            '${AppStrings.maleLabel} ${UrduNumbers.fromInt(item.maleCount)}'
+            '   ${AppStrings.femaleLabel} ${UrduNumbers.fromInt(item.femaleCount)}',
+        detail: '${AppStrings.institutes}: '
+            '${UrduNumbers.fromInt(item.instituteCount)}   •   '
+            '${AppStrings.totalGraduates}: '
+            '${UrduNumbers.fromInt(item.graduateTotal)}',
         icon: Icons.account_balance_outlined,
-        status: item.status,
-        accentColor: AppColors.earthBrown,
-        onTap: () {},
+        status: item.isUnassigned ? null : item.status,
+        accentColor: item.isUnassigned ? AppColors.gray : AppColors.earthBrown,
+        onTap: () => context.push(
+          AppRoutes.adminWifaqInstitutes,
+          extra: item,
+        ),
       ),
     );
   }

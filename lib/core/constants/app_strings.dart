@@ -110,6 +110,12 @@ class AppStrings {
   static const String wifaqName = 'وفاق کا نام';
   static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
   static const String cityOptional = 'شہر (اختیاری)';
+  static const String institutes = 'ادارے';
+  static const String maleLabel = 'فاضل';
+  static const String femaleLabel = 'فاضلہ';
+  static const String unassignedWifaq = 'غیر منسلک وفاق';
+  static const String unassignedInstitute = 'ادارہ درج نہیں';
+  static const String noGraduatesHere = 'یہاں ابھی کوئی فاضلہ / فاضل نہیں۔';
 
   // ---------------------------------------------------------------------
   // Activity administration
