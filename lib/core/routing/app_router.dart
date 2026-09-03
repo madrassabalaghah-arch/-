@@ -77,6 +77,15 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         return null;
       }
 
+      // A failed load is not a sign-out. When Supabase still holds the
+      // persisted session the account is signed in and merely offline, so
+      // hold position and let the screen show its own error state rather
+      // than bouncing the user to sign in and losing their place.
+      if (session.hasError &&
+          ref.read(authRepositoryProvider).currentUser != null) {
+        return null;
+      }
+
       final AppSession? current = session.value;
       final String location = state.matchedLocation;
       final bool isPublic = AppRoutes.publicRoutes.contains(location);

@@ -78,12 +78,8 @@ class AppHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    AppStrings.salaam,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
+                  // No greeting line: the header carries the reader's own
+                  // name and role, nothing else.
                   Text(
                     name,
                     maxLines: 1,

@@ -25,7 +25,6 @@ class AdminReportsScreen extends ConsumerWidget {
         detail: '${item.activityType} • ${item.dateLabel}',
         icon: Icons.description_outlined,
         status: item.status,
-        onTap: () {},
       ),
     );
   }

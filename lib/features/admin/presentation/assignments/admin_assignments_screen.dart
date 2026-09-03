@@ -26,7 +26,6 @@ class AdminAssignmentsScreen extends ConsumerWidget {
         icon: Icons.assignment_ind_outlined,
         status: item.status,
         accentColor: AppColors.oliveGreen,
-        onTap: () {},
       ),
     );
   }

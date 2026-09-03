@@ -16,7 +16,7 @@ import 'auth_scaffold.dart';
 /// Real Supabase registration.
 ///
 /// The role is never sent from here. A database trigger creates the profile
-/// and grants the default فاضلہ / فاضل role, so an account cannot register
+/// and grants the default فاضل / فاضلہ role, so an account cannot register
 /// itself as a mentor or administrator.
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});

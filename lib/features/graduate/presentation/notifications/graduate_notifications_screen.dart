@@ -27,7 +27,6 @@ class GraduateNotificationsScreen extends ConsumerWidget {
         icon: item.icon,
         accentColor:
             item.isUnread ? AppColors.primaryGreen : AppColors.gray,
-        onTap: () {},
       ),
     );
   }

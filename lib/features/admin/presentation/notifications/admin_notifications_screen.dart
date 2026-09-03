@@ -26,7 +26,6 @@ class AdminNotificationsScreen extends ConsumerWidget {
         detail: item.timeLabel,
         icon: item.icon,
         accentColor: item.isUnread ? AppColors.darkGreen : AppColors.gray,
-        onTap: () {},
       ),
     );
   }

@@ -90,7 +90,7 @@ class AppQuickActions {
     ),
     ManagementArea(
       title: AppStrings.practicalActivities,
-      subtitle: 'وہ فہرست جس میں سے فاضلہ / فاضل سرگرمی منتخب کرتے ہیں۔',
+      subtitle: 'وہ فہرست جس میں سے فاضل / فاضلہ سرگرمی منتخب کرتے ہیں۔',
       icon: Icons.volunteer_activism_outlined,
       route: AppRoutes.adminActivities,
     ),
@@ -102,7 +102,7 @@ class AppQuickActions {
     ),
     ManagementArea(
       title: AppStrings.assignments,
-      subtitle: 'فاضلہ / فاضل کو تفویض کردہ ذمہ داریاں۔',
+      subtitle: 'فاضل / فاضلہ کو تفویض کردہ ذمہ داریاں۔',
       icon: Icons.assignment_ind_outlined,
       route: AppRoutes.adminAssignments,
     ),

@@ -86,7 +86,7 @@ class AppStrings {
   static const String mentorRemoved = 'مربی ہٹا دیا گیا ہے۔';
   static const String cannotChangeOwnRole =
       'آپ اپنی حیثیت خود تبدیل نہیں کر سکتے۔';
-  static const String supervisedGraduates = 'زیرِ رہنمائی فاضلہ / فاضل';
+  static const String supervisedGraduates = 'زیرِ رہنمائی فاضل / فاضلہ';
   static const String roleChangeNote =
       'حیثیت تبدیل ہونے کے بعد صارف کو دوبارہ داخل ہونا ہوگا۔';
 
@@ -111,6 +111,10 @@ class AppStrings {
   static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
   static const String cityOptional = 'شہر (اختیاری)';
   static const String institutes = 'ادارے';
+  static const String showPassword = 'پاس ورڈ دکھائیں';
+  static const String hidePassword = 'پاس ورڈ چھپائیں';
+  static const String offlineNotice =
+      'انٹرنیٹ دستیاب نہیں۔ آپ کا اکاؤنٹ کھلا ہے، معلومات پرانی ہو سکتی ہیں۔';
 
   // ---------------------------------------------------------------------
   // Important links
@@ -124,13 +128,14 @@ class AppStrings {
   static const String noLinksYet =
       'ابھی کوئی لنک شامل نہیں کیا گیا۔ منتظم اسے شامل کرے گا۔';
   static const String couldNotOpenLink = 'لنک کھولا نہیں جا سکا۔';
+  static const String couldNotOpenEvidence = 'ثبوت کھولا نہیں جا سکا۔';
   static const String linkMustBeHttp =
       'لنک http:// یا https:// سے شروع ہونا چاہیے۔';
   static const String maleLabel = 'فاضل';
   static const String femaleLabel = 'فاضلہ';
   static const String unassignedWifaq = 'غیر منسلک وفاق';
   static const String unassignedInstitute = 'ادارہ درج نہیں';
-  static const String noGraduatesHere = 'یہاں ابھی کوئی فاضلہ / فاضل نہیں۔';
+  static const String noGraduatesHere = 'یہاں ابھی کوئی فاضل / فاضلہ نہیں۔';
 
   // ---------------------------------------------------------------------
   // Activity administration
@@ -197,7 +202,7 @@ class AppStrings {
   static const String noRecognitionsYet = 'ابھی کوئی اعزاز حاصل نہیں ہوا';
   static const String noFollowUpYet = 'کوئی پیروی مقرر نہیں';
   static const String noNotificationsYet = 'کوئی اطلاع موجود نہیں';
-  static const String noGraduatesYet = 'ابھی کوئی فاضلہ / فاضل تفویض نہیں';
+  static const String noGraduatesYet = 'ابھی کوئی فاضل / فاضلہ تفویض نہیں';
   static const String noReportsYet = 'ابھی کوئی کارگزاری موجود نہیں';
   static const String noEvidenceYet = 'ابھی کوئی ثبوت منسلک نہیں';
   static const String noEvaluationsYet = 'ابھی کوئی جائزہ مکمل نہیں ہوا';
@@ -267,18 +272,18 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Mentor dashboard
   // ---------------------------------------------------------------------
-  static const String myGraduates = 'میرے زیرِ رہنمائی فاضلہ / فاضل';
+  static const String myGraduates = 'میرے زیرِ رہنمائی فاضل / فاضلہ';
   static const String newReports = 'نئی کارگزاریاں';
   static const String awaitingReview = 'جائزے کے لیے منتظر';
   static const String underReview = 'زیرِ جائزہ';
   static const String completedReviews = 'مکمل جائزے';
   static const String lateSubmissions = 'تاخیر سے جمع ہونے والی';
   static const String pendingReviews = 'زیرِ التوا جائزے';
-  static const String recentGraduates = 'حالیہ فاضلہ / فاضل';
-  static const String graduateName = 'فاضلہ / فاضل کا نام';
+  static const String recentGraduates = 'حالیہ فاضل / فاضلہ';
+  static const String graduateName = 'فاضل / فاضلہ کا نام';
   static const String instituteName = 'ادارے کا نام';
   static const String reportStatus = 'کارگزاری کی حیثیت';
-  static const String graduateDetails = 'فاضلہ / فاضل کی تفصیلات';
+  static const String graduateDetails = 'فاضل / فاضلہ کی تفصیلات';
   static const String reportDetails = 'کارگزاری کی تفصیلات';
   static const String reportReview = 'کارگزاری کا جائزہ';
   static const String assessment = 'جانچ';
@@ -286,19 +291,19 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Admin dashboard
   // ---------------------------------------------------------------------
-  static const String totalGraduates = 'کل فاضلہ / فاضل';
-  static const String activeGraduates = 'فعال فاضلہ / فاضل';
+  static const String totalGraduates = 'کل فاضل / فاضلہ';
+  static const String activeGraduates = 'فعال فاضل / فاضلہ';
   static const String totalMentors = 'کل مربی';
   static const String pendingReports = 'زیرِ التوا کارگزاریاں';
   static const String managementAreas = 'انتظامی حصے';
-  static const String graduateManagement = 'فاضلہ / فاضل کا انتظام';
+  static const String graduateManagement = 'فاضل / فاضلہ کا انتظام';
   static const String mentorManagement = 'مربیوں کا انتظام';
   static const String wifaqManagement = 'وفاق کا انتظام';
   static const String courses = 'کورسز';
   static const String assignments = 'ذمہ داریاں';
   static const String allReports = 'کارگزاریاں';
   static const String standards = 'جانچ کے معیارات';
-  static const String graduates = 'فاضلہ / فاضل';
+  static const String graduates = 'فاضل / فاضلہ';
   static const String mentors = 'مربی';
   static const String wifaqs = 'وفاق';
   static const String systemOverview = 'نظام کا خلاصہ';
@@ -314,7 +319,7 @@ class AppStrings {
   static const String signInSubtitle =
       'اپنا ای میل پتہ اور پاس ورڈ درج کریں۔';
   static const String signUpSubtitle =
-      'اندراج کے بعد آپ کو فاضلہ / فاضل کی حیثیت دی جائے گی۔';
+      'اندراج کے بعد آپ کو فاضل / فاضلہ کی حیثیت دی جائے گی۔';
   static const String noAccountYet = 'اکاؤنٹ نہیں ہے؟';
   static const String alreadyHaveAccount = 'پہلے سے اکاؤنٹ موجود ہے؟';
   static const String labelPassword = 'پاس ورڈ';
@@ -375,7 +380,7 @@ class AppStrings {
   static const String hintEmail = 'مثلاً: name@example.com';
   static const String hintReportDetail =
       'اپنی عملی سرگرمی کی مکمل تفصیل یہاں تحریر کریں۔';
-  static const String hintSearchGraduate = 'فاضلہ / فاضل کا نام تلاش کریں';
+  static const String hintSearchGraduate = 'فاضل / فاضلہ کا نام تلاش کریں';
   static const String hintSearchReport = 'کارگزاری تلاش کریں';
   static const String hintSearchGeneral = 'تلاش کریں';
 

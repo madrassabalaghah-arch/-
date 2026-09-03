@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 enum AppRole {
   graduate(
     id: 'graduate',
-    urduTitle: 'فاضلہ / فاضل',
+    urduTitle: 'فاضل / فاضلہ',
     urduDescription:
         'اپنی تربیت، عملی سرگرمیوں، کارگزاری اور پیش رفت کا جائزہ لیں۔',
     icon: Icons.school_outlined,
@@ -16,13 +16,13 @@ enum AppRole {
     id: 'mentor',
     urduTitle: 'مربی',
     urduDescription:
-        'اپنے زیرِ رہنمائی فاضلہ / فاضل کی کارگزاریوں اور پیش رفت کا جائزہ لیں۔',
+        'اپنے زیرِ رہنمائی فاضل / فاضلہ کی کارگزاریوں اور پیش رفت کا جائزہ لیں۔',
     icon: Icons.supervisor_account_outlined,
   ),
   admin(
     id: 'admin',
     urduTitle: 'منتظم',
-    urduDescription: 'فاضلہ / فاضل، مربیوں، کارگزاریوں اور نظام کا انتظام کریں۔',
+    urduDescription: 'فاضل / فاضلہ، مربیوں، کارگزاریوں اور نظام کا انتظام کریں۔',
     icon: Icons.admin_panel_settings_outlined,
   );
 

@@ -9,7 +9,7 @@ import '../../core/theme/app_spacing.dart';
 /// Named [AppFormField] rather than FormField so it does not collide with the
 /// Flutter class of that name. The Urdu label sits above the field and is
 /// aligned to the start, which resolves to the right in the Urdu layout.
-class AppFormField extends StatelessWidget {
+class AppFormField extends StatefulWidget {
   const AppFormField({
     super.key,
     required this.label,
@@ -43,7 +43,8 @@ class AppFormField extends StatelessWidget {
   final String? initialValue;
   final ValueChanged<String>? onChanged;
 
-  /// Hides the entered text, for password fields.
+  /// Hides the entered text, for password fields. A field declared this way
+  /// starts hidden and gains an eye button to reveal what was typed.
   final bool obscureText;
 
   /// The standard required-field validator, in Urdu.
@@ -53,6 +54,16 @@ class AppFormField extends StatelessWidget {
     }
     return null;
   }
+
+  @override
+  State<AppFormField> createState() => _AppFormFieldState();
+}
+
+class _AppFormFieldState extends State<AppFormField> {
+  /// Whether the text is currently hidden. Seeded from the widget so a
+  /// password starts hidden, then toggled by the eye button. Only this flag
+  /// changes, so revealing the text never disturbs what was typed.
+  late bool _hidden = widget.obscureText;
 
   @override
   Widget build(BuildContext context) {
@@ -70,15 +81,15 @@ class AppFormField extends StatelessWidget {
             children: <Widget>[
               Flexible(
                 child: Text(
-                  label,
+                  widget.label,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: enabled
+                    color: widget.enabled
                         ? AppColors.textSecondary
                         : AppColors.disabled,
                   ),
                 ),
               ),
-              if (isRequired)
+              if (widget.isRequired)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(start: AppSpacing.xxs),
                   child: Text(
@@ -92,23 +103,41 @@ class AppFormField extends StatelessWidget {
           ),
         ),
         TextFormField(
-          controller: controller,
-          initialValue: controller == null ? initialValue : null,
-          validator: validator,
-          keyboardType: keyboardType,
-          maxLines: obscureText ? 1 : maxLines,
-          obscureText: obscureText,
-          enabled: enabled,
-          onChanged: onChanged,
+          controller: widget.controller,
+          initialValue:
+              widget.controller == null ? widget.initialValue : null,
+          validator: widget.validator,
+          keyboardType: widget.keyboardType,
+          maxLines: widget.obscureText ? 1 : widget.maxLines,
+          obscureText: _hidden,
+          enabled: widget.enabled,
+          onChanged: widget.onChanged,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: enabled ? AppColors.textPrimary : AppColors.disabled,
+            color: widget.enabled ? AppColors.textPrimary : AppColors.disabled,
           ),
           decoration: InputDecoration(
-            hintText: hintText,
-            fillColor: enabled ? AppColors.white : AppColors.surfaceSoft,
-            prefixIcon: prefixIcon == null
+            hintText: widget.hintText,
+            fillColor: widget.enabled ? AppColors.white : AppColors.surfaceSoft,
+            prefixIcon: widget.prefixIcon == null
                 ? null
-                : Icon(prefixIcon, size: 20, color: AppColors.gray),
+                : Icon(widget.prefixIcon, size: 20, color: AppColors.gray),
+            // Only a password field carries the reveal button, so ordinary
+            // fields look exactly as they did.
+            suffixIcon: !widget.obscureText
+                ? null
+                : IconButton(
+                    tooltip: _hidden
+                        ? AppStrings.showPassword
+                        : AppStrings.hidePassword,
+                    icon: Icon(
+                      _hidden
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 20,
+                      color: AppColors.gray,
+                    ),
+                    onPressed: () => setState(() => _hidden = !_hidden),
+                  ),
           ),
         ),
       ],

@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:madrassa_graduate_app/app.dart';
+import 'package:madrassa_graduate_app/core/config/app_config.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
 import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
 import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
@@ -257,5 +258,67 @@ void main() {
       expect(AppRoutes.isFullScreen(path), isFalse,
           reason: '$path is a bottom navigation destination');
     }
+  });
+
+  test('the official name and tagline are exact', () {
+    expect(AppConfig.appNameUrdu, 'کاروان فضلاء مدرسہ ڈاٹ پی کے');
+    expect(AppConfig.appTaglineUrdu, 'علم سے عمل، عمل سے اثر تک');
+  });
+
+  test('فاضل is written before فاضلہ, and no greeting survives', () {
+    // Spec order: فاضل first, فاضلہ second, everywhere the two appear together.
+    for (final String text in <String>[
+      AppStrings.graduates,
+      AppStrings.totalGraduates,
+      AppStrings.activeGraduates,
+      AppStrings.myGraduates,
+      AppStrings.graduateManagement,
+      AppStrings.hintSearchGraduate,
+      AppRole.graduate.urduTitle,
+    ]) {
+      expect(text.contains('فاضلہ / فاضل'), isFalse,
+          reason: '"$text" still puts فاضلہ first');
+      expect(text.contains('فاضل'), isTrue);
+    }
+  });
+
+  testWidgets('the password can be revealed without losing what was typed',
+      (WidgetTester tester) async {
+    await _pumpApp(tester);
+    await tester.tap(find.text(AppStrings.continueAction));
+    await tester.pumpAndSettle();
+
+    // The greeting must be gone from every screen that used to carry it.
+    expect(find.textContaining('السلام'), findsNothing);
+
+    final Finder password = find.ancestor(
+      of: find.text(AppStrings.labelPassword),
+      matching: find.byType(Column),
+    );
+    expect(password, findsWidgets);
+
+    await tester.enterText(
+        find.byType(TextFormField).last, 'qwertyui123');
+    await tester.pump();
+
+    TextField field() => tester.widget<TextField>(
+        find.descendant(
+          of: find.byType(TextFormField).last,
+          matching: find.byType(TextField),
+        ));
+
+    expect(field().obscureText, isTrue,
+        reason: 'the password must start hidden');
+
+    await tester.tap(find.byIcon(Icons.visibility_outlined).last);
+    await tester.pumpAndSettle();
+
+    expect(field().obscureText, isFalse, reason: 'the eye must reveal it');
+    expect(find.text('qwertyui123'), findsOneWidget,
+        reason: 'revealing must not clear the entered password');
+
+    await tester.tap(find.byIcon(Icons.visibility_off_outlined).last);
+    await tester.pumpAndSettle();
+    expect(field().obscureText, isTrue, reason: 'tapping again must hide it');
   });
 }

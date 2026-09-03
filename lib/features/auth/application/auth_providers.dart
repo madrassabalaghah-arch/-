@@ -27,7 +27,14 @@ class AppSession {
     required this.user,
     required this.profile,
     required this.roles,
+    this.isStale = false,
   });
+
+  /// True when the last refresh could not reach the server, so the profile
+  /// and roles below are the previous successful load rather than fresh
+  /// values. The session itself is still valid — this only says the figures
+  /// may be out of date, so the interface can say so instead of pretending.
+  final bool isStale;
 
   final User user;
 
@@ -61,6 +68,14 @@ class AppSession {
 /// Rebuilds whenever Supabase reports an auth change, so signing out
 /// anywhere in the app immediately invalidates every dependent screen.
 class AppSessionNotifier extends AsyncNotifier<AppSession?> {
+  /// The last load that actually reached the server.
+  ///
+  /// Kept so that losing connectivity degrades to stale values instead of
+  /// looking like a sign-out: the Supabase SDK still holds the persisted
+  /// session, so the account is signed in even when the profile and role
+  /// queries cannot complete.
+  AppSession? _lastGood;
+
   @override
   Future<AppSession?> build() async {
     // Re-run on every auth event.
@@ -69,19 +84,41 @@ class AppSessionNotifier extends AsyncNotifier<AppSession?> {
     final AuthRepository repository = ref.watch(authRepositoryProvider);
     final User? user = repository.currentUser;
     if (user == null) {
+      _lastGood = null;
       return null;
     }
 
-    final List<Object?> results = await Future.wait<Object?>(<Future<Object?>>[
-      repository.loadProfile(user.id),
-      repository.loadRoles(user.id),
-    ]);
+    try {
+      final List<Object?> results = await Future.wait<Object?>(<Future<Object?>>[
+        repository.loadProfile(user.id),
+        repository.loadRoles(user.id),
+      ]);
 
-    return AppSession(
-      user: user,
-      profile: results[0] as AppUser?,
-      roles: (results[1] as List<AppRole>?) ?? const <AppRole>[],
-    );
+      final AppSession session = AppSession(
+        user: user,
+        profile: results[0] as AppUser?,
+        roles: (results[1] as List<AppRole>?) ?? const <AppRole>[],
+      );
+      _lastGood = session;
+      return session;
+    } catch (_) {
+      // Reaching here means the queries failed while the account is still
+      // authenticated, which is a network problem rather than a rejected
+      // session. Serving the previous values keeps the user where they were.
+      final AppSession? cached = _lastGood;
+      if (cached != null) {
+        return AppSession(
+          user: user,
+          profile: cached.profile,
+          roles: cached.roles,
+          isStale: true,
+        );
+      }
+      // A cold start with no cache genuinely cannot tell which area to open,
+      // so the error surfaces — but the redirect below still refuses to treat
+      // it as a sign-out.
+      rethrow;
+    }
   }
 
   /// Re-reads the profile and roles, for example after editing the profile.

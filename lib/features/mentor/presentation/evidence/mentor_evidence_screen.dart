@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/models.dart';
+import '../../../../shared/presentation/evidence_viewer.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
 
@@ -26,7 +27,7 @@ class MentorEvidenceScreen extends ConsumerWidget {
         icon: item.icon,
         status: item.status,
         accentColor: AppColors.tealGreen,
-        onTap: () {},
+        onTap: () => openEvidence(context, ref, item),
       ),
     );
   }

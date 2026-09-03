@@ -36,7 +36,6 @@ class GraduateEvaluationsScreen extends ConsumerWidget {
                       color: AppColors.earthBrown,
                     ),
               ),
-        onTap: () {},
       ),
     );
   }

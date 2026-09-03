@@ -90,7 +90,7 @@ class AdminRepository {
   /// Accounts that actually hold the graduate role.
   ///
   /// This filters by role rather than returning every profile. Without the
-  /// filter a promoted mentor kept appearing in the فاضلہ / فاضل list as well
+  /// filter a promoted mentor kept appearing in the فاضل / فاضلہ list as well
   /// as the مربی one, because every account has a profile row regardless of
   /// what it is.
   Future<List<GraduateSummary>> graduates() async {

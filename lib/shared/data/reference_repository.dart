@@ -29,25 +29,74 @@ class ReferenceRepository {
     return rows.map(InstituteItem.fromMap).toList();
   }
 
-  /// Adds an institute and returns the stored row.
+  /// Adds an institute, or returns the existing one when the same institution
+  /// has already been registered under this wifaq.
   ///
-  /// It is attached to the wifaq the user selected, so the list stays
-  /// organised rather than becoming one flat pile of names.
+  /// The database holds a normalised shadow of the name (`name_key`) with a
+  /// unique index per wifaq, so "جامعہ اشاعت الاسلام" typed with stray spaces
+  /// or a diacritic is recognised as the same institution rather than starting
+  /// a second group. The name is stored exactly as the user wrote it; only the
+  /// matching is normalised. A concurrent insert loses the race against that
+  /// index, so the duplicate error is caught and the winning row returned.
   Future<InstituteItem> createInstitute({
     required String name,
     required String wifaqId,
     String? city,
   }) async {
-    final Map<String, dynamic> row = await _client
-        .from('institutes')
-        .insert(<String, dynamic>{
-          'name': name.trim(),
-          'wifaq_id': wifaqId,
-          'city': city?.trim().isEmpty ?? true ? null : city!.trim(),
-        })
-        .select()
-        .single();
-    return InstituteItem.fromMap(row);
+    try {
+      final Map<String, dynamic> row = await _client
+          .from('institutes')
+          .insert(<String, dynamic>{
+            'name': name.trim(),
+            'wifaq_id': wifaqId,
+            'city': city?.trim().isEmpty ?? true ? null : city!.trim(),
+          })
+          .select()
+          .single();
+      return InstituteItem.fromMap(row);
+    } on PostgrestException catch (error) {
+      // 23505 is unique_violation: this institution already exists here.
+      if (error.code != '23505') {
+        rethrow;
+      }
+      final Map<String, dynamic> existing = await _client
+          .from('institutes')
+          .select()
+          .eq('wifaq_id', wifaqId)
+          .eq('name_key', _instituteKey(name))
+          .single();
+      return InstituteItem.fromMap(existing);
+    }
+  }
+
+  /// Mirrors the `name_key` generated column so an existing institution can be
+  /// looked up by the same rule the database matched on.
+  static String _instituteKey(String name) {
+    const String diacritics = 'ً-ْٰ';
+    const String joiners = '​-‏';
+    final String stripped = name.replaceAll(
+      RegExp('[$diacritics$joiners]'),
+      '',
+    );
+
+    final StringBuffer folded = StringBuffer();
+    for (final int rune in stripped.runes) {
+      // Arabic-Indic (٠-٩) and extended Arabic-Indic (۰-۹) digits fold to
+      // Latin, so ۱۲ and 12 are the same institution.
+      if (rune >= 0x0660 && rune <= 0x0669) {
+        folded.write(rune - 0x0660);
+      } else if (rune >= 0x06F0 && rune <= 0x06F9) {
+        folded.write(rune - 0x06F0);
+      } else {
+        folded.writeCharCode(rune);
+      }
+    }
+
+    return folded
+        .toString()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .toLowerCase();
   }
 
   /// The shared catalogue of practical activities.
