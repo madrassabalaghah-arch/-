@@ -216,7 +216,6 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Greetings and shared headings
   // ---------------------------------------------------------------------
-  static const String salaam = 'السلام علیکم';
   static const String dashboard = 'ڈیش بورڈ';
   static const String profile = 'میرا پروفائل';
   static const String notifications = 'اطلاعات';
