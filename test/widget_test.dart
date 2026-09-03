@@ -17,6 +17,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:madrassa_graduate_app/app.dart';
 import 'package:madrassa_graduate_app/core/config/app_config.dart';
+import 'package:madrassa_graduate_app/features/admin/presentation/workshop/csv_import.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
 import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
 import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
@@ -404,5 +405,39 @@ void main() {
         reason: 'the values are the previous load, and must say so');
     expect(offline.roles, <AppRole>[AppRole.graduate],
         reason: 'the role must survive, or routing would send them to noRole');
+  });
+
+  test('a spreadsheet export imports, byte-order mark and quoted fields and all',
+      () {
+    // Exactly what Excel's "CSV UTF-8" export produces: a leading BOM, CRLF
+    // line endings, and a quoted field containing a comma.
+    const String csv = '\ufeff'
+        'registration_number,full_name,father_name,gender,workshop_date\r\n'
+        'WS-2026/001,محمد عثمان,عبداللہ,male,2026-01-15\r\n'
+        'WS-2026/002,عائشہ صدیقہ,محمد کریم,female,2026-01-15\r\n'
+        'WS-2026/003,"خان, محمد",کریم,م,2026-01-15\r\n'
+        ',بغیر نمبر,,male,\r\n';
+
+    final ({List<Map<String, dynamic>> rows, int invalid}) parsed =
+        CsvImport.toParticipants(csv);
+
+    expect(parsed.rows.length, 3,
+        reason: 'the BOM must not stop the header from being recognised');
+    expect(parsed.invalid, 1, reason: 'the row with no number is refused');
+
+    expect(parsed.rows.first['registration_number'], 'WS-2026/001');
+    expect(parsed.rows.first['full_name'], 'محمد عثمان');
+    expect(parsed.rows.first['gender'], 'male');
+    expect(parsed.rows[1]['gender'], 'female');
+
+    // A quoted field keeps its comma instead of splitting into two columns.
+    expect(parsed.rows[2]['full_name'], 'خان, محمد');
+    // An unrecognised gender spelling is left unset rather than guessed at.
+    expect(parsed.rows[2]['gender'], isNull);
+
+    // Attendance is what a row in the register means.
+    expect(parsed.rows.first['completed'], isTrue);
+    expect(parsed.rows.first['eligible'], isTrue);
+    expect(parsed.rows.first['workshop_date'], '2026-01-15');
   });
 }

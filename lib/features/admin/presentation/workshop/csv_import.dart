@@ -21,7 +21,13 @@ class CsvImport {
   ];
 
   /// Splits raw CSV text into rows of fields.
-  static List<List<String>> parse(String input) {
+  static List<List<String>> parse(String rawInput) {
+    // Excel's "CSV UTF-8" export begins with a byte-order mark. Left in place
+    // it becomes part of the first header name, so `registration_number`
+    // would never match and every row would be counted invalid.
+    final String input =
+        rawInput.startsWith('﻿') ? rawInput.substring(1) : rawInput;
+
     final List<List<String>> rows = <List<String>>[];
     List<String> row = <String>[];
     final StringBuffer field = StringBuffer();
