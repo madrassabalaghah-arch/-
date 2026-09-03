@@ -10,7 +10,7 @@ class AppConfig {
   static const String appName = 'MADRASSA.PK Graduate Platform';
 
   /// Temporary product name shown to users inside the Urdu interface.
-  static const String appNameUrdu = 'کارواں فضلاء مدرسہ ڈاٹ پی کے';
+  static const String appNameUrdu = 'کاروان فضلاء مدرسہ ڈاٹ پی کے';
 
   /// Secondary line displayed under the brand mark.
   static const String appTaglineUrdu = 'علم سے عمل، عمل سے اثر تک';

@@ -8,12 +8,12 @@ import '../../../core/routing/app_routes.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_theme.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../shared/widgets/brand_mark.dart';
 
 /// Shared frame for the sign in and sign up screens.
 ///
@@ -86,24 +86,7 @@ class AuthScaffold extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Center(
-                    child: Container(
-                      height: 84,
-                      width: 84,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.green,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.gold, width: 2.4),
-                        boxShadow: AppShadows.tinted(AppColors.primaryGreen),
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        size: 38,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ),
+                  const Center(child: BrandMark(size: 92)),
                   AppSpacing.gapLg,
                   Text(
                     AppConfig.appNameUrdu,

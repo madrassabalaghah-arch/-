@@ -6,6 +6,7 @@ library;
 
 export 'app_bottom_navigation.dart';
 export 'async_section.dart';
+export 'brand_mark.dart';
 export 'app_header.dart';
 export 'app_list_tile.dart';
 export 'app_scaffold.dart';
