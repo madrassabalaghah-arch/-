@@ -13,6 +13,7 @@ import '../../features/admin/presentation/notifications/admin_notifications_scre
 import '../../features/admin/presentation/recognition/admin_recognition_screen.dart';
 import '../../features/admin/presentation/reports/admin_report_detail_screen.dart';
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
+import '../../features/admin/presentation/settings/admin_settings_screen.dart';
 import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
@@ -488,6 +489,12 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminReportDetailName,
     builder: (BuildContext context, GoRouterState state) =>
         AdminReportDetailScreen(report: state.extra! as ReportItem),
+  ),
+  GoRoute(
+    path: AppRoutes.adminSettings,
+    name: AppRoutes.adminSettingsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminSettingsScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminEvidence,

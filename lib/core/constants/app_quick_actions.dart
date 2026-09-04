@@ -119,6 +119,12 @@ class AppQuickActions {
       route: AppRoutes.adminReports,
     ),
     ManagementArea(
+      title: AppStrings.systemSettings,
+      subtitle: 'کارگزاری کا وقفہ اور اعزازات کے اصول۔',
+      icon: Icons.tune_outlined,
+      route: AppRoutes.adminSettings,
+    ),
+    ManagementArea(
       title: AppStrings.standards,
       subtitle: 'جائزے کے معیارات اور ان کا وزن۔',
       icon: Icons.rule_outlined,

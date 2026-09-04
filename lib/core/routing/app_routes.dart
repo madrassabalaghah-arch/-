@@ -135,6 +135,9 @@ class AppRoutes {
   static const String adminEvidence = '/admin/evidence';
   static const String adminEvidenceName = 'adminEvidence';
 
+  static const String adminSettings = '/admin/settings';
+  static const String adminSettingsName = 'adminSettings';
+
   static const String adminReportDetail = '/admin/report-detail';
   static const String adminReportDetailName = 'adminReportDetail';
 
@@ -184,6 +187,7 @@ class AppRoutes {
     graduateActivityDetail,
     adminEvidence,
     adminReportDetail,
+    adminSettings,
     mentorGraduates,
     mentorReviews,
     mentorEvidence,

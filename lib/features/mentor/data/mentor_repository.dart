@@ -186,6 +186,28 @@ class MentorRepository {
         .update(<String, dynamic>{'status': 'completed'}).eq('id', reportId);
   }
 
+  /// Hands a کارگزاری back for correction instead of completing it.
+  ///
+  /// The comment is written as feedback so the graduate can see what to fix,
+  /// and the report moves to the revision state rather than leaving the queue,
+  /// so it comes back once the work has been amended.
+  Future<void> requestRevision({
+    required String reportId,
+    required String graduateId,
+    required String comment,
+  }) async {
+    await _client.from('reports').update(<String, dynamic>{
+      'status': 'revision_required',
+    }).eq('id', reportId);
+
+    await _client.from('mentor_feedback').insert(<String, dynamic>{
+      'mentor_id': _uid,
+      'graduate_id': graduateId,
+      'subject': 'اصلاح درکار',
+      'message': comment.trim(),
+    });
+  }
+
   /// Writes guidance for an assigned graduate.
   Future<void> sendFeedback({
     required String graduateId,

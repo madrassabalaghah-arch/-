@@ -173,6 +173,61 @@ class AdminRepository {
     return rows.map(EvidenceItem.fromMap).toList();
   }
 
+  /// How many months pass between one کارگزاری and the next.
+  ///
+  /// Stored as a setting rather than compiled in, so the organisation can move
+  /// between a monthly, two monthly or three monthly cycle at any time.
+  Future<int> followUpInterval() async {
+    final Map<String, dynamic>? row = await _client
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'follow_up_interval_months')
+        .maybeSingle();
+    final Object? value = row?['value'];
+    if (value is int) {
+      return value;
+    }
+    return int.tryParse('${value ?? ''}') ?? 3;
+  }
+
+  Future<void> setFollowUpInterval(int months) async {
+    await _client.from('app_settings').upsert(<String, dynamic>{
+      'key': 'follow_up_interval_months',
+      'value': months,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  Future<List<RecognitionRule>> recognitionRules() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('recognition_rules')
+        .select()
+        .order('created_at', ascending: false);
+    return rows.map(RecognitionRule.fromMap).toList();
+  }
+
+  Future<void> createRecognitionRule({
+    required String title,
+    required RecognitionCriterion criterion,
+    required int threshold,
+    String? detail,
+  }) async {
+    await _client.from('recognition_rules').insert(<String, dynamic>{
+      'title': title.trim(),
+      'detail': detail?.trim().isEmpty ?? true ? null : detail!.trim(),
+      'criterion': criterion.dbValue,
+      'threshold': threshold < 1 ? 1 : threshold,
+      'is_active': true,
+    });
+  }
+
+  Future<void> setRuleActive({required String id, required bool active}) async {
+    await _client
+        .from('recognition_rules')
+        .update(<String, dynamic>{'is_active': active})
+        .eq('id', id);
+  }
+
   Future<List<WifaqItem>> wifaqs() async {
     final List<Map<String, dynamic>> rows =
         await _client.from('wifaqs').select().order('name');

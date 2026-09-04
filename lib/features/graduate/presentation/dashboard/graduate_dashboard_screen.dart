@@ -7,6 +7,7 @@ import '../../../../core/routing/app_navigation.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
@@ -71,6 +72,17 @@ class GraduateDashboardScreen extends ConsumerWidget {
                     onRetry: () => ref.invalidate(graduateJourneyProvider),
                     builder: (BuildContext context, JourneyProgress journey) =>
                         ProgressCard(journey: journey),
+                  ),
+                  AppSpacing.gapXl,
+                  const SectionHeader(title: AppStrings.followUpTitle),
+                  AsyncSection<FollowUpStatus?>(
+                    value: ref.watch(followUpStatusProvider),
+                    isEmpty: (FollowUpStatus? f) => f == null,
+                    emptyTitle: AppStrings.followUpNone,
+                    emptyIcon: Icons.event_repeat_outlined,
+                    onRetry: () => ref.invalidate(followUpStatusProvider),
+                    builder: (BuildContext context, FollowUpStatus? status) =>
+                        _FollowUpCard(status: status!),
                   ),
                   AppSpacing.gapXl,
                   SectionHeader(
@@ -203,6 +215,71 @@ class GraduateDashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Where the reader stands in the follow-up cycle: when the next کارگزاری is
+/// expected, and how many they have submitted so far.
+///
+/// Every figure is computed by the database from the configured interval, so
+/// changing that interval changes this immediately.
+class _FollowUpCard extends StatelessWidget {
+  const _FollowUpCard({required this.status});
+
+  final FollowUpStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool warn = status.isOverdue || status.isDueSoon;
+    final Color accent = warn ? AppColors.warning : AppColors.primaryGreen;
+
+    return DashboardCard(
+      accentColor: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(
+                status.isOverdue
+                    ? Icons.error_outline
+                    : Icons.event_available_outlined,
+                color: accent,
+              ),
+              AppSpacing.hGapMd,
+              Expanded(
+                child: Text(
+                  status.isOverdue
+                      ? AppStrings.followUpOverdue
+                      : AppStrings.followUpDue,
+                  style: theme.textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          if (status.dueOn != null) ...<Widget>[
+            AppSpacing.gapMd,
+            Text(
+              UrduDates.label(status.dueOn),
+              style: theme.textTheme.titleMedium?.copyWith(color: accent),
+            ),
+          ],
+          AppSpacing.gapSm,
+          Text(
+            status.isOverdue
+                ? '${AppStrings.followUpSubmitted}: '
+                    '${UrduNumbers.fromInt(status.submittedCount)}'
+                : '${AppStrings.followUpDaysLeft}: '
+                    '${UrduNumbers.fromInt(status.daysRemaining)} '
+                    '${AppStrings.daysUnit}   •   '
+                    '${AppStrings.followUpSubmitted}: '
+                    '${UrduNumbers.fromInt(status.submittedCount)}',
+            style: theme.textTheme.labelSmall,
+          ),
+        ],
       ),
     );
   }

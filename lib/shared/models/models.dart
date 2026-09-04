@@ -13,6 +13,7 @@ export 'notification_item.dart';
 export 'people.dart';
 export 'urdu_dates.dart';
 export 'recognition_item.dart';
+export 'recognition_rule.dart';
 export 'work_items.dart';
 export 'course_participant.dart';
 export 'follow_up_status.dart';

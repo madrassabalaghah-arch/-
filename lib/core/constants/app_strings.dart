@@ -131,6 +131,34 @@ class AppStrings {
   static const String followUpOverdue = 'مقررہ وقت گزر چکا ہے';
   static const String followUpDaysLeft = 'باقی دن';
   static const String followUpSubmitted = 'جمع شدہ کارگزاریاں';
+  static const String followUpNone = 'ابھی تک کوئی کارگزاری جمع نہیں کی گئی۔';
+  static const String daysUnit = 'دن';
+  static const String monthsUnit = 'ماہ';
+
+  // ---------------------------------------------------------------------
+  // System settings and recognition rules
+  // ---------------------------------------------------------------------
+  static const String systemSettings = 'نظام کی ترتیبات';
+  static const String followUpIntervalLabel = 'کارگزاری کا وقفہ';
+  static const String followUpIntervalHelp =
+      'ہر کتنے ماہ بعد فاضل / فاضلہ سے کارگزاری طلب کی جائے۔';
+  static const String settingSaved = 'ترتیب محفوظ کر دی گئی ہے۔';
+  static const String recognitionRules = 'اعزازات کے اصول';
+  static const String addRecognitionRule = 'نیا اصول شامل کریں';
+  static const String ruleTitle = 'اعزاز کا عنوان';
+  static const String ruleDetail = 'وضاحت (اختیاری)';
+  static const String ruleCriterion = 'کس بنیاد پر';
+  static const String ruleThreshold = 'مطلوبہ تعداد';
+  static const String ruleAdded = 'اصول شامل کر دیا گیا ہے۔';
+  static const String noRulesYet =
+      'ابھی کوئی اصول مقرر نہیں۔ جب تک اصول شامل نہ ہو، کوئی اعزاز خودکار طور پر نہیں دیا جائے گا۔';
+  static const String criterionSubmitted = 'جمع شدہ کارگزاریاں';
+  static const String criterionReviewed = 'مکمل جائزہ شدہ کارگزاریاں';
+  static const String criterionOnTime = 'بروقت کارگزاریاں';
+  static const String criterionEvidence = 'شامل کردہ ثبوت';
+  static const String requestRevision = 'اصلاح کے لیے واپس بھیجیں';
+  static const String revisionRequested =
+      'کارگزاری اصلاح کے لیے واپس بھیج دی گئی ہے۔';
   static const String relatedReports = 'متعلقہ کارگزاریاں';
   static const String noEvidenceForReport =
       'اس کارگزاری کے ساتھ کوئی ثبوت منسلک نہیں۔';

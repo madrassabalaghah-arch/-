@@ -37,6 +37,47 @@ class _MentorReportReviewScreenState
   /// Writes the evaluation, its per-standard scores and the report's new
   /// status in one repository call. Row level security rejects this if the
   /// graduate is not assigned to the signed-in mentor.
+  /// Sends the کارگزاری back for correction. The comment is required, because
+  /// handing work back without saying why helps nobody.
+  Future<void> _requestRevision(ReportItem report) async {
+    if (_comment.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(content: Text(AppStrings.validationRequired)),
+        );
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(mentorRepositoryProvider).requestRevision(
+            reportId: report.id,
+            graduateId: report.graduateId,
+            comment: _comment.text,
+          );
+      ref.invalidate(mentorReportsProvider);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(content: Text(AppStrings.revisionRequested)),
+        );
+      Navigator.of(context).maybePop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(SnackBar(
+            content: Text('${AppStrings.somethingWentWrong} — $error'),
+          ));
+      }
+    }
+  }
+
   Future<void> _submit(ReportItem report, List<StandardItem> standards) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -145,8 +186,18 @@ class _MentorReportReviewScreenState
             ),
             AppSpacing.gapMd,
             SecondaryButton(
+              label: AppStrings.requestRevision,
+              icon: Icons.edit_outlined,
+              onPressed: _busy || reports.isEmpty
+                  ? null
+                  : () => _requestRevision(reports.first),
+            ),
+            AppSpacing.gapMd,
+            SecondaryButton(
               label: AppStrings.cancel,
-              onPressed: _busy ? null : () => setState(_scores.clear),
+              // Cancel leaves the review without saving, returning to wherever
+              // it was opened from rather than only emptying the form.
+              onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
             ),
           ],
         ),

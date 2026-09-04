@@ -414,3 +414,17 @@ final FutureProvider<List<ImportBatch>> importHistoryProvider =
   _dependOnSession(ref);
   return ref.watch(courseRepositoryProvider).importHistory();
 });
+
+/// The organisation's configured follow-up cycle, in months.
+final FutureProvider<int> followUpIntervalProvider =
+    FutureProvider<int>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).followUpInterval();
+});
+
+/// The configurable rules that grant a recognition.
+final FutureProvider<List<RecognitionRule>> recognitionRulesProvider =
+    FutureProvider<List<RecognitionRule>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).recognitionRules();
+});
