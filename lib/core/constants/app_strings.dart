@@ -111,6 +111,26 @@ class AppStrings {
   static const String wifaqAdded = 'وفاق شامل کر دیا گیا ہے۔';
   static const String cityOptional = 'شہر (اختیاری)';
   static const String institutes = 'ادارے';
+
+  // ---------------------------------------------------------------------
+  // Kar-guzari detail and the follow-up cycle
+  // ---------------------------------------------------------------------
+  static const String activityTypeLabel = 'سرگرمی کی نوعیت';
+  static const String activityTypeHint = 'مثلاً: ورکشاپ، درس، ویبینار، سیمینار';
+  static const String locationLabel = 'مقام';
+  static const String organisationLabel = 'ادارہ یا معاشرتی حلقہ';
+  static const String beneficiariesLabel = 'مستفید افراد کی تعداد';
+  static const String learningAppliedLabel = 'کورس سے کیا عملی طور پر نافذ کیا';
+  static const String impactLabel = 'عملی اثر';
+  static const String resultsLabel = 'نتائج';
+  static const String challengesLabel = 'درپیش مشکلات';
+  static const String futurePlanLabel = 'آئندہ کا منصوبہ';
+  static const String moreDetails = 'مزید تفصیل (اختیاری)';
+  static const String followUpTitle = 'اگلی کارگزاری';
+  static const String followUpDue = 'مقررہ تاریخ';
+  static const String followUpOverdue = 'مقررہ وقت گزر چکا ہے';
+  static const String followUpDaysLeft = 'باقی دن';
+  static const String followUpSubmitted = 'جمع شدہ کارگزاریاں';
   static const String relatedReports = 'متعلقہ کارگزاریاں';
   static const String noEvidenceForReport =
       'اس کارگزاری کے ساتھ کوئی ثبوت منسلک نہیں۔';

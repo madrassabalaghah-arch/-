@@ -149,6 +149,7 @@ class GraduateRepository {
     required String title,
     String? summary,
     String? activityId,
+    KarGuzariDetails? details,
     bool submit = false,
   }) async {
     final Map<String, dynamic> row = await _client
@@ -160,6 +161,7 @@ class GraduateRepository {
           'activity_id': activityId,
           'status': submit ? 'submitted' : 'draft',
           if (submit) 'submitted_at': DateTime.now().toUtc().toIso8601String(),
+          ...?details?.toColumns(),
         })
         .select('*, activities(title)')
         .single();
@@ -170,16 +172,49 @@ class GraduateRepository {
     required String id,
     String? title,
     String? summary,
+    KarGuzariDetails? details,
     bool submit = false,
   }) async {
     await _client.from('reports').update(<String, dynamic>{
       'title': ?title,
       'summary': ?summary,
+      ...?details?.toColumns(),
       if (submit) ...<String, dynamic>{
         'status': 'submitted',
         'submitted_at': DateTime.now().toUtc().toIso8601String(),
       },
     }).eq('id', id);
+  }
+
+  /// Where this graduate stands in the configured follow-up cycle.
+  ///
+  /// The interval is a stored setting, so the organisation can move between a
+  /// monthly, two monthly or three monthly cycle without a new release.
+  Future<FollowUpStatus?> followUpStatus() async {
+    final List<dynamic> rows =
+        await _client.rpc<List<dynamic>>('follow_up_status');
+    if (rows.isEmpty) {
+      return null;
+    }
+    return FollowUpStatus.fromMap(rows.first as Map<String, dynamic>);
+  }
+
+  /// Writes this cycle's reminder if one is due and none was sent yet.
+  ///
+  /// Returns how many were written, which is zero on every call after the
+  /// first in a cycle: the same message is never repeated.
+  Future<int> ensureFollowUpReminder() async {
+    final Object? written =
+        await _client.rpc<Object?>('ensure_follow_up_reminder');
+    return written is int ? written : 0;
+  }
+
+  /// Grants any recognition the administrator's rules say has been earned.
+  /// With no rules configured this grants nothing rather than inventing one.
+  Future<int> awardEarnedRecognitions() async {
+    final Object? written =
+        await _client.rpc<Object?>('award_earned_recognitions');
+    return written is int ? written : 0;
   }
 
   /// Deletes a draft. Row level security refuses anything already submitted.

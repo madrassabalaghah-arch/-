@@ -30,6 +30,18 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   late final TextEditingController _title;
   late final TextEditingController _summary;
 
+  /// The fuller record of the activity. Every one of these is optional: a
+  /// participant filing quickly should not be blocked, and a blank box is
+  /// stored as nothing rather than as an empty string.
+  final Map<String, TextEditingController> _extra =
+      <String, TextEditingController>{
+    for (final String key in <String>[
+      'type', 'location', 'organisation', 'beneficiaries',
+      'learning', 'impact', 'results', 'challenges', 'plan',
+    ])
+      key: TextEditingController(),
+  };
+
   String? _activityId;
   bool _busy = false;
 
@@ -49,6 +61,9 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   void dispose() {
     _title.dispose();
     _summary.dispose();
+    for (final TextEditingController c in _extra.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -70,11 +85,23 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
     setState(() => _busy = true);
     try {
       final GraduateRepository repo = ref.read(graduateRepositoryProvider);
+      final KarGuzariDetails details = KarGuzariDetails(
+        activityType: _extra['type']!.text,
+        location: _extra['location']!.text,
+        organisation: _extra['organisation']!.text,
+        beneficiaries: int.tryParse(_extra['beneficiaries']!.text.trim()),
+        learningApplied: _extra['learning']!.text,
+        impact: _extra['impact']!.text,
+        results: _extra['results']!.text,
+        challenges: _extra['challenges']!.text,
+        futurePlan: _extra['plan']!.text,
+      );
       if (_isEditing) {
         await repo.updateReport(
           id: widget.report!.id,
           title: _title.text.trim(),
           summary: _summary.text.trim(),
+          details: details,
           submit: submit,
         );
       } else {
@@ -82,6 +109,7 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
           title: _title.text.trim(),
           summary: _summary.text.trim(),
           activityId: _activityId,
+          details: details,
           submit: submit,
         );
         // Only a submitted report counts towards progress; a draft does not.
@@ -249,6 +277,22 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
             ),
             AppSpacing.gapXl,
             if (!_isLocked) ...<Widget>[
+            AppSpacing.gapXl,
+            const SectionHeader(title: AppStrings.moreDetails),
+            for (final ({String key, String label, String? hint, int lines})
+                field in _extraFields) ...<Widget>[
+              AppFormField(
+                label: field.label,
+                hintText: field.hint,
+                controller: _extra[field.key],
+                enabled: !_busy,
+                maxLines: field.lines,
+                keyboardType: field.key == 'beneficiaries'
+                    ? TextInputType.number
+                    : null,
+              ),
+              AppSpacing.gapLg,
+            ],
               PrimaryButton(
                 label: AppStrings.submitReport,
                 icon: Icons.send_outlined,
@@ -334,3 +378,21 @@ class _ActivityChoice extends StatelessWidget {
     );
   }
 }
+
+/// The optional detail a کارگزاری may carry, in the order the brief lists it.
+const List<({String key, String label, String? hint, int lines})> _extraFields =
+    <({String key, String label, String? hint, int lines})>[
+  (key: 'type', label: AppStrings.activityTypeLabel,
+      hint: AppStrings.activityTypeHint, lines: 1),
+  (key: 'location', label: AppStrings.locationLabel, hint: null, lines: 1),
+  (key: 'organisation', label: AppStrings.organisationLabel, hint: null,
+      lines: 1),
+  (key: 'beneficiaries', label: AppStrings.beneficiariesLabel, hint: null,
+      lines: 1),
+  (key: 'learning', label: AppStrings.learningAppliedLabel, hint: null,
+      lines: 3),
+  (key: 'impact', label: AppStrings.impactLabel, hint: null, lines: 3),
+  (key: 'results', label: AppStrings.resultsLabel, hint: null, lines: 3),
+  (key: 'challenges', label: AppStrings.challengesLabel, hint: null, lines: 3),
+  (key: 'plan', label: AppStrings.futurePlanLabel, hint: null, lines: 3),
+];

@@ -25,7 +25,6 @@ import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
 import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
 import 'package:madrassa_graduate_app/core/routing/app_router.dart';
 import 'package:madrassa_graduate_app/core/routing/app_routes.dart';
-import 'package:madrassa_graduate_app/shared/widgets/app_bottom_navigation.dart';
 import 'package:madrassa_graduate_app/core/theme/app_colors.dart';
 import 'package:madrassa_graduate_app/features/auth/application/auth_providers.dart';
 import 'package:madrassa_graduate_app/features/auth/data/auth_repository.dart';

@@ -80,6 +80,27 @@ final FutureProvider<MentorFeedback?> graduateMentorFeedbackProvider =
   return ref.watch(graduateRepositoryProvider).latestFeedback();
 });
 
+/// The graduate's position in the configured follow-up cycle. Reading it also
+/// writes this cycle's reminder and grants any earned recognition, so opening
+/// the dashboard is what drives the cycle forward — both are no-ops when there
+/// is nothing new to say.
+final FutureProvider<FollowUpStatus?> followUpStatusProvider =
+    FutureProvider<FollowUpStatus?>((Ref ref) async {
+  _dependOnSession(ref);
+  final GraduateRepository repository = ref.watch(graduateRepositoryProvider);
+  final FollowUpStatus? status = await repository.followUpStatus();
+
+  // A failure here must not blank the dashboard: the cycle figure is the
+  // point, the reminder is a side effect of showing it.
+  try {
+    await repository.ensureFollowUpReminder();
+    await repository.awardEarnedRecognitions();
+  } catch (_) {
+    // Left deliberately silent.
+  }
+  return status;
+});
+
 final FutureProvider<FollowUpItem?> graduateFollowUpProvider =
     FutureProvider<FollowUpItem?>((Ref ref) {
   _dependOnSession(ref);
