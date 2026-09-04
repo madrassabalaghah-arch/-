@@ -7,6 +7,7 @@
 // No mock data exists in the application any more, so there is nothing to
 // stub — an unauthenticated client simply has no rows it may read.
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:madrassa_graduate_app/app.dart';
 import 'package:madrassa_graduate_app/core/config/app_config.dart';
-import 'package:madrassa_graduate_app/features/admin/presentation/workshop/csv_import.dart';
+import 'package:madrassa_graduate_app/features/admin/presentation/workshop/participant_file.dart';
+import 'package:madrassa_graduate_app/features/auth/data/course_repository.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
 import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
 import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
@@ -28,6 +30,7 @@ import 'package:madrassa_graduate_app/core/theme/app_colors.dart';
 import 'package:madrassa_graduate_app/features/auth/application/auth_providers.dart';
 import 'package:madrassa_graduate_app/features/auth/data/auth_repository.dart';
 import 'package:madrassa_graduate_app/shared/models/app_role.dart';
+import 'package:madrassa_graduate_app/shared/widgets/widgets.dart';
 import 'package:madrassa_graduate_app/shared/models/people.dart';
 
 
@@ -162,7 +165,7 @@ void main() {
     }
   });
 
-  testWidgets('sign up is gated behind workshop verification',
+  testWidgets('registration asks for the course record and the profile facts',
       (WidgetTester tester) async {
     await _pumpApp(tester);
 
@@ -172,20 +175,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.signUpTitle), findsOneWidget);
-
-    // Step one is the registration number and nothing else. Public signup is
-    // closed, so the account fields must not be reachable yet.
-    expect(find.text(AppStrings.registrationNumber), findsOneWidget);
-    expect(find.text(AppStrings.verifyNumber), findsOneWidget);
     expect(find.text(AppStrings.publicSignupClosed), findsOneWidget);
 
-    expect(find.text(AppStrings.labelPassword), findsNothing,
-        reason: 'password must not be offered before verification');
-    expect(find.text(AppStrings.labelConfirmPassword), findsNothing);
-    expect(find.text(AppStrings.labelEmail), findsNothing);
+    // Everything the brief asks for on one form: the register's own two
+    // fields, then the three the participant answers themselves.
+    expect(find.text(AppStrings.registrationNumber), findsOneWidget);
+    expect(find.text(AppStrings.participantName), findsOneWidget);
+    expect(find.text(AppStrings.selectCategory), findsOneWidget);
+    expect(find.text(AppStrings.maleLabel), findsOneWidget);
+    expect(find.text(AppStrings.femaleLabel), findsOneWidget);
+    expect(find.text(AppStrings.newInstituteName), findsOneWidget);
 
-    // Verifying with an empty number is refused in Urdu.
-    await tester.tap(find.text(AppStrings.verifyNumber));
+    // فاضل is offered before فاضلہ. The layout is right to left, so first
+    // means further to the right.
+    final double male = tester.getTopLeft(find.text(AppStrings.maleLabel)).dx;
+    final double female =
+        tester.getTopLeft(find.text(AppStrings.femaleLabel)).dx;
+    expect(male > female, isTrue,
+        reason: 'فاضل must be offered before فاضلہ');
+
+    // An empty form is refused rather than sent to the server.
+    final Finder submit = find.widgetWithText(PrimaryButton, AppStrings.signUp);
+    await tester.ensureVisible(submit);
+    await tester.pumpAndSettle();
+    await tester.tap(submit);
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.regRequired), findsWidgets);
   });
@@ -407,37 +420,40 @@ void main() {
         reason: 'the role must survive, or routing would send them to noRole');
   });
 
-  test('a spreadsheet export imports, byte-order mark and quoted fields and all',
-      () {
-    // Exactly what Excel's "CSV UTF-8" export produces: a leading BOM, CRLF
-    // line endings, and a quoted field containing a comma.
+  test('the organisation own column headings are what the importer reads', () {
+    // The organisation's file, saved by Excel as "CSV UTF-8": a leading BOM,
+    // CRLF endings, Urdu headings, and a quoted name containing a comma.
     const String csv = '\ufeff'
-        'registration_number,full_name,father_name,gender,workshop_date\r\n'
-        'WS-2026/001,محمد عثمان,عبداللہ,male,2026-01-15\r\n'
-        'WS-2026/002,عائشہ صدیقہ,محمد کریم,female,2026-01-15\r\n'
-        'WS-2026/003,"خان, محمد",کریم,م,2026-01-15\r\n'
-        ',بغیر نمبر,,male,\r\n';
+        'رقمِ تسجیل,نام مع ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
+        'MD-2026/001,محمد عثمان بن عبداللہ,مارچ 2024,جون 2024\r\n'
+        'MD-2026/002,عائشہ صدیقہ بنت کریم,مارچ 2024,جون 2024\r\n'
+        'MD-2026/001,دوبارہ وہی نمبر,مارچ 2024,جون 2024\r\n'
+        ',بغیر نمبر,مارچ 2024,جون 2024\r\n'
+        'MD-2026/004,"خان, محمد",مارچ 2024,جون 2024\r\n';
 
-    final ({List<Map<String, dynamic>> rows, int invalid}) parsed =
-        CsvImport.toParticipants(csv);
+    final List<List<String>> table =
+        ParticipantFile.read(Uint8List.fromList(utf8.encode(csv)), 'list.csv');
+    final ({List<CandidateRow> rows, bool missingColumns}) parsed =
+        ParticipantFile.toCandidates(table);
 
-    expect(parsed.rows.length, 3,
-        reason: 'the BOM must not stop the header from being recognised');
-    expect(parsed.invalid, 1, reason: 'the row with no number is refused');
+    expect(parsed.missingColumns, isFalse,
+        reason: 'the Urdu headings must be recognised, BOM and all');
+    expect(parsed.rows.length, 5);
 
-    expect(parsed.rows.first['registration_number'], 'WS-2026/001');
-    expect(parsed.rows.first['full_name'], 'محمد عثمان');
-    expect(parsed.rows.first['gender'], 'male');
-    expect(parsed.rows[1]['gender'], 'female');
+    final List<CandidateRow> good =
+        parsed.rows.where((CandidateRow r) => r.isValid).toList();
+    expect(good.length, 3);
 
+    expect(good.first.registrationNumber, 'MD-2026/001');
+    expect(good.first.fullName, 'محمد عثمان بن عبداللہ');
+    expect(good.first.courseStartDate, 'مارچ 2024');
+    expect(good.first.courseCompletionDate, 'جون 2024');
+
+    // A repeat of a number already seen in the file is refused, not imported.
+    expect(parsed.rows[2].problem, CandidateProblem.duplicateInFile);
+    // A row with no رقمِ تسجیل is refused.
+    expect(parsed.rows[3].problem, CandidateProblem.missingNumber);
     // A quoted field keeps its comma instead of splitting into two columns.
-    expect(parsed.rows[2]['full_name'], 'خان, محمد');
-    // An unrecognised gender spelling is left unset rather than guessed at.
-    expect(parsed.rows[2]['gender'], isNull);
-
-    // Attendance is what a row in the register means.
-    expect(parsed.rows.first['completed'], isTrue);
-    expect(parsed.rows.first['eligible'], isTrue);
-    expect(parsed.rows.first['workshop_date'], '2026-01-15');
+    expect(good.last.fullName, 'خان, محمد');
   });
 }

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
-import '../../features/auth/data/workshop_repository.dart';
+import '../../features/auth/data/course_repository.dart';
 import '../../features/graduate/data/graduate_repository.dart';
 import '../../features/mentor/data/mentor_repository.dart';
 import '../data/reference_repository.dart';
@@ -374,15 +374,22 @@ final FutureProvider<List<ActivityItem>> allActivitiesProvider =
 // Workshop register
 // ---------------------------------------------------------------------------
 
-final Provider<WorkshopRepository> workshopRepositoryProvider =
-    Provider<WorkshopRepository>(
-  (Ref ref) => WorkshopRepository(ref.watch(supabaseClientProvider)),
+final Provider<CourseRepository> courseRepositoryProvider =
+    Provider<CourseRepository>(
+  (Ref ref) => CourseRepository(ref.watch(supabaseClientProvider)),
 );
 
 /// The whole register, for administration. Only an administrator can read it;
 /// applicants verify a single number through the RPC instead.
-final FutureProvider<List<WorkshopParticipant>> workshopParticipantsProvider =
-    FutureProvider<List<WorkshopParticipant>>((Ref ref) {
+final FutureProvider<List<CourseParticipant>> courseParticipantsProvider =
+    FutureProvider<List<CourseParticipant>>((Ref ref) {
   _dependOnSession(ref);
-  return ref.watch(workshopRepositoryProvider).participants();
+  return ref.watch(courseRepositoryProvider).participants();
+});
+
+/// Every recorded participant-file import, newest first.
+final FutureProvider<List<ImportBatch>> importHistoryProvider =
+    FutureProvider<List<ImportBatch>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(courseRepositoryProvider).importHistory();
 });

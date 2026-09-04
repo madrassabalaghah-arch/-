@@ -13,11 +13,13 @@ import '../../../shared/widgets/widgets.dart';
 import '../application/auth_providers.dart';
 import 'auth_scaffold.dart';
 
-/// Real Supabase registration.
+/// Registration for someone who completed the three-month course.
 ///
-/// The role is never sent from here. A database trigger creates the profile
-/// and grants the default فاضل / فاضلہ role, so an account cannot register
-/// itself as a mentor or administrator.
+/// One form, verified in one step. The رقمِ تسجیل and the name are checked
+/// against the imported register; the category, وفاق and institution are the
+/// participant's own answers and are stored on their profile. There is no
+/// approval queue — a valid, unused number with a matching name creates the
+/// account, and anything else is refused with the reason why.
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
@@ -26,255 +28,258 @@ class SignUpScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _form = GlobalKey<FormState>();
+  final TextEditingController _number = TextEditingController();
   final TextEditingController _name = TextEditingController();
+  final TextEditingController _institute = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _confirm = TextEditingController();
 
-  final TextEditingController _regNumber = TextEditingController();
-
+  /// 'male' is فاضل and is offered first, per the display order the brief sets.
+  String _gender = 'male';
+  String? _wifaqId;
   bool _busy = false;
   String? _error;
 
-  /// Until a registration number verifies, the account fields stay hidden.
-  /// Registration is closed to anyone who did not complete the workshop.
-  WorkshopVerification? _verified;
-
-  String _verdictMessage(WorkshopVerdict v) {
-    switch (v) {
-      case WorkshopVerdict.notFound:
-        return AppStrings.regNotFound;
-      case WorkshopVerdict.notCompleted:
-        return AppStrings.regNotCompleted;
-      case WorkshopVerdict.notEligible:
-        return AppStrings.regNotEligible;
-      case WorkshopVerdict.alreadyUsed:
-        return AppStrings.regAlreadyUsed;
-      case WorkshopVerdict.ok:
-      case WorkshopVerdict.unknown:
-        return AppStrings.somethingWentWrong;
-    }
-  }
-
-  Future<void> _verify() async {
-    final String number = _regNumber.text.trim();
-    if (number.isEmpty) {
-      setState(() => _error = AppStrings.regRequired);
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final WorkshopVerification result = await ref
-          .read(workshopRepositoryProvider)
-          .verify(number);
-      setState(() {
-        _verified = result.valid ? result : null;
-        _error = result.valid ? null : _verdictMessage(result.verdict);
-      });
-    } catch (error) {
-      setState(() => _error = authErrorMessage(error));
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-      }
-    }
-  }
-
   @override
   void dispose() {
-    _regNumber.dispose();
+    _number.dispose();
     _name.dispose();
+    _institute.dispose();
     _email.dispose();
     _password.dispose();
     _confirm.dispose();
     super.dispose();
   }
 
+  /// Turns a refusal from the register into the sentence the brief specifies.
+  String _messageFor(CourseVerdict verdict) {
+    switch (verdict) {
+      case CourseVerdict.missingNumber:
+        return AppStrings.regRequired;
+      case CourseVerdict.notFound:
+        return AppStrings.regNotFound;
+      case CourseVerdict.nameMismatch:
+        return AppStrings.regNameMismatch;
+      case CourseVerdict.notEligible:
+        return AppStrings.regNotEligible;
+      case CourseVerdict.alreadyUsed:
+        return AppStrings.regAlreadyUsed;
+      case CourseVerdict.ok:
+      case CourseVerdict.unknown:
+        return AppStrings.somethingWentWrong;
+    }
+  }
+
   Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
+    if (!(_form.currentState?.validate() ?? false)) {
       return;
     }
+    if (_wifaqId == null) {
+      setState(() => _error = AppStrings.noWifaqSelected);
+      return;
+    }
+
     setState(() {
       _busy = true;
       _error = null;
     });
 
     try {
-      await ref
-          .read(appSessionProvider.notifier)
-          .signUp(
+      // Checked here so a refusal can be explained in the applicant's own
+      // terms. The signup trigger checks the same things again and is what
+      // actually enforces them, so calling the API directly gains nothing.
+      final CourseVerification verification = await ref
+          .read(courseRepositoryProvider)
+          .verify(_number.text, fullName: _name.text);
+
+      if (!verification.valid) {
+        setState(() {
+          _busy = false;
+          _error = _messageFor(verification.verdict);
+        });
+        return;
+      }
+
+      await ref.read(appSessionProvider.notifier).signUp(
             email: _email.text,
             password: _password.text,
             fullName: _name.text,
-            registrationNumber: _regNumber.text,
+            registrationNumber: _number.text,
+            gender: _gender,
+            wifaqId: _wifaqId,
+            instituteName: _institute.text,
           );
+
       if (!mounted) {
         return;
       }
+      // The router sends a signed-in account to its own dashboard, so there is
+      // nothing to navigate to here.
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
-        ..showSnackBar(const SnackBar(content: Text(AppStrings.signUpSuccess)));
+        ..showSnackBar(
+          const SnackBar(content: Text(AppStrings.verifiedActivated)),
+        );
     } catch (error) {
-      setState(() => _error = authErrorMessage(error));
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
+      if (!mounted) {
+        return;
       }
+      setState(() {
+        _busy = false;
+        _error = authErrorMessage(error);
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final AsyncValue<List<WifaqItem>> wifaqs = ref.watch(wifaqListProvider);
+
     return AuthScaffold(
       title: AppStrings.signUpTitle,
-      subtitle: AppStrings.signUpSubtitle,
+      subtitle: AppStrings.courseGateSubtitle,
       backTo: AppRoutes.signIn,
-      // Wrap rather than Row: the Urdu prompt plus the action can exceed
-      // one line on a narrow phone, and a Row would overflow.
+      // Wrap rather than Row: the Urdu sentence plus the action does not fit
+      // on one line on a narrow phone, and a Row would overflow.
       footer: Wrap(
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
-          Text(
-            AppStrings.alreadyHaveAccount,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          const Text(AppStrings.alreadyHaveAccount),
           TextButton(
-            onPressed: _busy
-                ? null
-                : () => context.canPop()
-                      ? context.pop()
-                      : context.go(AppRoutes.signIn),
+            onPressed: _busy ? null : () => context.go(AppRoutes.signIn),
             child: const Text(AppStrings.signIn),
           ),
         ],
       ),
       child: Form(
-        key: _formKey,
+        key: _form,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // Step one. Registration is closed to the public, so nothing else
-            // is offered until a workshop number verifies.
+            if (_error != null) ...<Widget>[
+              AuthErrorBanner(message: _error!),
+              AppSpacing.gapLg,
+            ],
+            const _Notice(message: AppStrings.publicSignupClosed),
+            AppSpacing.gapLg,
             AppFormField(
               label: AppStrings.registrationNumber,
               hintText: AppStrings.hintRegistrationNumber,
-              controller: _regNumber,
+              controller: _number,
               isRequired: true,
-              enabled: !_busy && _verified == null,
-              prefixIcon: Icons.confirmation_number_outlined,
+              enabled: !_busy,
+              prefixIcon: Icons.badge_outlined,
               validator: (String? value) =>
                   (value == null || value.trim().isEmpty)
-                  ? AppStrings.regRequired
-                  : null,
+                      ? AppStrings.regRequired
+                      : null,
             ),
-            AppSpacing.gapMd,
-            if (_verified == null) ...<Widget>[
-              PrimaryButton(
-                label: AppStrings.verifyNumber,
-                icon: Icons.verified_outlined,
-                isLoading: _busy,
-                onPressed: _verify,
-              ),
-              if (_error != null) ...<Widget>[
-                AppSpacing.gapLg,
-                AuthErrorBanner(message: _error!),
-              ],
-              AppSpacing.gapLg,
-              Text(
-                AppStrings.publicSignupClosed,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-            ] else ...<Widget>[
-              _VerifiedBanner(
-                name: _verified!.participantName,
-                onChange: _busy
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.participantName,
+              controller: _name,
+              isRequired: true,
+              enabled: !_busy,
+              prefixIcon: Icons.person_outline,
+              validator: AppFormField.requiredValidator,
+            ),
+            AppSpacing.gapLg,
+            _CategoryField(
+              value: _gender,
+              enabled: !_busy,
+              onChanged: (String value) => setState(() => _gender = value),
+            ),
+            AppSpacing.gapLg,
+            wifaqs.when(
+              loading: () => const LoadingState(compact: true),
+              error: (Object e, StackTrace s) =>
+                  const _Notice(message: AppStrings.noWifaqsYet),
+              data: (List<WifaqItem> items) => DropdownButtonFormField<String>(
+                initialValue: _wifaqId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.selectWifaq,
+                  prefixIcon: Icon(Icons.account_balance_outlined, size: 20),
+                ),
+                items: <DropdownMenuItem<String>>[
+                  for (final WifaqItem w in items)
+                    DropdownMenuItem<String>(
+                      value: w.id,
+                      child: Text(w.name),
+                    ),
+                ],
+                onChanged: _busy
                     ? null
-                    : () => setState(() {
-                        _verified = null;
-                        _error = null;
-                      }),
+                    : (String? value) => setState(() => _wifaqId = value),
               ),
-              AppSpacing.gapXl,
-              AppFormField(
-                label: AppStrings.labelName,
-                hintText: AppStrings.hintName,
-                controller: _name,
-                isRequired: true,
-                enabled: !_busy,
-                prefixIcon: Icons.person_outline,
-                validator: AppFormField.requiredValidator,
-              ),
-              AppSpacing.gapLg,
-              AppFormField(
-                label: AppStrings.labelEmail,
-                hintText: AppStrings.hintEmail,
-                controller: _email,
-                isRequired: true,
-                enabled: !_busy,
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.alternate_email_outlined,
-                validator: (String? value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return AppStrings.validationRequired;
-                  }
-                  return value.contains('@')
-                      ? null
-                      : AppStrings.validationEmail;
-                },
-              ),
-              AppSpacing.gapLg,
-              AppFormField(
-                label: AppStrings.labelPassword,
-                hintText: AppStrings.hintPassword,
-                controller: _password,
-                isRequired: true,
-                enabled: !_busy,
-                obscureText: true,
-                prefixIcon: Icons.lock_outline,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return AppStrings.validationRequired;
-                  }
-                  return value.length < 8
-                      ? AppStrings.validationPassword
-                      : null;
-                },
-              ),
-              AppSpacing.gapLg,
-              AppFormField(
-                label: AppStrings.labelConfirmPassword,
-                controller: _confirm,
-                isRequired: true,
-                enabled: !_busy,
-                obscureText: true,
-                prefixIcon: Icons.lock_reset_outlined,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return AppStrings.validationRequired;
-                  }
-                  return value == _password.text
-                      ? null
-                      : AppStrings.validationPasswordMatch;
-                },
-              ),
-              if (_error != null) ...<Widget>[
-                AppSpacing.gapLg,
-                AuthErrorBanner(message: _error!),
-              ],
-              AppSpacing.gapXl,
-              PrimaryButton(
-                label: AppStrings.signUp,
-                icon: Icons.person_add_alt_outlined,
-                isLoading: _busy,
-                onPressed: _submit,
-              ),
-            ],
+            ),
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.newInstituteName,
+              controller: _institute,
+              isRequired: true,
+              enabled: !_busy,
+              prefixIcon: Icons.location_city_outlined,
+              validator: AppFormField.requiredValidator,
+            ),
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.labelEmail,
+              controller: _email,
+              isRequired: true,
+              enabled: !_busy,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.mail_outline,
+              validator: (String? value) {
+                if (value == null || value.trim().isEmpty) {
+                  return AppStrings.validationRequired;
+                }
+                return value.contains('@') ? null : AppStrings.validationEmail;
+              },
+            ),
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.labelPassword,
+              hintText: AppStrings.hintPassword,
+              controller: _password,
+              isRequired: true,
+              enabled: !_busy,
+              obscureText: true,
+              prefixIcon: Icons.lock_outline,
+              validator: (String? value) {
+                if (value == null || value.isEmpty) {
+                  return AppStrings.validationRequired;
+                }
+                return value.length < 8 ? AppStrings.validationPassword : null;
+              },
+            ),
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.labelConfirmPassword,
+              controller: _confirm,
+              isRequired: true,
+              enabled: !_busy,
+              obscureText: true,
+              prefixIcon: Icons.lock_reset_outlined,
+              validator: (String? value) {
+                if (value == null || value.isEmpty) {
+                  return AppStrings.validationRequired;
+                }
+                return value == _password.text
+                    ? null
+                    : AppStrings.validationPasswordMatch;
+              },
+            ),
+            AppSpacing.gapXl,
+            PrimaryButton(
+              label: _busy ? AppStrings.verifying : AppStrings.signUp,
+              icon: Icons.how_to_reg_outlined,
+              isLoading: _busy,
+              onPressed: _busy ? null : _submit,
+            ),
           ],
         ),
       ),
@@ -282,62 +287,77 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 }
 
-/// Confirms which workshop record the applicant verified against, so they can
-/// spot a mistyped number before creating an account under someone else's
-/// name.
-class _VerifiedBanner extends StatelessWidget {
-  const _VerifiedBanner({required this.name, required this.onChange});
+/// A quiet explanatory line, for facts that are not errors.
+class _Notice extends StatelessWidget {
+  const _Notice({required this.message});
 
-  final String? name;
-  final VoidCallback? onChange;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+      decoration: const BoxDecoration(
+        color: AppColors.goldTint,
+        borderRadius: AppRadius.radiusMd,
+      ),
+      child: Text(
+        message,
+        style: Theme.of(context)
+            .textTheme
+            .labelSmall
+            ?.copyWith(color: AppColors.earthBrown),
+      ),
+    );
+  }
+}
+
+/// فاضل or فاضلہ, in that order, chosen in the app rather than imported.
+class _CategoryField extends StatelessWidget {
+  const _CategoryField({
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String value;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsetsDirectional.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.greenTint,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(
-          color: AppColors.primaryGreen.withValues(alpha: 0.3),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsetsDirectional.only(
+            bottom: AppSpacing.sm,
+            start: AppSpacing.xs,
+          ),
+          child: Text(
+            AppStrings.selectCategory,
+            style: theme.textTheme.labelLarge,
+          ),
         ),
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            Icons.verified_rounded,
-            size: 20,
-            color: AppColors.primaryGreen,
-          ),
-          AppSpacing.hGapSm,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  AppStrings.verifiedAs,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-                if (name != null)
-                  Text(
-                    name!,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-              ],
+        SegmentedButton<String>(
+          segments: const <ButtonSegment<String>>[
+            ButtonSegment<String>(
+              value: 'male',
+              label: Text(AppStrings.maleLabel),
             ),
-          ),
-          TextButton(
-            onPressed: onChange,
-            child: const Text(AppStrings.changeNumber),
-          ),
-        ],
-      ),
+            ButtonSegment<String>(
+              value: 'female',
+              label: Text(AppStrings.femaleLabel),
+            ),
+          ],
+          selected: <String>{value},
+          onSelectionChanged: enabled
+              ? (Set<String> selection) => onChanged(selection.first)
+              : null,
+        ),
+      ],
     );
   }
 }

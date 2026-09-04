@@ -41,6 +41,9 @@ class AuthRepository {
     required String password,
     required String fullName,
     required String registrationNumber,
+    String? gender,
+    String? wifaqId,
+    String? instituteName,
   }) {
     return _auth.signUp(
       email: email.trim(),
@@ -48,9 +51,15 @@ class AuthRepository {
       // The registration number is re-verified by the signup trigger. The
       // check the app performs first is a courtesy; this is what the database
       // actually enforces, so calling the API directly cannot bypass it.
+      // The trigger re-verifies the number AND the name, and reads the
+      // category, wifaq and institution from here. None of it is trusted for
+      // authorisation: the role is decided by the database, never sent.
       data: <String, dynamic>{
         'full_name': fullName.trim(),
         'registration_number': registrationNumber.trim(),
+        'gender': gender,
+        'wifaq_id': wifaqId,
+        'institute_name': instituteName?.trim(),
       },
     );
   }

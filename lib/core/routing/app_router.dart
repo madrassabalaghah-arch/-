@@ -18,7 +18,7 @@ import '../../features/admin/presentation/users/admin_user_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_institutes_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaqs_screen.dart';
-import '../../features/admin/presentation/workshop/admin_workshop_screen.dart';
+import '../../features/admin/presentation/workshop/admin_participants_screen.dart';
 import '../../features/graduate/presentation/dashboard/graduate_dashboard_screen.dart';
 import '../../features/graduate/presentation/evaluations/graduate_evaluations_screen.dart';
 import '../../features/graduate/presentation/evidence/graduate_evidence_screen.dart';
@@ -499,7 +499,7 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     path: AppRoutes.adminWorkshop,
     name: AppRoutes.adminWorkshopName,
     builder: (BuildContext context, GoRouterState state) =>
-        const AdminWorkshopScreen(),
+        const AdminParticipantsScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminActivities,

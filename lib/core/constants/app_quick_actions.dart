@@ -65,8 +65,8 @@ class AppQuickActions {
 
   static const List<ManagementArea> adminAreas = <ManagementArea>[
     ManagementArea(
-      title: AppStrings.manageWorkshop,
-      subtitle: 'ورکشاپ کے شرکاء، جن کو اکاؤنٹ بنانے کی اجازت ہے۔',
+      title: AppStrings.manageParticipants,
+      subtitle: 'کورس کے شرکاء، جن کو اکاؤنٹ بنانے کی اجازت ہے۔',
       icon: Icons.how_to_reg_outlined,
       route: AppRoutes.adminWorkshop,
     ),

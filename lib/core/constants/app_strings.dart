@@ -162,45 +162,62 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Workshop registration gate
   // ---------------------------------------------------------------------
-  static const String workshopGateTitle = 'ورکشاپ کی تصدیق';
-  static const String workshopGateSubtitle =
-      'اکاؤنٹ بنانے کے لیے پانچ روزہ ورکشاپ کا رجسٹریشن نمبر درج کریں۔';
-  static const String registrationNumber = 'رجسٹریشن نمبر';
-  static const String hintRegistrationNumber = 'مثلاً: WS-2026/001';
+  // ---------------------------------------------------------------------
+  // Course registration
+  // ---------------------------------------------------------------------
+  static const String courseGateTitle = 'کورس کی تصدیق';
+  static const String courseGateSubtitle =
+      'اکاؤنٹ بنانے کے لیے تین ماہی کورس کی رقمِ تسجیل درج کریں۔';
+  static const String registrationNumber = 'رقمِ تسجیل';
+  static const String hintRegistrationNumber = 'مثلاً: MD-2026/001';
   static const String verifyNumber = 'تصدیق کریں';
-  static const String verifying = 'تصدیق کی جا رہی ہے...';
+  static const String verifying = 'آپ کی معلومات کی تصدیق کی جا رہی ہے...';
   static const String verifiedAs = 'تصدیق ہو گئی';
+  static const String verifiedActivated =
+      'آپ کی معلومات کی کامیابی سے تصدیق ہو گئی ہے۔ آپ کا پروفائل فعال کر دیا گیا ہے۔';
   static const String changeNumber = 'نمبر تبدیل کریں';
   static const String regNotFound =
-      'یہ رجسٹریشن نمبر ریکارڈ میں موجود نہیں ہے۔';
-  static const String regNotCompleted =
-      'اس نمبر کے لیے پانچ روزہ ورکشاپ مکمل درج نہیں ہے۔';
+      'یہ رقمِ تسجیل ہمارے ریکارڈ میں موجود نہیں ہے۔';
+  static const String regNameMismatch =
+      'درج کردہ نام ہمارے ریکارڈ سے مطابقت نہیں رکھتا۔';
   static const String regNotEligible =
-      'یہ نمبر اکاؤنٹ بنانے کے لیے اہل نہیں ہے۔ منتظم سے رابطہ کریں۔';
+      'یہ رقمِ تسجیل اکاؤنٹ بنانے کے لیے اہل نہیں ہے۔ منتظم سے رابطہ کریں۔';
   static const String regAlreadyUsed =
-      'اس رجسٹریشن نمبر سے پہلے ہی اکاؤنٹ بن چکا ہے۔';
-  static const String regRequired = 'رجسٹریشن نمبر درج کرنا ضروری ہے۔';
+      'اس رقمِ تسجیل کے ساتھ پہلے سے ایک اکاؤنٹ موجود ہے۔';
+  static const String regRequired = 'رقمِ تسجیل درج کرنا ضروری ہے۔';
   static const String publicSignupClosed =
-      'عام رجسٹریشن دستیاب نہیں۔ صرف ورکشاپ کے شرکاء اکاؤنٹ بنا سکتے ہیں۔';
+      'عام رجسٹریشن دستیاب نہیں۔ صرف کورس کے شرکاء اکاؤنٹ بنا سکتے ہیں۔';
+  static const String selectCategory = 'اپنی حیثیت منتخب کریں';
 
-  // Workshop administration
-  static const String manageWorkshop = 'ورکشاپ شرکاء کا انتظام';
+  // ---------------------------------------------------------------------
+  // Course participant administration
+  // ---------------------------------------------------------------------
+  static const String manageParticipants = 'کورس کے شرکاء کا انتظام';
   static const String addParticipant = 'نیا شریک شامل کریں';
-  static const String importParticipants = 'فائل سے درآمد کریں';
-  static const String participantName = 'شریک کا نام';
-  static const String workshopBatch = 'بیچ';
-  static const String workshopCompleted = 'ورکشاپ مکمل';
+  static const String importParticipants = 'کورس کے شرکاء کی فائل درآمد کریں';
+  static const String participantName = 'نام مع ولدیت';
+  static const String courseStartMonth = 'داخلہ ماہ';
+  static const String courseCompletionMonth = 'فراغت ماہ';
   static const String eligibleForApp = 'اکاؤنٹ کے لیے اہل';
   static const String accountCreated = 'اکاؤنٹ بن چکا ہے';
   static const String accountNotCreated = 'اکاؤنٹ نہیں بنا';
   static const String participantAdded = 'شریک شامل کر دیا گیا ہے۔';
   static const String participantUpdated = 'ریکارڈ تبدیل کر دیا گیا ہے۔';
-  static const String importDone = 'درآمد مکمل';
-  static const String importSummary = 'شامل کیے گئے';
-  static const String importSkipped = 'پہلے سے موجود، چھوڑ دیے گئے';
-  static const String csvFormatHint =
-      'CSV کالم: registration_number, full_name, father_name, gender, phone, batch';
   static const String noParticipantsYet = 'ابھی کوئی شریک درج نہیں';
+  static const String fileFormatHint =
+      'فائل کے کالم: رقمِ تسجیل، نام مع ولدیت، داخلہ ماہ، فراغت ماہ';
+  static const String missingColumnsError =
+      'فائل میں ضروری کالم موجود نہیں۔ رقمِ تسجیل اور نام مع ولدیت لازمی ہیں۔';
+  static const String importPreviewTitle = 'درآمد کا جائزہ';
+  static const String totalRecords = 'کل ریکارڈ';
+  static const String validRecords = 'درست ریکارڈ';
+  static const String duplicateRecords = 'نقل ریکارڈ';
+  static const String invalidRecords = 'نامکمل ریکارڈ';
+  static const String confirmImport = 'درآمد شروع کریں';
+  static const String importDone = 'درآمد مکمل';
+  static const String nothingToImport = 'درآمد کے لیے کوئی نیا ریکارڈ نہیں۔';
+  static const String importHistory = 'درآمد کی تاریخ';
+  static const String noImportsYet = 'ابھی کوئی فائل درآمد نہیں کی گئی۔';
 
   // ---------------------------------------------------------------------
   // Empty states, one per section so the wording is specific

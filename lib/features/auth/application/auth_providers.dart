@@ -139,12 +139,18 @@ class AppSessionNotifier extends AsyncNotifier<AppSession?> {
     required String password,
     required String fullName,
     required String registrationNumber,
+    String? gender,
+    String? wifaqId,
+    String? instituteName,
   }) async {
     await ref.read(authRepositoryProvider).signUp(
           email: email,
           password: password,
           fullName: fullName,
           registrationNumber: registrationNumber,
+          gender: gender,
+          wifaqId: wifaqId,
+          instituteName: instituteName,
         );
   }
 
