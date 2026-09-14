@@ -178,6 +178,16 @@ class AppStrings {
   static const String recordMatched = 'آپ کا ریکارڈ مل گیا';
   static const String continueRegistration = 'رجسٹریشن جاری رکھیں';
 
+  // Adding participants one at a time
+  static const String importFromFile = 'فائل سے درآمد کریں';
+  static const String addByForm = 'فارم سے شامل کریں';
+  static const String saveAndAddAnother = 'محفوظ کریں اور اگلا شامل کریں';
+  static const String participantAlreadyExists =
+      'یہ رقمِ تسجیل پہلے سے ریکارڈ میں موجود ہے۔';
+  static const String periodNeedsYear =
+      'دورانیہ میں کورس کا سال لکھیں، مثلاً: مارچ تا جون 2024';
+  static const String optionalMonths = 'داخلہ اور فراغت کے مہینے (اختیاری)';
+
   // ---------------------------------------------------------------------
   // Kar-guzari detail and the follow-up cycle
   // ---------------------------------------------------------------------

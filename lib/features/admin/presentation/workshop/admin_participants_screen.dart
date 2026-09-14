@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/routing/app_navigation.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/urdu_numbers.dart';
@@ -133,100 +135,6 @@ class AdminParticipantsScreen extends ConsumerWidget {
     );
   }
 
-  /// Adds a single participant, for a late enrolment that missed the file.
-  static Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final TextEditingController number = TextEditingController();
-    final TextEditingController name = TextEditingController();
-    final TextEditingController start = TextEditingController();
-    final TextEditingController end = TextEditingController();
-
-    final bool saved = await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) => AlertDialog(
-            title: const Text(AppStrings.addParticipant),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  AppFormField(
-                    label: AppStrings.registrationNumber,
-                    hintText: AppStrings.hintRegistrationNumber,
-                    controller: number,
-                    isRequired: true,
-                    prefixIcon: Icons.badge_outlined,
-                  ),
-                  AppSpacing.gapLg,
-                  AppFormField(
-                    label: AppStrings.participantName,
-                    controller: name,
-                    isRequired: true,
-                    prefixIcon: Icons.person_outline,
-                  ),
-                  AppSpacing.gapLg,
-                  AppFormField(
-                    label: AppStrings.courseStartMonth,
-                    controller: start,
-                    prefixIcon: Icons.event_outlined,
-                  ),
-                  AppSpacing.gapLg,
-                  AppFormField(
-                    label: AppStrings.courseCompletionMonth,
-                    controller: end,
-                    prefixIcon: Icons.event_available_outlined,
-                  ),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text(AppStrings.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text(AppStrings.save),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (!saved || number.text.trim().isEmpty || name.text.trim().isEmpty) {
-      number.dispose();
-      name.dispose();
-      start.dispose();
-      end.dispose();
-      return;
-    }
-
-    try {
-      await ref.read(courseRepositoryProvider).addParticipant(
-            registrationNumber: number.text,
-            fullName: name.text,
-            courseStartDate: start.text,
-            courseCompletionDate: end.text,
-          );
-      ref.invalidate(courseParticipantsProvider);
-      messenger
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(content: Text(AppStrings.participantAdded)),
-        );
-    } catch (error) {
-      messenger
-        ..clearSnackBars()
-        ..showSnackBar(SnackBar(
-          content: Text('${AppStrings.somethingWentWrong} — $error'),
-        ));
-    } finally {
-      number.dispose();
-      name.dispose();
-      start.dispose();
-      end.dispose();
-    }
-  }
-
   static Future<void> _showHistory(BuildContext context, WidgetRef ref) {
     return showModalBottomSheet<void>(
       context: context,
@@ -294,17 +202,30 @@ class AdminParticipantsScreen extends ConsumerWidget {
       emptyIcon: Icons.how_to_reg_outlined,
       emptyTitle: AppStrings.noParticipantsYet,
       emptyMessage: AppStrings.fileFormatHint,
+      header: Padding(
+        padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: PrimaryButton(
+                label: AppStrings.importFromFile,
+                icon: Icons.upload_file_outlined,
+                onPressed: () => _import(context, ref),
+              ),
+            ),
+            AppSpacing.hGapMd,
+            Expanded(
+              child: SecondaryButton(
+                label: AppStrings.addByForm,
+                icon: Icons.person_add_alt_outlined,
+                onPressed: () =>
+                    context.goToRoute(AppRoutes.adminAddParticipant),
+              ),
+            ),
+          ],
+        ),
+      ),
       actions: <Widget>[
-        IconButton(
-          tooltip: AppStrings.importParticipants,
-          icon: const Icon(Icons.upload_file_outlined),
-          onPressed: () => _import(context, ref),
-        ),
-        IconButton(
-          tooltip: AppStrings.addParticipant,
-          icon: const Icon(Icons.add_circle_outline),
-          onPressed: () => _add(context, ref),
-        ),
         IconButton(
           tooltip: AppStrings.importHistory,
           icon: const Icon(Icons.history_outlined),

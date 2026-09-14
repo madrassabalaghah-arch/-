@@ -120,6 +120,10 @@ class AppRoutes {
   static const String adminWorkshop = '/admin/workshop';
   static const String adminWorkshopName = 'adminWorkshop';
 
+  /// The form for adding one participant at a time.
+  static const String adminAddParticipant = '/admin/workshop/add';
+  static const String adminAddParticipantName = 'adminAddParticipant';
+
   static const String adminActivities = '/admin/activities';
   static const String adminActivitiesName = 'adminActivities';
 
@@ -214,6 +218,7 @@ class AppRoutes {
     mentorReportReview,
     mentorEvaluations,
     adminWorkshop,
+    adminAddParticipant,
     adminActivities,
     adminUser,
     adminWifaqs,

@@ -137,13 +137,33 @@ class CourseRepository {
     required String fullName,
     String? courseStartDate,
     String? courseCompletionDate,
+    String? coursePeriod,
   }) async {
     await _client.from('course_participants').insert(<String, dynamic>{
       'registration_number': registrationNumber.trim(),
       'full_name': fullName.trim(),
       'course_start_date': _clean(courseStartDate),
       'course_completion_date': _clean(courseCompletionDate),
+      'course_period': _clean(coursePeriod),
     });
+  }
+
+  /// True when this رقمِ تسجیل is already on the register.
+  ///
+  /// Compared on the same normalised key the database's unique index uses, so
+  /// "MD-2026/001" and "md 2026 001" are recognised as one number and the
+  /// administrator is told so in Urdu, before the insert would be refused.
+  Future<bool> participantExists(String registrationNumber) async {
+    final String key = _key(registrationNumber);
+    if (key.isEmpty) {
+      return false;
+    }
+    final Map<String, dynamic>? row = await _client
+        .from('course_participants')
+        .select('id')
+        .eq('registration_key', key)
+        .maybeSingle();
+    return row != null;
   }
 
   /// Bars or restores a participant's ability to register.
