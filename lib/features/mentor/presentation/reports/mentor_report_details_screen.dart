@@ -94,7 +94,8 @@ class MentorReportDetailsScreen extends ConsumerWidget {
           PrimaryButton(
             label: AppStrings.reportReview,
             icon: Icons.rate_review_outlined,
-            onPressed: () => context.goToRoute(AppRoutes.mentorReportReview),
+            onPressed: () =>
+                context.goToRoute(AppRoutes.mentorReportReview, extra: report),
           ),
         ],
       ),

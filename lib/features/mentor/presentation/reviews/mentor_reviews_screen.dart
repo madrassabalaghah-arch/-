@@ -33,7 +33,8 @@ class MentorReviewsScreen extends ConsumerWidget {
         onTap: () => context.goToRoute(AppRoutes.mentorReportDetails,
             extra: item),
         trailing: TextButton(
-          onPressed: () => context.goToRoute(AppRoutes.mentorReportReview),
+          onPressed: () =>
+              context.goToRoute(AppRoutes.mentorReportReview, extra: item),
           child: const Text(AppStrings.review),
         ),
       ),

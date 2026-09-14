@@ -82,6 +82,22 @@ class KarGuzariDetails {
   final String? challenges;
   final String? futurePlan;
 
+  /// Reads the fuller record back from a `reports` row.
+  factory KarGuzariDetails.fromMap(Map<String, dynamic> row) =>
+      KarGuzariDetails(
+        activityType: nullableString(row, 'activity_type'),
+        activityDate: dateOf(row, 'activity_date'),
+        location: nullableString(row, 'location'),
+        organisation: nullableString(row, 'organisation'),
+        beneficiaries:
+            row['beneficiaries'] == null ? null : intOr(row, 'beneficiaries'),
+        learningApplied: nullableString(row, 'learning_applied'),
+        impact: nullableString(row, 'impact'),
+        results: nullableString(row, 'results'),
+        challenges: nullableString(row, 'challenges'),
+        futurePlan: nullableString(row, 'future_plan'),
+      );
+
   /// Only the fields that were filled in, so a blank box never overwrites a
   /// stored value with an empty string.
   Map<String, dynamic> toColumns() {

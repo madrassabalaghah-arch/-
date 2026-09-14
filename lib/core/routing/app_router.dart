@@ -408,7 +408,7 @@ final List<RouteBase> _mentorFullScreenRoutes = <RouteBase>[
     path: AppRoutes.mentorGraduateDetails,
     name: AppRoutes.mentorGraduateDetailsName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorGraduateDetailsScreen(),
+        MentorGraduateDetailsScreen(graduate: state.extra! as GraduateSummary),
   ),
   GoRoute(
     path: AppRoutes.mentorReportDetails,
@@ -420,7 +420,7 @@ final List<RouteBase> _mentorFullScreenRoutes = <RouteBase>[
     path: AppRoutes.mentorReportReview,
     name: AppRoutes.mentorReportReviewName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorReportReviewScreen(),
+        MentorReportReviewScreen(report: state.extra! as ReportItem),
   ),
   GoRoute(
     path: AppRoutes.mentorEvaluations,

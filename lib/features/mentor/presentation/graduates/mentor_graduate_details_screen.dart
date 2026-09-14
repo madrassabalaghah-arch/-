@@ -17,26 +17,21 @@ import '../../../../shared/widgets/widgets.dart';
 /// The demonstration data has no selection mechanism yet, so the first record
 /// is shown. Selecting a specific graduate arrives with real data.
 class MentorGraduateDetailsScreen extends ConsumerWidget {
-  const MentorGraduateDetailsScreen({super.key});
+  const MentorGraduateDetailsScreen({required this.graduate, super.key});
+
+  /// The graduate that was tapped. This screen used to show the first
+  /// graduate in the list whoever was opened, and matched their reports by
+  /// name, so two graduates sharing a name would have seen each other's work.
+  final GraduateSummary graduate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
-    final List<GraduateSummary> graduates =
-        ref.watch(mentorGraduatesProvider).value ?? const <GraduateSummary>[];
     final List<ReportItem> reports =
         ref.watch(mentorReportsProvider).value ?? const <ReportItem>[];
 
-    if (graduates.isEmpty) {
-      return const AppScaffold(
-        title: AppStrings.graduateDetails,
-        body: EmptyState(),
-      );
-    }
-
-    final GraduateSummary graduate = graduates.first;
     final List<ReportItem> graduateReports = reports
-        .where((ReportItem r) => r.graduateName == graduate.name)
+        .where((ReportItem r) => r.graduateId == graduate.id)
         .toList();
 
     return AppScaffold(
@@ -123,12 +118,7 @@ class MentorGraduateDetailsScreen extends ConsumerWidget {
               ),
               AppSpacing.gapMd,
             ],
-          AppSpacing.gapMd,
-          PrimaryButton(
-            label: AppStrings.reportReview,
-            icon: Icons.rate_review_outlined,
-            onPressed: () => context.goToRoute(AppRoutes.mentorReportReview),
-          ),
+
         ],
       ),
     );

@@ -1,3 +1,4 @@
+import 'follow_up_status.dart';
 import 'package:flutter/material.dart';
 
 import 'app_status.dart';
@@ -102,7 +103,12 @@ class ReportItem {
     this.dueAt,
     this.createdAt,
     this.categoryId,
+    this.details = const KarGuzariDetails(),
   });
+
+  /// The fuller record — impact, results, beneficiaries and so on — so a
+  /// reviewer reads what was actually done, not only the title.
+  final KarGuzariDetails details;
 
   final String id;
   final String title;
@@ -138,6 +144,7 @@ class ReportItem {
       dueAt: dateOf(row, 'due_at'),
       createdAt: dateOf(row, 'created_at'),
       categoryId: nullableString(row, 'category_id'),
+      details: KarGuzariDetails.fromMap(row),
     );
   }
 

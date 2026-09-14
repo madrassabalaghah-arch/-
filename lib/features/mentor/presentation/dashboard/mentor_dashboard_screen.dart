@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_quick_actions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/app_navigation.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -155,25 +154,22 @@ class _MentorBody extends ConsumerWidget {
               reports.value!,
               evaluations.value!,
             ),
-            // Each figure opens the screen it was counted from: the first is
-            // the assigned graduates, the rest are all report queues.
-            onTap: (int index) => context.goToRoute(
-              index == 0 ? AppRoutes.mentorGraduates : AppRoutes.mentorReviews,
-            ),
+            // Each figure opens the screen it was counted from: assigned
+            // graduates, completed reviews, and otherwise the review queue.
+            onTap: (int index) => context.goToRoute(switch (index) {
+              0 => AppRoutes.mentorGraduates,
+              4 => AppRoutes.mentorEvaluations,
+              _ => AppRoutes.mentorReviews,
+            }),
           )
         else if (graduates.hasError || reports.hasError)
           const DashboardCard(child: ErrorState(compact: true))
         else
           const DashboardCard(child: LoadingState(compact: true)),
         AppSpacing.gapXl,
-        const SectionHeader(title: AppStrings.quickActions),
-        const QuickActionGrid(actions: AppQuickActions.mentor),
+        const _TodaysWork(),
         AppSpacing.gapXl,
-        SectionHeader(
-          title: AppStrings.recentGraduates,
-          actionLabel: AppStrings.viewAll,
-          onAction: () => context.goToRoute(AppRoutes.mentorGraduates),
-        ),
+        const SectionHeader(title: AppStrings.recentGraduates),
         AsyncSection<List<GraduateSummary>>(
           value: graduates,
           isEmpty: (List<GraduateSummary> g) => g.isEmpty,
@@ -194,46 +190,99 @@ class _MentorBody extends ConsumerWidget {
                     avatarText: graduate.avatarLabel,
                     status: graduate.status,
                     progress: graduate.progress,
-                    onTap: () =>
-                        context.goToRoute(AppRoutes.mentorGraduateDetails),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        AppSpacing.gapMd,
-        SectionHeader(
-          title: AppStrings.newReports,
-          actionLabel: AppStrings.viewAll,
-          onAction: () => context.goToRoute(AppRoutes.mentorReviews),
-        ),
-        AsyncSection<List<ReportItem>>(
-          value: reports,
-          isEmpty: (List<ReportItem> r) => r.isEmpty,
-          emptyTitle: AppStrings.noReportsYet,
-          emptyIcon: Icons.description_outlined,
-          onRetry: () => ref.invalidate(mentorReportsProvider),
-          builder: (BuildContext context, List<ReportItem> items) => Column(
-            children: <Widget>[
-              for (final ReportItem report in items.take(3))
-                Padding(
-                  padding:
-                      const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
-                  child: AppListTile(
-                    title: report.title,
-                    subtitle: report.graduateName,
-                    detail: report.dateLabel,
-                    icon: Icons.description_outlined,
-                    status: report.status,
-                    accentColor: AppColors.tealGreen,
                     onTap: () => context.goToRoute(
-                      AppRoutes.mentorReportDetails,
-                      extra: report,
+                      AppRoutes.mentorGraduateDetails,
+                      extra: graduate,
                     ),
                   ),
                 ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What needs the mentor now: the کارگزاری waiting for their review, each
+/// opening its review directly, and the graduates those submissions belong
+/// to. Counted from the mentor's own live queue; nothing here is estimated.
+class _TodaysWork extends ConsumerWidget {
+  const _TodaysWork();
+
+  static const Set<AppStatus> _waiting = <AppStatus>{
+    AppStatus.submitted,
+    AppStatus.pending,
+    AppStatus.underReview,
+    AppStatus.late,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const SectionHeader(title: AppStrings.todaysWork),
+        AsyncSection<List<ReportItem>>(
+          value: ref.watch(mentorReportsProvider).whenData(
+                (List<ReportItem> all) => all
+                    .where((ReportItem r) => _waiting.contains(r.status))
+                    .toList(),
+              ),
+          isEmpty: (List<ReportItem> r) => r.isEmpty,
+          emptyTitle: AppStrings.emptyNoReviewsWaiting,
+          emptyIcon: Icons.task_alt_outlined,
+          onRetry: () => ref.invalidate(mentorReportsProvider),
+          builder: (BuildContext context, List<ReportItem> waiting) {
+            final List<String> names = <String>{
+              for (final ReportItem r in waiting)
+                if (r.graduateName != null) r.graduateName!,
+            }.toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  '${AppStrings.awaitingYourReview}: '
+                  '${UrduNumbers.fromInt(waiting.length)}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                AppSpacing.gapSm,
+                for (final ReportItem report in waiting.take(3))
+                  Padding(
+                    padding:
+                        const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
+                    child: AppListTile(
+                      title: report.title,
+                      subtitle: report.graduateName,
+                      detail: report.dateLabel,
+                      icon: Icons.rate_review_outlined,
+                      status: report.status,
+                      accentColor: AppColors.tealGreen,
+                      onTap: () => context.goToRoute(
+                        AppRoutes.mentorReportReview,
+                        extra: report,
+                      ),
+                    ),
+                  ),
+                if (names.isNotEmpty) ...<Widget>[
+                  AppSpacing.gapXs,
+                  Text(
+                    AppStrings.needsFeedback,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  AppSpacing.gapXs,
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: <Widget>[
+                      for (final String name in names) Chip(label: Text(name)),
+                    ],
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );
