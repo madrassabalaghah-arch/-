@@ -55,6 +55,7 @@ class InstituteDirectoryEntry {
   const InstituteDirectoryEntry({
     this.instituteId,
     this.instituteName,
+    this.wifaqName,
     this.city,
     this.status = AppStatus.active,
     this.graduateTotal = 0,
@@ -65,6 +66,9 @@ class InstituteDirectoryEntry {
 
   final String? instituteId;
   final String? instituteName;
+
+  /// Set only when institutes are listed across every wifaq.
+  final String? wifaqName;
   final String? city;
   final AppStatus status;
   final int graduateTotal;
@@ -79,6 +83,7 @@ class InstituteDirectoryEntry {
       InstituteDirectoryEntry(
         instituteId: nullableString(row, 'institute_id'),
         instituteName: nullableString(row, 'institute_name'),
+        wifaqName: nullableString(row, 'wifaq_name'),
         city: nullableString(row, 'city'),
         status: AppStatusX.fromDb(nullableString(row, 'status')),
         graduateTotal: intOr(row, 'graduate_total'),

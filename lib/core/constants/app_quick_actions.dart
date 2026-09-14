@@ -63,78 +63,47 @@ class AppQuickActions {
     ),
   ];
 
-  static const List<ManagementArea> adminAreas = <ManagementArea>[
-    ManagementArea(
-      title: AppStrings.manageParticipants,
-      subtitle: 'کورس کے شرکاء، جن کو اکاؤنٹ بنانے کی اجازت ہے۔',
-      icon: Icons.how_to_reg_outlined,
-      route: AppRoutes.adminWorkshop,
+  /// The administrator's areas, grouped as the brief sets out. Every screen
+  /// the flat list used to offer is still here, placed in the group it
+  /// belongs to, and participant verification data sits apart from all of it.
+  static const List<({String title, List<ManagementArea> areas})> adminGroups =
+      <({String title, List<ManagementArea> areas})>[
+    (
+      title: AppStrings.groupManagement,
+      areas: <ManagementArea>[
+        ManagementArea(title: AppStrings.graduateManagement, subtitle: 'اندراج، حیثیت اور تفصیلات۔', icon: Icons.school_outlined, route: AppRoutes.adminGraduates),
+        ManagementArea(title: AppStrings.mentorManagement, subtitle: 'مربیوں کی تفویض اور نگرانی۔', icon: Icons.supervisor_account_outlined, route: AppRoutes.adminMentors),
+        ManagementArea(title: AppStrings.wifaqManagement, subtitle: 'وفاق، ان کے ادارے اور فاضلین۔', icon: Icons.account_balance_outlined, route: AppRoutes.adminWifaqs),
+        ManagementArea(title: AppStrings.allInstitutes, subtitle: 'تمام ادارے اور ان کے فاضل / فاضلہ۔', icon: Icons.location_city_outlined, route: AppRoutes.adminInstitutes),
+        ManagementArea(title: AppStrings.courses, subtitle: 'کورسز اور تربیتی نصاب۔', icon: Icons.menu_book_outlined, route: AppRoutes.adminCourses),
+      ],
     ),
-    ManagementArea(
-      title: AppStrings.graduateManagement,
-      subtitle: 'اندراج، حیثیت اور تربیتی مراحل کا انتظام۔',
-      icon: Icons.school_outlined,
-      route: AppRoutes.adminGraduates,
+    (
+      title: AppStrings.groupKarGuzari,
+      areas: <ManagementArea>[
+        ManagementArea(title: AppStrings.allReports, subtitle: 'تمام کارگزاریاں۔', icon: Icons.description_outlined, route: AppRoutes.adminReports),
+        ManagementArea(title: AppStrings.evidenceManagement, subtitle: 'جمع کردہ ثبوت اور ان کا جائزہ۔', icon: Icons.folder_open_outlined, route: AppRoutes.adminEvidence),
+        ManagementArea(title: AppStrings.allReviews, subtitle: 'مربیوں کے لکھے ہوئے جائزے۔', icon: Icons.fact_check_outlined, route: AppRoutes.adminEvaluations),
+        ManagementArea(title: AppStrings.statisticsReports, subtitle: 'کارگزاری کے اعداد و شمار۔', icon: Icons.insights_outlined, route: AppRoutes.adminStatistics),
+        ManagementArea(title: AppStrings.assignments, subtitle: 'فاضل / فاضلہ کو تفویض کردہ ذمہ داریاں۔', icon: Icons.assignment_ind_outlined, route: AppRoutes.adminAssignments),
+        ManagementArea(title: AppStrings.practicalActivities, subtitle: 'عملی سرگرمیوں کی فہرست۔', icon: Icons.volunteer_activism_outlined, route: AppRoutes.adminActivities),
+      ],
     ),
-    ManagementArea(
-      title: AppStrings.mentorManagement,
-      subtitle: 'مربیوں کی تفویض اور نگرانی۔',
-      icon: Icons.supervisor_account_outlined,
-      route: AppRoutes.adminMentors,
+    (
+      title: AppStrings.groupSystem,
+      areas: <ManagementArea>[
+        ManagementArea(title: AppStrings.notifications, subtitle: 'اطلاعات اور اعلانات۔', icon: Icons.notifications_none_outlined, route: AppRoutes.adminNotifications),
+        ManagementArea(title: AppStrings.recognitions, subtitle: 'اعزازات اور حوصلہ افزائی۔', icon: Icons.workspace_premium_outlined, route: AppRoutes.adminRecognition),
+        ManagementArea(title: AppStrings.importantLinks, subtitle: 'ویڈیوز، فارم، ویب سائٹس اور رہنما مواد۔', icon: Icons.link_outlined, route: AppRoutes.adminLinks),
+        ManagementArea(title: AppStrings.systemSettings, subtitle: 'کارگزاری کا وقفہ اور اعزازات کے اصول۔', icon: Icons.tune_outlined, route: AppRoutes.adminSettings),
+        ManagementArea(title: AppStrings.standards, subtitle: 'جائزے کے معیارات اور ان کا وزن۔', icon: Icons.rule_outlined, route: AppRoutes.adminStandards),
+      ],
     ),
-    ManagementArea(
-      title: AppStrings.wifaqManagement,
-      subtitle: 'وفاق اور منسلک اداروں کی فہرست۔',
-      icon: Icons.account_balance_outlined,
-      route: AppRoutes.adminWifaqs,
-    ),
-    ManagementArea(
-      title: AppStrings.practicalActivities,
-      subtitle: 'وہ فہرست جس میں سے فاضل / فاضلہ سرگرمی منتخب کرتے ہیں۔',
-      icon: Icons.volunteer_activism_outlined,
-      route: AppRoutes.adminActivities,
-    ),
-    ManagementArea(
-      title: AppStrings.courses,
-      subtitle: 'کورسز اور تربیتی نصاب۔',
-      icon: Icons.menu_book_outlined,
-      route: AppRoutes.adminCourses,
-    ),
-    ManagementArea(
-      title: AppStrings.assignments,
-      subtitle: 'فاضل / فاضلہ کو تفویض کردہ ذمہ داریاں۔',
-      icon: Icons.assignment_ind_outlined,
-      route: AppRoutes.adminAssignments,
-    ),
-    ManagementArea(
-      title: AppStrings.evidenceManagement,
-      subtitle: 'فاضل / فاضلہ کے جمع کردہ ثبوت دیکھیں۔',
-      icon: Icons.folder_open_outlined,
-      route: AppRoutes.adminEvidence,
-    ),
-    ManagementArea(
-      title: AppStrings.allReports,
-      subtitle: 'تمام کارگزاریوں کا مجموعی جائزہ۔',
-      icon: Icons.description_outlined,
-      route: AppRoutes.adminReports,
-    ),
-    ManagementArea(
-      title: AppStrings.systemSettings,
-      subtitle: 'کارگزاری کا وقفہ اور اعزازات کے اصول۔',
-      icon: Icons.tune_outlined,
-      route: AppRoutes.adminSettings,
-    ),
-    ManagementArea(
-      title: AppStrings.standards,
-      subtitle: 'جائزے کے معیارات اور ان کا وزن۔',
-      icon: Icons.rule_outlined,
-      route: AppRoutes.adminStandards,
-    ),
-    ManagementArea(
-      title: AppStrings.recognitions,
-      subtitle: 'اعزازات اور حوصلہ افزائی کا نظام۔',
-      icon: Icons.workspace_premium_outlined,
-      route: AppRoutes.adminRecognition,
+    (
+      title: AppStrings.groupBackend,
+      areas: <ManagementArea>[
+        ManagementArea(title: AppStrings.backendDataManagement, subtitle: 'کورس کے شرکاء کا تصدیقی ڈیٹا، فائل سے درآمد۔', icon: Icons.storage_outlined, route: AppRoutes.adminWorkshop),
+      ],
     ),
   ];
 }

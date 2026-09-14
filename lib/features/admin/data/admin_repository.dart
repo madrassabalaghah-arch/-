@@ -228,6 +228,41 @@ class AdminRepository {
         .eq('id', id);
   }
 
+  /// Every institute with its graduate counts, across all wifaqs.
+  Future<List<InstituteDirectoryEntry>> allInstitutes() async {
+    final List<dynamic> rows =
+        await _client.rpc<List<dynamic>>('institute_directory_all');
+    return rows
+        .map((dynamic r) =>
+            InstituteDirectoryEntry.fromMap(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Every evaluation written. Row level security admits an administrator to
+  /// all of them.
+  Future<List<EvaluationItem>> evaluations() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('evaluations')
+        .select('*, reports(title)')
+        .order('created_at', ascending: false);
+    return rows.map(EvaluationItem.fromMap).toList();
+  }
+
+  /// کارگزاری counted by status and by category.
+  Future<List<({String section, String label, int total})>>
+      karGuzariStatistics() async {
+    final List<dynamic> rows =
+        await _client.rpc<List<dynamic>>('karguzari_statistics');
+    return rows.map((dynamic r) {
+      final Map<String, dynamic> m = r as Map<String, dynamic>;
+      return (
+        section: (m['section'] as String?) ?? '',
+        label: (m['label'] as String?) ?? '',
+        total: (m['total'] as num?)?.toInt() ?? 0,
+      );
+    }).toList();
+  }
+
   Future<List<WifaqItem>> wifaqs() async {
     final List<Map<String, dynamic>> rows =
         await _client.from('wifaqs').select().order('name');

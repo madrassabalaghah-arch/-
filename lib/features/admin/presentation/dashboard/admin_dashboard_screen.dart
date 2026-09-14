@@ -80,8 +80,12 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 AppSpacing.gapXl,
-                const SectionHeader(title: AppStrings.managementAreas),
-                const _ManagementGrid(areas: AppQuickActions.adminAreas),
+                for (final ({String title, List<ManagementArea> areas}) group
+                    in AppQuickActions.adminGroups) ...<Widget>[
+                  SectionHeader(title: group.title),
+                  _ManagementGrid(areas: group.areas),
+                  AppSpacing.gapXl,
+                ],
                 AppSpacing.gapXl,
                 SectionHeader(
                   title: AppStrings.recentNotifications,

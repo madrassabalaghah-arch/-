@@ -10,6 +10,7 @@ import '../../features/admin/presentation/evidence/admin_evidence_screen.dart';
 import '../../features/admin/presentation/graduates/admin_graduates_screen.dart';
 import '../../features/admin/presentation/mentors/admin_mentors_screen.dart';
 import '../../features/admin/presentation/notifications/admin_notifications_screen.dart';
+import '../../features/admin/presentation/overview/admin_overview_screens.dart';
 import '../../features/admin/presentation/recognition/admin_recognition_screen.dart';
 import '../../features/admin/presentation/reports/admin_report_detail_screen.dart';
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
@@ -507,6 +508,24 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminReportDetailName,
     builder: (BuildContext context, GoRouterState state) =>
         AdminReportDetailScreen(report: state.extra! as ReportItem),
+  ),
+  GoRoute(
+    path: AppRoutes.adminInstitutes,
+    name: AppRoutes.adminInstitutesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminInstitutesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminEvaluations,
+    name: AppRoutes.adminEvaluationsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminEvaluationsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminStatistics,
+    name: AppRoutes.adminStatisticsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminStatisticsScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminSettings,

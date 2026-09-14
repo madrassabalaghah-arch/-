@@ -138,6 +138,15 @@ class AppRoutes {
   static const String adminSettings = '/admin/settings';
   static const String adminSettingsName = 'adminSettings';
 
+  static const String adminInstitutes = '/admin/institutes';
+  static const String adminInstitutesName = 'adminInstitutes';
+
+  static const String adminEvaluations = '/admin/evaluations';
+  static const String adminEvaluationsName = 'adminEvaluations';
+
+  static const String adminStatistics = '/admin/statistics';
+  static const String adminStatisticsName = 'adminStatistics';
+
   static const String adminReportDetail = '/admin/report-detail';
   static const String adminReportDetailName = 'adminReportDetail';
 
@@ -188,6 +197,9 @@ class AppRoutes {
     adminEvidence,
     adminReportDetail,
     adminSettings,
+    adminInstitutes,
+    adminEvaluations,
+    adminStatistics,
     mentorGraduates,
     mentorReviews,
     mentorEvidence,

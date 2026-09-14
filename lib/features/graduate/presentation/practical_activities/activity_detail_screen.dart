@@ -139,6 +139,39 @@ class ActivityDetailScreen extends ConsumerWidget {
               ],
             ),
           ),
+          AppSpacing.gapXl,
+          const SectionHeader(title: AppStrings.reviewAndFeedback),
+          AsyncSection<List<EvaluationItem>>(
+            value: ref.watch(graduateEvaluationsProvider).whenData(
+                  (List<EvaluationItem> all) => all
+                      .where((EvaluationItem e) =>
+                          (work.value?.reports ?? const <ReportItem>[])
+                              .any((ReportItem r) => r.id == e.reportId))
+                      .toList(),
+                ),
+            isEmpty: (List<EvaluationItem> e) => e.isEmpty,
+            emptyTitle: AppStrings.noReviewYet,
+            emptyIcon: Icons.fact_check_outlined,
+            onRetry: () => ref.invalidate(graduateEvaluationsProvider),
+            builder: (BuildContext context, List<EvaluationItem> reviews) =>
+                Column(
+              children: <Widget>[
+                for (final EvaluationItem e in reviews)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      bottom: AppSpacing.md,
+                    ),
+                    child: AppListTile(
+                      title: e.title ?? AppStrings.reviewStepReport,
+                      subtitle: e.comment,
+                      detail: e.reviewerName,
+                      icon: Icons.fact_check_outlined,
+                      accentColor: AppColors.oliveGreen,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

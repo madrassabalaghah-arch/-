@@ -27,12 +27,35 @@ class AdminEvidenceScreen extends ConsumerWidget {
       emptyTitle: AppStrings.noRecordsYet,
       itemBuilder: (BuildContext context, EvidenceItem item) => AppListTile(
         title: item.title,
-        subtitle: '${item.typeLabel} • ${item.sizeLabel}',
-        detail: item.dateLabel,
+        subtitle: '${item.typeLabel} • ${item.reviewLabel}',
+        detail: item.reviewNote == null
+            ? item.dateLabel
+            : '${item.dateLabel} — ${item.reviewNote}',
         icon: item.icon,
         status: item.status,
         accentColor: AppColors.tealGreen,
         onTap: () => openEvidence(context, ref, item),
+        trailing: PopupMenuButton<AppStatus>(
+          tooltip: AppStrings.reviewEvidence,
+          icon: const Icon(Icons.fact_check_outlined),
+          onSelected: (AppStatus verdict) async {
+            await ref
+                .read(mentorRepositoryProvider)
+                .reviewEvidence(evidenceId: item.id, verdict: verdict);
+            ref.invalidate(adminEvidenceProvider);
+          },
+          itemBuilder: (BuildContext context) =>
+              const <PopupMenuEntry<AppStatus>>[
+            PopupMenuItem<AppStatus>(
+              value: AppStatus.completed,
+              child: Text(AppStrings.evidenceApproved),
+            ),
+            PopupMenuItem<AppStatus>(
+              value: AppStatus.revisionRequired,
+              child: Text(AppStrings.evidenceNeedsInfo),
+            ),
+          ],
+        ),
       ),
     );
   }

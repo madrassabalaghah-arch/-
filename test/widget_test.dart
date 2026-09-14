@@ -31,6 +31,8 @@ import 'package:madrassa_graduate_app/features/auth/data/auth_repository.dart';
 import 'package:madrassa_graduate_app/shared/models/app_role.dart';
 import 'package:madrassa_graduate_app/shared/widgets/widgets.dart';
 import 'package:madrassa_graduate_app/shared/models/people.dart';
+import 'package:madrassa_graduate_app/shared/models/models.dart';
+import 'package:madrassa_graduate_app/shared/providers/data_providers.dart';
 
 
 /// An authenticated account whose profile and role reads fail, which is what
@@ -448,5 +450,40 @@ void main() {
     expect(parsed.rows[3].problem, CandidateProblem.missingNumber);
     // A quoted field keeps its comma instead of splitting into two columns.
     expect(good.last.fullName, 'خان, محمد');
+  });
+
+  test('a summary card counts exactly the rows its list will show', () {
+    const ReportCategory teaching = ReportCategory(
+      id: 'c1', key: 'teaching', groupKey: 'institutional',
+      groupTitle: 'ادارتی خدمات', title: 'تدریس');
+    const ReportCategory counselling = ReportCategory(
+      id: 'c2', key: 'counselling', groupKey: ReportCategory.socialGroup,
+      groupTitle: 'معاشرتی و دینی خدمات', title: 'کونسلنگ');
+    const List<ReportCategory> categories = <ReportCategory>[teaching, counselling];
+
+    ReportItem report(String id, AppStatus status, String? category) =>
+        ReportItem(id: id, title: id, graduateId: 'g', status: status,
+            categoryId: category);
+
+    final List<ReportItem> reports = <ReportItem>[
+      report('draft-teaching', AppStatus.draft, 'c1'),
+      report('done-counselling', AppStatus.completed, 'c2'),
+      report('open-counselling', AppStatus.submitted, 'c2'),
+      report('done-uncategorised', AppStatus.completed, null),
+    ];
+
+    List<String> ids(List<ReportItem> r) => r.map((ReportItem x) => x.id).toList();
+
+    expect(ids(filterKarGuzari(reports, categories)), hasLength(4),
+        reason: 'مجموعی کارگزاریاں counts every کارگزاری');
+    expect(ids(filterKarGuzari(reports, categories, filter: KarGuzariFilter.social)),
+        <String>['done-counselling', 'open-counselling'],
+        reason: 'only the social group counts as معاشرتی و اصلاحی');
+    expect(ids(filterKarGuzari(reports, categories, filter: KarGuzariFilter.completed)),
+        <String>['done-counselling', 'done-uncategorised'],
+        reason: 'مکمل شدہ پروجیکٹس is decided by review status, not category');
+    expect(ids(filterKarGuzari(reports, categories, categoryKey: 'teaching')),
+        <String>['draft-teaching'],
+        reason: 'a quick access category narrows to that category alone');
   });
 }

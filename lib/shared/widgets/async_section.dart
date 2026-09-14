@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'dashboard_card.dart';
-import 'empty_state.dart';
 import 'error_state.dart';
 import 'loading_state.dart';
 
@@ -49,12 +51,35 @@ class AsyncSection<T> extends StatelessWidget {
       data: (T data) {
         final bool empty = isEmpty?.call(data) ?? false;
         if (empty) {
+          // One quiet row rather than a tall card: a dashboard can show several
+          // empty sections at once, and each should read as a short, kind
+          // sentence, not take a screenful.
           return DashboardCard(
-            child: EmptyState(
-              compact: true,
-              icon: emptyIcon,
-              title: emptyTitle,
-              message: emptyMessage,
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: <Widget>[
+                Icon(emptyIcon, size: 22, color: AppColors.gray),
+                AppSpacing.hGapMd,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        emptyTitle ?? AppStrings.noData,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      if (emptyMessage != null)
+                        Text(
+                          emptyMessage!,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         }

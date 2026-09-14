@@ -374,7 +374,7 @@ class AppStrings {
   // Bottom navigation
   // ---------------------------------------------------------------------
   static const String navHome = 'ہوم';
-  static const String navMyProfile = 'میری پروفائل';
+  static const String navMyProfile = 'میرا پروفائل';
   static const String navLinks = 'اہم لنکس';
   static const String navDashboard = 'ڈیش بورڈ';
   static const String navReports = 'کارگزاری';

@@ -491,3 +491,23 @@ final FutureProvider<({int total, int social, int completed})>
     completed: count(KarGuzariFilter.completed),
   );
 });
+
+final FutureProvider<List<InstituteDirectoryEntry>> adminInstitutesProvider =
+    FutureProvider<List<InstituteDirectoryEntry>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).allInstitutes();
+});
+
+final FutureProvider<List<EvaluationItem>> adminEvaluationsProvider =
+    FutureProvider<List<EvaluationItem>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).evaluations();
+});
+
+final FutureProvider<List<({String section, String label, int total})>>
+    adminStatisticsReportProvider =
+    FutureProvider<List<({String section, String label, int total})>>(
+        (Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).karGuzariStatistics();
+});
