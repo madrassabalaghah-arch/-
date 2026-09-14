@@ -44,6 +44,7 @@ class AuthRepository {
     String? gender,
     String? wifaqId,
     String? instituteName,
+    String? coursePeriod,
   }) {
     return _auth.signUp(
       email: email.trim(),
@@ -60,6 +61,7 @@ class AuthRepository {
         'gender': gender,
         'wifaq_id': wifaqId,
         'institute_name': instituteName?.trim(),
+        'course_period': coursePeriod?.trim(),
       },
     );
   }

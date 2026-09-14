@@ -31,6 +31,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final GlobalKey<FormState> _form = GlobalKey<FormState>();
   final TextEditingController _number = TextEditingController();
   final TextEditingController _name = TextEditingController();
+  final TextEditingController _period = TextEditingController();
+
+  /// The matched record. Until it exists only the three identifying fields are
+  /// shown; the rest of registration continues once the register confirms them.
+  CourseVerification? _verified;
   final TextEditingController _institute = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
@@ -46,6 +51,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   void dispose() {
     _number.dispose();
     _name.dispose();
+    _period.dispose();
     _institute.dispose();
     _email.dispose();
     _password.dispose();
@@ -74,8 +80,36 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _verify() async {
     if (!(_form.currentState?.validate() ?? false)) {
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final CourseVerification result = await ref
+          .read(courseRepositoryProvider)
+          .verify(_number.text, fullName: _name.text, coursePeriod: _period.text);
+      setState(() {
+        _busy = false;
+        if (result.valid) {
+          _verified = result;
+        } else {
+          _error = _messageFor(result.verdict);
+        }
+      });
+    } catch (error) {
+      setState(() {
+        _busy = false;
+        _error = authErrorMessage(error);
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_verified == null || !(_form.currentState?.validate() ?? false)) {
       return;
     }
     if (_wifaqId == null) {
@@ -89,21 +123,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
 
     try {
-      // Checked here so a refusal can be explained in the applicant's own
-      // terms. The signup trigger checks the same things again and is what
-      // actually enforces them, so calling the API directly gains nothing.
-      final CourseVerification verification = await ref
-          .read(courseRepositoryProvider)
-          .verify(_number.text, fullName: _name.text);
-
-      if (!verification.valid) {
-        setState(() {
-          _busy = false;
-          _error = _messageFor(verification.verdict);
-        });
-        return;
-      }
-
       await ref.read(appSessionProvider.notifier).signUp(
             email: _email.text,
             password: _password.text,
@@ -112,6 +131,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             gender: _gender,
             wifaqId: _wifaqId,
             instituteName: _institute.text,
+            coursePeriod: _period.text,
           );
 
       if (!mounted) {
@@ -172,7 +192,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               hintText: AppStrings.hintRegistrationNumber,
               controller: _number,
               isRequired: true,
-              enabled: !_busy,
+              enabled: !_busy && _verified == null,
               prefixIcon: Icons.badge_outlined,
               validator: (String? value) =>
                   (value == null || value.trim().isEmpty)
@@ -184,10 +204,34 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               label: AppStrings.participantName,
               controller: _name,
               isRequired: true,
-              enabled: !_busy,
+              enabled: !_busy && _verified == null,
               prefixIcon: Icons.person_outline,
               validator: AppFormField.requiredValidator,
             ),
+            AppSpacing.gapLg,
+            AppFormField(
+              label: AppStrings.coursePeriod,
+              hintText: AppStrings.hintCoursePeriod,
+              controller: _period,
+              isRequired: true,
+              enabled: !_busy && _verified == null,
+              prefixIcon: Icons.date_range_outlined,
+              validator: AppFormField.requiredValidator,
+            ),
+            if (_verified == null) ...<Widget>[
+              AppSpacing.gapXl,
+              PrimaryButton(
+                label: _busy ? AppStrings.verifying : AppStrings.verifyNumber,
+                icon: Icons.verified_outlined,
+                isLoading: _busy,
+                onPressed: _busy ? null : _verify,
+              ),
+            ] else ...<Widget>[
+              AppSpacing.gapLg,
+              _MatchedRecord(
+                verification: _verified!,
+                onChange: _busy ? null : () => setState(() => _verified = null),
+              ),
             AppSpacing.gapLg,
             _CategoryField(
               value: _gender,
@@ -282,6 +326,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               isLoading: _busy,
               onPressed: _busy ? null : _submit,
             ),
+            ],
           ],
         ),
       ),
@@ -360,6 +405,55 @@ class _CategoryField extends StatelessWidget {
               : null,
         ),
       ],
+    );
+  }
+}
+
+/// Confirms which register entry was matched, including its دورانیہ, before
+/// the applicant fills in anything else — and lets them go back if it is not
+/// theirs.
+class _MatchedRecord extends StatelessWidget {
+  const _MatchedRecord({required this.verification, required this.onChange});
+
+  final CourseVerification verification;
+  final VoidCallback? onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+      decoration: const BoxDecoration(
+        color: AppColors.greenTint,
+        borderRadius: AppRadius.radiusMd,
+      ),
+      child: Row(
+        children: <Widget>[
+          const Icon(Icons.verified_outlined, color: AppColors.primaryGreen),
+          AppSpacing.hGapMd,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(AppStrings.recordMatched, style: theme.textTheme.titleSmall),
+                if (verification.participantName != null)
+                  Text(verification.participantName!,
+                      style: theme.textTheme.bodyMedium),
+                if (verification.participantPeriod != null)
+                  Text(
+                    '${AppStrings.coursePeriod}: ${verification.participantPeriod}',
+                    style: theme.textTheme.labelSmall,
+                  ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onChange,
+            child: const Text(AppStrings.changeNumber),
+          ),
+        ],
+      ),
     );
   }
 }

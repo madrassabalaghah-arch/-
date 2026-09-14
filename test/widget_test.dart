@@ -176,25 +176,19 @@ void main() {
     expect(find.text(AppStrings.signUpTitle), findsOneWidget);
     expect(find.text(AppStrings.publicSignupClosed), findsOneWidget);
 
-    // Everything the brief asks for on one form: the register's own two
-    // fields, then the three the participant answers themselves.
+    // Step one is the three identifying fields and nothing else: the profile
+    // questions are not asked until the register has matched the record.
     expect(find.text(AppStrings.registrationNumber), findsOneWidget);
     expect(find.text(AppStrings.participantName), findsOneWidget);
-    expect(find.text(AppStrings.selectCategory), findsOneWidget);
-    expect(find.text(AppStrings.maleLabel), findsOneWidget);
-    expect(find.text(AppStrings.femaleLabel), findsOneWidget);
-    expect(find.text(AppStrings.newInstituteName), findsOneWidget);
-
-    // فاضل is offered before فاضلہ. The layout is right to left, so first
-    // means further to the right.
-    final double male = tester.getTopLeft(find.text(AppStrings.maleLabel)).dx;
-    final double female =
-        tester.getTopLeft(find.text(AppStrings.femaleLabel)).dx;
-    expect(male > female, isTrue,
-        reason: 'فاضل must be offered before فاضلہ');
+    expect(find.text(AppStrings.coursePeriod), findsOneWidget);
+    expect(find.text(AppStrings.selectCategory), findsNothing,
+        reason: 'category must wait until the record has matched');
+    expect(find.text(AppStrings.labelPassword), findsNothing,
+        reason: 'a password must not be asked for before verification');
 
     // An empty form is refused rather than sent to the server.
-    final Finder submit = find.widgetWithText(PrimaryButton, AppStrings.signUp);
+    final Finder submit =
+        find.widgetWithText(PrimaryButton, AppStrings.verifyNumber);
     await tester.ensureVisible(submit);
     await tester.pumpAndSettle();
     await tester.tap(submit);
