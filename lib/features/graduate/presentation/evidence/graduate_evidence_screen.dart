@@ -13,7 +13,12 @@ import '../../../../shared/widgets/widgets.dart';
 
 /// Evidence the graduate has attached, with real uploads to Supabase Storage.
 class GraduateEvidenceScreen extends ConsumerStatefulWidget {
-  const GraduateEvidenceScreen({super.key});
+  const GraduateEvidenceScreen({super.key, this.kind, this.title});
+
+  /// When set, only files of this `evidence.kind` are listed — how the
+  /// dashboard's تصاویر / دستاویزات / دیگر متعلقہ فائلیں open this screen.
+  final String? kind;
+  final String? title;
 
   @override
   ConsumerState<GraduateEvidenceScreen> createState() =>
@@ -124,8 +129,14 @@ class _GraduateEvidenceScreenState
   @override
   Widget build(BuildContext context) {
     return SearchableListScreen<EvidenceItem>(
-      title: AppStrings.evidence,
-      items: ref.watch(graduateEvidenceProvider),
+      title: widget.title ?? AppStrings.evidence,
+      items: widget.kind == null
+          ? ref.watch(graduateEvidenceProvider)
+          : ref.watch(graduateEvidenceProvider).whenData(
+                (List<EvidenceItem> all) => all
+                    .where((EvidenceItem e) => e.kind == widget.kind)
+                    .toList(),
+              ),
       searchText: (EvidenceItem item) => '${item.title} ${item.typeLabel}',
       emptyIcon: Icons.folder_open_outlined,
       emptyTitle: AppStrings.noEvidenceYet,
@@ -147,8 +158,10 @@ class _GraduateEvidenceScreenState
       ],
       itemBuilder: (BuildContext context, EvidenceItem item) => AppListTile(
         title: item.title,
-        subtitle: '${item.typeLabel} • ${item.sizeLabel}',
-        detail: item.dateLabel,
+        subtitle: '${item.typeLabel} • ${item.sizeLabel} • ${item.reviewLabel}',
+        detail: item.reviewNote == null
+            ? item.dateLabel
+            : '${item.dateLabel} — ${item.reviewNote}',
         icon: item.icon,
         status: item.status,
         accentColor: AppColors.tealGreen,

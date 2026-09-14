@@ -48,6 +48,7 @@ import '../../shared/presentation/important_links_screen.dart';
 import '../../shared/models/directory_entries.dart';
 import '../../shared/models/people.dart';
 import '../../shared/models/work_items.dart';
+import '../../shared/providers/data_providers.dart';
 import '../constants/app_strings.dart';
 import '../../shared/widgets/error_state.dart';
 import 'app_nav_items.dart';
@@ -264,14 +265,31 @@ final List<RouteBase> _graduateFullScreenRoutes = <RouteBase>[
   GoRoute(
     path: AppRoutes.graduateReports,
     name: AppRoutes.graduateReportsName,
-    builder: (BuildContext context, GoRouterState state) =>
-        const GraduateReportsScreen(),
+    builder: (BuildContext context, GoRouterState state) {
+      final Object? extra = state.extra;
+      if (extra is ({
+        KarGuzariFilter filter,
+        String? categoryKey,
+        String title
+      })) {
+        return GraduateReportsScreen(
+          filter: extra.filter,
+          categoryKey: extra.categoryKey,
+          title: extra.title,
+        );
+      }
+      return const GraduateReportsScreen();
+    },
   ),
   GoRoute(
     path: AppRoutes.graduateEvidence,
     name: AppRoutes.graduateEvidenceName,
-    builder: (BuildContext context, GoRouterState state) =>
-        const GraduateEvidenceScreen(),
+    builder: (BuildContext context, GoRouterState state) {
+      final Object? extra = state.extra;
+      return extra is ({String kind, String title})
+          ? GraduateEvidenceScreen(kind: extra.kind, title: extra.title)
+          : const GraduateEvidenceScreen();
+    },
   ),
   GoRoute(
     path: AppRoutes.graduateActivityDetail,

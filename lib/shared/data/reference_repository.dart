@@ -156,6 +156,16 @@ class ReferenceRepository {
         .eq('id', id);
   }
 
+  /// The categories a کارگزاری can be filed under, in display order.
+  Future<List<ReportCategory>> reportCategories() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('report_categories')
+        .select()
+        .eq('is_active', true)
+        .order('sort_order');
+    return rows.map(ReportCategory.fromMap).toList();
+  }
+
   /// The curated اہم لنکس list.
   ///
   /// Retired links are withheld from readers by default; the administration

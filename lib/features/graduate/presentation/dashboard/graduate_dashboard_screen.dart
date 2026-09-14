@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_quick_actions.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/app_navigation.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
@@ -14,20 +14,20 @@ import '../../../../shared/widgets/widgets.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../auth/presentation/sign_out_action.dart';
 
-/// The graduate dashboard.
+/// The graduate dashboard, laid out most important first: who the reader is
+/// and their standing, the one action they come to take, what they have done,
+/// where to go next, what happened recently, and what is waiting for them.
 ///
-/// Every figure and row comes from Supabase through the providers. Sections
-/// resolve independently, so one slow query never blanks the page.
+/// Each destination has one entry point. A summary card opens its list, a
+/// category opens its filtered list, and nothing is reachable twice.
 class GraduateDashboardScreen extends ConsumerWidget {
   const GraduateDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppSession? session = ref.watch(appSessionProvider).value;
-    final AppUser? profile = ref.watch(currentProfileProvider);
     final AsyncValue<List<NotificationItem>> notifications =
         ref.watch(graduateNotificationsProvider);
-
     final int unread =
         notifications.value?.where((NotificationItem n) => n.isUnread).length ??
             0;
@@ -41,7 +41,8 @@ class GraduateDashboardScreen extends ConsumerWidget {
           ref.invalidate(graduateActivitiesProvider);
           ref.invalidate(graduateTasksProvider);
           ref.invalidate(graduateMentorFeedbackProvider);
-          ref.invalidate(graduateFollowUpProvider);
+          ref.invalidate(followUpStatusProvider);
+          ref.invalidate(reportCategoriesProvider);
           await ref.read(appSessionProvider.notifier).refresh();
         },
         child: ListView(
@@ -49,10 +50,12 @@ class GraduateDashboardScreen extends ConsumerWidget {
             bottom: AppSpacing.bottomSafeArea,
           ),
           children: <Widget>[
+            // 1 and 2: the reader, and their standing as a graduate in the
+            // practical field rather than a trainee.
             AppHeader(
               name: session?.displayName ?? '',
               roleTitle: AppRole.graduate.urduTitle,
-              subtitle: profile?.stage,
+              subtitle: AppStrings.graduateStatus,
               notificationCount: unread,
               onProfileTap: () => context.goToRoute(AppRoutes.graduateProfile),
               actions: const <Widget>[SignOutAction()],
@@ -67,14 +70,36 @@ class GraduateDashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
+                  // 3: the existing کارگزاری editor; there is no second one.
+                  PrimaryButton(
+                    label: AppStrings.newKarGuzari,
+                    onPressed: () =>
+                        context.goToRoute(AppRoutes.graduateReportEditor),
+                  ),
+                  AppSpacing.gapXl,
+                  // 4
+                  const _SummaryCards(),
+                  AppSpacing.gapXl,
+                  // 5
+                  const SectionHeader(title: AppStrings.quickActions),
+                  const _QuickAccess(),
+                  AppSpacing.gapXl,
+                  // 6
+                  const SectionHeader(title: AppStrings.recentActivity),
                   AsyncSection<JourneyProgress>(
                     value: ref.watch(graduateJourneyProvider),
                     onRetry: () => ref.invalidate(graduateJourneyProvider),
                     builder: (BuildContext context, JourneyProgress journey) =>
-                        ProgressCard(journey: journey),
+                        InkWell(
+                      borderRadius: AppRadius.radiusLg,
+                      // The journey is made of practical activities, so it
+                      // opens them, and each opens its own detail.
+                      onTap: () =>
+                          context.goToRoute(AppRoutes.graduateActivities),
+                      child: ProgressCard(journey: journey),
+                    ),
                   ),
-                  AppSpacing.gapXl,
-                  const SectionHeader(title: AppStrings.followUpTitle),
+                  AppSpacing.gapLg,
                   AsyncSection<FollowUpStatus?>(
                     value: ref.watch(followUpStatusProvider),
                     isEmpty: (FollowUpStatus? f) => f == null,
@@ -86,41 +111,11 @@ class GraduateDashboardScreen extends ConsumerWidget {
                   ),
                   AppSpacing.gapXl,
                   SectionHeader(
-                    title: AppStrings.pendingTasks,
+                    title: AppStrings.mentorGuidance,
                     actionLabel: AppStrings.viewAll,
                     onAction: () =>
-                        context.goToRoute(AppRoutes.graduateReports),
+                        context.goToRoute(AppRoutes.graduateEvaluations),
                   ),
-                  AsyncSection<List<TaskItem>>(
-                    value: ref.watch(graduateTasksProvider),
-                    isEmpty: (List<TaskItem> t) => t.isEmpty,
-                    emptyTitle: AppStrings.noPendingTasks,
-                    emptyIcon: Icons.task_alt_outlined,
-                    onRetry: () => ref.invalidate(graduateTasksProvider),
-                    builder: (BuildContext context, List<TaskItem> tasks) =>
-                        Column(
-                      children: <Widget>[
-                        for (final TaskItem task in tasks)
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                              bottom: AppSpacing.md,
-                            ),
-                            child: AppListTile(
-                              title: task.title,
-                              subtitle: task.detail,
-                              detail: task.dueLabel,
-                              icon: task.icon,
-                              status: task.status,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  AppSpacing.gapMd,
-                  const SectionHeader(title: AppStrings.quickActions),
-                  const QuickActionGrid(actions: AppQuickActions.graduate),
-                  AppSpacing.gapXl,
-                  const SectionHeader(title: AppStrings.mentorGuidance),
                   AsyncSection<MentorFeedback?>(
                     value: ref.watch(graduateMentorFeedbackProvider),
                     isEmpty: (MentorFeedback? f) => f == null,
@@ -158,22 +153,32 @@ class GraduateDashboardScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  AppSpacing.gapMd,
-                  const SectionHeader(title: AppStrings.followUp),
-                  AsyncSection<FollowUpItem?>(
-                    value: ref.watch(graduateFollowUpProvider),
-                    isEmpty: (FollowUpItem? f) => f == null,
-                    emptyTitle: AppStrings.noFollowUpYet,
-                    emptyIcon: Icons.event_repeat_outlined,
-                    onRetry: () => ref.invalidate(graduateFollowUpProvider),
-                    builder: (BuildContext context, FollowUpItem? followUp) =>
-                        AppListTile(
-                      title: followUp!.title,
-                      subtitle: followUp.detail,
-                      detail: followUp.dateLabel,
-                      icon: Icons.event_repeat_outlined,
-                      status: followUp.status,
-                      accentColor: AppColors.tealGreen,
+                  AppSpacing.gapXl,
+                  // 7
+                  const SectionHeader(title: AppStrings.pendingItems),
+                  AsyncSection<List<TaskItem>>(
+                    value: ref.watch(graduateTasksProvider),
+                    isEmpty: (List<TaskItem> t) => t.isEmpty,
+                    emptyTitle: AppStrings.emptyNoPending,
+                    emptyIcon: Icons.task_alt_outlined,
+                    onRetry: () => ref.invalidate(graduateTasksProvider),
+                    builder: (BuildContext context, List<TaskItem> tasks) =>
+                        Column(
+                      children: <Widget>[
+                        for (final TaskItem task in tasks)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            child: AppListTile(
+                              title: task.title,
+                              subtitle: task.detail,
+                              detail: task.dueLabel,
+                              icon: task.icon,
+                              status: task.status,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   AppSpacing.gapXl,
@@ -186,7 +191,7 @@ class GraduateDashboardScreen extends ConsumerWidget {
                   AsyncSection<List<NotificationItem>>(
                     value: notifications,
                     isEmpty: (List<NotificationItem> n) => n.isEmpty,
-                    emptyTitle: AppStrings.noNotificationsYet,
+                    emptyTitle: AppStrings.emptyNoNotifications,
                     emptyIcon: Icons.notifications_none_outlined,
                     builder:
                         (BuildContext context, List<NotificationItem> items) =>
@@ -220,11 +225,221 @@ class GraduateDashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Where the reader stands in the follow-up cycle: when the next کارگزاری is
-/// expected, and how many they have submitted so far.
-///
-/// Every figure is computed by the database from the configured interval, so
-/// changing that interval changes this immediately.
+/// The three figures the brief asks for. Each opens exactly the list it
+/// counted, so the number on the card is the number of rows behind it.
+class _SummaryCards extends ConsumerWidget {
+  const _SummaryCards();
+
+  static const List<(KarGuzariFilter, String)> _targets =
+      <(KarGuzariFilter, String)>[
+    (KarGuzariFilter.all, AppStrings.totalKarGuzari),
+    (KarGuzariFilter.social, AppStrings.socialActivities),
+    (KarGuzariFilter.completed, AppStrings.completedProjects),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AsyncSection<({int total, int social, int completed})>(
+      value: ref.watch(karGuzariSummaryProvider),
+      onRetry: () => ref.invalidate(karGuzariSummaryProvider),
+      builder: (
+        BuildContext context,
+        ({int total, int social, int completed}) counts,
+      ) =>
+          StatGrid(
+        stats: <StatItem>[
+          StatItem(
+            label: AppStrings.totalKarGuzari,
+            value: UrduNumbers.fromInt(counts.total),
+            icon: Icons.description_outlined,
+          ),
+          StatItem(
+            label: AppStrings.socialActivities,
+            value: UrduNumbers.fromInt(counts.social),
+            icon: Icons.volunteer_activism_outlined,
+            tone: StatTone.teal,
+          ),
+          StatItem(
+            label: AppStrings.completedProjects,
+            value: UrduNumbers.fromInt(counts.completed),
+            icon: Icons.task_alt_outlined,
+            tone: StatTone.gold,
+          ),
+        ],
+        onTap: (int index) => context.goToRoute(
+          AppRoutes.graduateReports,
+          extra: (
+            filter: _targets[index].$1,
+            categoryKey: null,
+            title: _targets[index].$2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quick access grouped by the kind of work. The work groups come from
+/// `report_categories`, so their names and order are the organisation's;
+/// evidence is grouped by the file kind `evidence.kind` records.
+class _QuickAccess extends ConsumerWidget {
+  const _QuickAccess();
+
+  static IconData _iconFor(String key) {
+    switch (key) {
+      case 'teaching':
+        return Icons.menu_book_outlined;
+      case 'administration':
+        return Icons.admin_panel_settings_outlined;
+      case 'reform_circles':
+        return Icons.groups_2_outlined;
+      case 'counselling':
+        return Icons.support_agent_outlined;
+      case 'social_service':
+        return Icons.volunteer_activism_outlined;
+      default:
+        return Icons.category_outlined;
+    }
+  }
+
+  static const List<(String, String, IconData)> _evidenceKinds =
+      <(String, String, IconData)>[
+    ('image', AppStrings.evidenceImages, Icons.image_outlined),
+    ('document', AppStrings.evidenceDocuments, Icons.description_outlined),
+    ('video', AppStrings.evidenceOther, Icons.attach_file_outlined),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AsyncSection<List<ReportCategory>>(
+      value: ref.watch(reportCategoriesProvider),
+      onRetry: () => ref.invalidate(reportCategoriesProvider),
+      builder: (BuildContext context, List<ReportCategory> categories) {
+        final Map<String, List<ReportCategory>> groups =
+            <String, List<ReportCategory>>{};
+        for (final ReportCategory c in categories) {
+          groups.putIfAbsent(c.groupKey, () => <ReportCategory>[]).add(c);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            for (final List<ReportCategory> group in groups.values) ...<Widget>[
+              _QuickAccessGroup(
+                title: group.first.groupTitle,
+                tiles: <Widget>[
+                  for (final ReportCategory c in group)
+                    _QuickTile(
+                      label: c.title,
+                      icon: _iconFor(c.key),
+                      onTap: () => context.goToRoute(
+                        AppRoutes.graduateReports,
+                        extra: (
+                          filter: KarGuzariFilter.all,
+                          categoryKey: c.key,
+                          title: c.title,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              AppSpacing.gapMd,
+            ],
+            _QuickAccessGroup(
+              title: AppStrings.evidenceGroup,
+              tiles: <Widget>[
+                for (final (String, String, IconData) k in _evidenceKinds)
+                  _QuickTile(
+                    label: k.$2,
+                    icon: k.$3,
+                    onTap: () => context.goToRoute(
+                      AppRoutes.graduateEvidence,
+                      extra: (kind: k.$1, title: k.$2),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One heading of quick access and the destinations beneath it.
+class _QuickAccessGroup extends StatelessWidget {
+  const _QuickAccessGroup({required this.title, required this.tiles});
+
+  final String title;
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardCard(
+      padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          AppSpacing.gapSm,
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: tiles,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single quick access destination.
+class _QuickTile extends StatelessWidget {
+  const _QuickTile({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.greenTint,
+      borderRadius: AppRadius.radiusPill,
+      child: InkWell(
+        borderRadius: AppRadius.radiusPill,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 18, color: AppColors.primaryGreen),
+              AppSpacing.hGapXs,
+              Text(
+                label,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(color: AppColors.primaryGreen),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Where the reader stands in the follow-up cycle, computed by the database
+/// from the configured interval.
 class _FollowUpCard extends StatelessWidget {
   const _FollowUpCard({required this.status});
 
@@ -254,7 +469,7 @@ class _FollowUpCard extends StatelessWidget {
                 child: Text(
                   status.isOverdue
                       ? AppStrings.followUpOverdue
-                      : AppStrings.followUpDue,
+                      : AppStrings.followUpTitle,
                   style: theme.textTheme.titleSmall,
                 ),
               ),

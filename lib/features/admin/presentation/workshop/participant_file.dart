@@ -39,6 +39,13 @@ class ParticipantFile {
       'course_start_date',
       'course start',
     ],
+    'course_period': <String>[
+      'دورانیہ',
+      'مدت',
+      'course_period',
+      'course period',
+      'duration',
+    ],
     'course_completion_date': <String>[
       'فراغت ماہ',
       'فراغت',
@@ -219,13 +226,16 @@ class ParticipantFile {
       final String name = cell(line, 'full_name');
       final String start = cell(line, 'course_start_date');
       final String end = cell(line, 'course_completion_date');
+      final String period = cell(line, 'course_period');
 
       CandidateProblem? problem;
       if (number.isEmpty) {
         problem = CandidateProblem.missingNumber;
       } else if (name.isEmpty) {
         problem = CandidateProblem.missingName;
-      } else if (!isMonthLike(start) || !isMonthLike(end)) {
+      } else if (!isMonthLike(start) ||
+          !isMonthLike(end) ||
+          !isMonthLike(period)) {
         problem = CandidateProblem.invalidMonth;
       } else {
         final String key =
@@ -240,6 +250,7 @@ class ParticipantFile {
         fullName: name,
         courseStartDate: start.isEmpty ? null : start,
         courseCompletionDate: end.isEmpty ? null : end,
+        coursePeriod: period.isEmpty ? null : period,
         problem: problem,
       ));
     }

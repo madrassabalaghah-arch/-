@@ -11,6 +11,7 @@ enum CourseVerdict {
   notEligible,
   alreadyUsed,
   nameMismatch,
+  periodMismatch,
   unknown;
 
   static CourseVerdict fromCode(String? code) {
@@ -27,6 +28,8 @@ enum CourseVerdict {
         return CourseVerdict.alreadyUsed;
       case 'name_mismatch':
         return CourseVerdict.nameMismatch;
+      case 'period_mismatch':
+        return CourseVerdict.periodMismatch;
       default:
         return CourseVerdict.unknown;
     }
@@ -39,9 +42,14 @@ class CourseVerification {
     required this.valid,
     required this.verdict,
     this.participantName,
+    this.participantPeriod,
   });
 
   final bool valid;
+
+  /// The دورانیہ on record, returned only after number, name and period all
+  /// matched, so the applicant can see the record really is theirs.
+  final String? participantPeriod;
   final CourseVerdict verdict;
 
   /// Returned only on a valid match, so the applicant can confirm the record
@@ -53,6 +61,7 @@ class CourseVerification {
       valid: row['valid'] == true,
       verdict: CourseVerdict.fromCode(row['reason'] as String?),
       participantName: nullableString(row, 'participant_name'),
+      participantPeriod: nullableString(row, 'participant_period'),
     );
   }
 }
@@ -70,6 +79,7 @@ class CourseParticipant {
     required this.fullName,
     this.courseStartDate,
     this.courseCompletionDate,
+    this.coursePeriodText,
     this.eligible = true,
     this.accountCreated = false,
     this.linkedUserId,
@@ -89,6 +99,9 @@ class CourseParticipant {
   /// فراغت ماہ.
   final String? courseCompletionDate;
 
+  /// دورانیہ, when the organisation records the period as one column.
+  final String? coursePeriodText;
+
   /// Cleared by an administrator to bar someone from registering.
   final bool eligible;
 
@@ -103,6 +116,7 @@ class CourseParticipant {
       fullName: (row['full_name'] as String?) ?? '',
       courseStartDate: nullableString(row, 'course_start_date'),
       courseCompletionDate: nullableString(row, 'course_completion_date'),
+      coursePeriodText: nullableString(row, 'course_period'),
       eligible: row['eligible'] != false,
       accountCreated: row['account_created'] == true,
       linkedUserId: nullableString(row, 'linked_user_id'),
@@ -111,6 +125,9 @@ class CourseParticipant {
 
   /// The course period as one line, or null when neither month is known.
   String? get coursePeriod {
+    if (coursePeriodText != null && coursePeriodText!.trim().isNotEmpty) {
+      return coursePeriodText!.trim();
+    }
     final List<String> parts = <String>[
       if (courseStartDate != null && courseStartDate!.trim().isNotEmpty)
         courseStartDate!.trim(),

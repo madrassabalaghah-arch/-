@@ -101,11 +101,15 @@ class ReportItem {
     this.submittedAt,
     this.dueAt,
     this.createdAt,
+    this.categoryId,
   });
 
   final String id;
   final String title;
   final String graduateId;
+
+  /// The `report_categories` row this کارگزاری was filed under, if any.
+  final String? categoryId;
   final String? summary;
   final String? graduateName;
   final String? activityType;
@@ -133,6 +137,7 @@ class ReportItem {
       submittedAt: dateOf(row, 'submitted_at'),
       dueAt: dateOf(row, 'due_at'),
       createdAt: dateOf(row, 'created_at'),
+      categoryId: nullableString(row, 'category_id'),
     );
   }
 
@@ -153,7 +158,11 @@ class EvidenceItem {
     this.sizeBytes,
     this.status = AppStatus.submitted,
     this.createdAt,
+    this.reviewNote,
   });
+
+  /// What the reviewer said, shown to the graduate beside the verdict.
+  final String? reviewNote;
 
   final String id;
   final String title;
@@ -182,7 +191,21 @@ class EvidenceItem {
       sizeBytes: row['size_bytes'] == null ? null : intOr(row, 'size_bytes'),
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
+      reviewNote: nullableString(row, 'review_note'),
     );
+  }
+
+  /// The verdict in the words the brief uses for evidence, which differ from
+  /// those used for a کارگزاری: a file is approved, not "completed".
+  String get reviewLabel {
+    switch (status) {
+      case AppStatus.completed:
+        return 'منظور شدہ';
+      case AppStatus.revisionRequired:
+        return 'مزید معلومات درکار ہیں';
+      default:
+        return 'زیرِ جائزہ';
+    }
   }
 
   /// Urdu name of the file kind.

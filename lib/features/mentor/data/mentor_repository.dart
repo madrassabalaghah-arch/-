@@ -186,6 +186,21 @@ class MentorRepository {
         .update(<String, dynamic>{'status': 'completed'}).eq('id', reportId);
   }
 
+  /// Records a verdict on an uploaded file.
+  ///
+  /// Only the verdict and the note are sent: who reviewed it and when are
+  /// stamped by the database trigger, so neither can be forged by the caller.
+  Future<void> reviewEvidence({
+    required String evidenceId,
+    required AppStatus verdict,
+    String? note,
+  }) async {
+    await _client.from('evidence').update(<String, dynamic>{
+      'status': verdict.dbValue,
+      'review_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+    }).eq('id', evidenceId);
+  }
+
   /// Hands a کارگزاری back for correction instead of completing it.
   ///
   /// The comment is written as feedback so the graduate can see what to fix,

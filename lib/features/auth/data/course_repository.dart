@@ -19,6 +19,7 @@ class CandidateRow {
     required this.fullName,
     this.courseStartDate,
     this.courseCompletionDate,
+    this.coursePeriod,
     this.problem,
   });
 
@@ -26,6 +27,9 @@ class CandidateRow {
   final String fullName;
   final String? courseStartDate;
   final String? courseCompletionDate;
+
+  /// دورانیہ, for a file that records the period as one column.
+  final String? coursePeriod;
 
   /// Null when the row is importable.
   final CandidateProblem? problem;
@@ -37,6 +41,7 @@ class CandidateRow {
         fullName: fullName,
         courseStartDate: courseStartDate,
         courseCompletionDate: courseCompletionDate,
+        coursePeriod: coursePeriod,
         problem: problem,
       );
 
@@ -45,6 +50,7 @@ class CandidateRow {
         'full_name': fullName,
         'course_start_date': courseStartDate,
         'course_completion_date': courseCompletionDate,
+        'course_period': coursePeriod,
       };
 }
 
@@ -94,12 +100,14 @@ class CourseRepository {
   Future<CourseVerification> verify(
     String registrationNumber, {
     String? fullName,
+    String? coursePeriod,
   }) async {
     final List<dynamic> rows = await _client.rpc<List<dynamic>>(
       'verify_course_registration',
       params: <String, dynamic>{
         'p_registration_number': registrationNumber,
         'p_full_name': fullName,
+        'p_course_period': coursePeriod,
       },
     );
 

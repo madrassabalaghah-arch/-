@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_strings.dart';
+
 import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/data/course_repository.dart';
@@ -122,10 +124,10 @@ final FutureProvider<JourneyProgress> graduateJourneyProvider =
       activities.fold<int>(0, (int sum, ActivityItem a) => sum + a.total);
 
   return JourneyProgress(
-    stageLabel: profile?.stage ?? 'تربیت کا آغاز',
+    stageLabel: profile?.stage ?? AppStrings.graduateStatus,
     statusLabel: total == 0
         ? 'ابھی کوئی عملی سرگرمی مقرر نہیں'
-        : (completed >= total ? 'تمام مراحل مکمل' : 'تربیت جاری ہے'),
+        : (completed >= total ? 'تمام مراحل مکمل' : 'عملی سرگرمیاں جاری ہیں'),
     completedSteps: completed,
     totalSteps: total,
     nextStepLabel:
@@ -427,4 +429,65 @@ final FutureProvider<List<RecognitionRule>> recognitionRulesProvider =
     FutureProvider<List<RecognitionRule>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).recognitionRules();
+});
+
+/// The categories a کارگزاری can be filed under, from `report_categories`.
+final FutureProvider<List<ReportCategory>> reportCategoriesProvider =
+    FutureProvider<List<ReportCategory>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(referenceRepositoryProvider).reportCategories();
+});
+
+/// What one list of کارگزاری should contain.
+///
+/// A summary card and the list it opens use the same filter, so the number on
+/// the card is always the number of rows the reader finds behind it.
+enum KarGuzariFilter { all, social, completed }
+
+/// The graduate's own کارگزاری narrowed to [filter], plus a category key when
+/// one quick access item was chosen.
+List<ReportItem> filterKarGuzari(
+  List<ReportItem> reports,
+  List<ReportCategory> categories, {
+  KarGuzariFilter filter = KarGuzariFilter.all,
+  String? categoryKey,
+}) {
+  final Map<String, ReportCategory> byId = <String, ReportCategory>{
+    for (final ReportCategory c in categories) c.id: c,
+  };
+
+  return reports.where((ReportItem r) {
+    final ReportCategory? category =
+        r.categoryId == null ? null : byId[r.categoryId];
+    if (categoryKey != null && category?.key != categoryKey) {
+      return false;
+    }
+    switch (filter) {
+      case KarGuzariFilter.all:
+        return true;
+      case KarGuzariFilter.social:
+        return category?.groupKey == ReportCategory.socialGroup;
+      case KarGuzariFilter.completed:
+        return r.status == AppStatus.completed;
+    }
+  }).toList();
+}
+
+/// The three figures on the graduate dashboard, counted from real rows.
+final FutureProvider<({int total, int social, int completed})>
+    karGuzariSummaryProvider =
+    FutureProvider<({int total, int social, int completed})>((Ref ref) async {
+  final List<ReportItem> reports =
+      await ref.watch(graduateReportsProvider.future);
+  final List<ReportCategory> categories =
+      await ref.watch(reportCategoriesProvider.future);
+
+  int count(KarGuzariFilter f) =>
+      filterKarGuzari(reports, categories, filter: f).length;
+
+  return (
+    total: count(KarGuzariFilter.all),
+    social: count(KarGuzariFilter.social),
+    completed: count(KarGuzariFilter.completed),
+  );
 });

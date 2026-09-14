@@ -149,6 +149,7 @@ class GraduateRepository {
     required String title,
     String? summary,
     String? activityId,
+    String? categoryId,
     KarGuzariDetails? details,
     bool submit = false,
   }) async {
@@ -159,6 +160,7 @@ class GraduateRepository {
           'title': title,
           'summary': summary,
           'activity_id': activityId,
+          'category_id': categoryId,
           'status': submit ? 'submitted' : 'draft',
           if (submit) 'submitted_at': DateTime.now().toUtc().toIso8601String(),
           ...?details?.toColumns(),
@@ -172,12 +174,14 @@ class GraduateRepository {
     required String id,
     String? title,
     String? summary,
+    String? categoryId,
     KarGuzariDetails? details,
     bool submit = false,
   }) async {
     await _client.from('reports').update(<String, dynamic>{
       'title': ?title,
       'summary': ?summary,
+      'category_id': ?categoryId,
       ...?details?.toColumns(),
       if (submit) ...<String, dynamic>{
         'status': 'submitted',

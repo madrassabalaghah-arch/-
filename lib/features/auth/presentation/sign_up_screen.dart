@@ -62,6 +62,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         return AppStrings.regNotFound;
       case CourseVerdict.nameMismatch:
         return AppStrings.regNameMismatch;
+      case CourseVerdict.periodMismatch:
+        return AppStrings.regPeriodMismatch;
       case CourseVerdict.notEligible:
         return AppStrings.regNotEligible;
       case CourseVerdict.alreadyUsed:

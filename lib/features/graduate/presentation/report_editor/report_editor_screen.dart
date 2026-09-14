@@ -30,6 +30,10 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   late final TextEditingController _title;
   late final TextEditingController _summary;
 
+  /// Which kind of work this is. It is what the dashboard's category counts
+  /// and quick access lists are built from.
+  String? _categoryId;
+
   /// The fuller record of the activity. Every one of these is optional: a
   /// participant filing quickly should not be blocked, and a blank box is
   /// stored as nothing rather than as an empty string.
@@ -55,6 +59,7 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
     super.initState();
     _title = TextEditingController(text: widget.report?.title ?? '');
     _summary = TextEditingController(text: widget.report?.summary ?? '');
+    _categoryId = widget.report?.categoryId;
   }
 
   @override
@@ -101,6 +106,7 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
           id: widget.report!.id,
           title: _title.text.trim(),
           summary: _summary.text.trim(),
+          categoryId: _categoryId,
           details: details,
           submit: submit,
         );
@@ -109,6 +115,7 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
           title: _title.text.trim(),
           summary: _summary.text.trim(),
           activityId: _activityId,
+          categoryId: _categoryId,
           details: details,
           submit: submit,
         );
@@ -278,6 +285,35 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
             AppSpacing.gapXl,
             if (!_isLocked) ...<Widget>[
             AppSpacing.gapXl,
+            Consumer(
+              builder: (BuildContext context, WidgetRef ref, Widget? child) {
+                final List<ReportCategory> categories =
+                    ref.watch(reportCategoriesProvider).value ??
+                        const <ReportCategory>[];
+                return DropdownButtonFormField<String>(
+                  initialValue: categories
+                          .any((ReportCategory c) => c.id == _categoryId)
+                      ? _categoryId
+                      : null,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: AppStrings.selectCategoryOptional,
+                    prefixIcon: Icon(Icons.category_outlined, size: 20),
+                  ),
+                  items: <DropdownMenuItem<String>>[
+                    for (final ReportCategory c in categories)
+                      DropdownMenuItem<String>(
+                        value: c.id,
+                        child: Text('${c.groupTitle} — ${c.title}'),
+                      ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (String? value) => setState(() => _categoryId = value),
+                );
+              },
+            ),
+            AppSpacing.gapLg,
             const SectionHeader(title: AppStrings.moreDetails),
             for (final ({String key, String label, String? hint, int lines})
                 field in _extraFields) ...<Widget>[

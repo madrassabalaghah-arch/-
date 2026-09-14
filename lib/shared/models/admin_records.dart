@@ -106,3 +106,41 @@ class StandardItem {
         status: AppStatusX.fromDb(nullableString(row, 'status')),
       );
 }
+
+/// One category a کارگزاری can belong to, grouped under a heading.
+///
+/// Curated by an administrator in `report_categories`, so the grouping shown
+/// on the dashboard comes from the database rather than from this file.
+class ReportCategory {
+  const ReportCategory({
+    required this.id,
+    required this.key,
+    required this.groupKey,
+    required this.groupTitle,
+    required this.title,
+    this.sortOrder = 0,
+  });
+
+  final String id;
+
+  /// Stable identifier, for example `teaching`.
+  final String key;
+
+  /// Which heading the category sits under, for example `social`.
+  final String groupKey;
+  final String groupTitle;
+  final String title;
+  final int sortOrder;
+
+  /// The group whose کارگزاری count as معاشرتی و اصلاحی سرگرمیاں.
+  static const String socialGroup = 'social';
+
+  factory ReportCategory.fromMap(Map<String, dynamic> row) => ReportCategory(
+        id: row['id'] as String,
+        key: (row['key'] as String?) ?? '',
+        groupKey: (row['group_key'] as String?) ?? '',
+        groupTitle: (row['group_title'] as String?) ?? '',
+        title: (row['title'] as String?) ?? '',
+        sortOrder: intOr(row, 'sort_order'),
+      );
+}

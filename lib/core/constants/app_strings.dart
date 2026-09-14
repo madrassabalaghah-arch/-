@@ -113,6 +113,72 @@ class AppStrings {
   static const String institutes = 'ادارے';
 
   // ---------------------------------------------------------------------
+  // Prompt 05: graduate dashboard
+  // ---------------------------------------------------------------------
+  static const String graduateStatus = 'فارغ التحصیل / عملی میدان';
+  static const String currentStatus = 'موجودہ حیثیت';
+  static const String myPracticalJourney = 'میرا عملی سفر';
+  static const String newKarGuzari = '+ نئی کارگزاری درج کریں';
+  static const String totalKarGuzari = 'مجموعی کارگزاریاں';
+  static const String socialActivities = 'معاشرتی و اصلاحی سرگرمیاں';
+  static const String completedProjects = 'مکمل شدہ پروجیکٹس';
+  static const String recentActivity = 'حالیہ سرگرمی';
+  static const String pendingItems = 'زیرِ التوا امور';
+  static const String evidenceGroup = 'ثبوت و رپورٹس';
+  static const String evidenceImages = 'تصاویر';
+  static const String evidenceDocuments = 'دستاویزات';
+  static const String evidenceOther = 'دیگر متعلقہ فائلیں';
+  static const String category = 'نوعیت';
+  static const String selectCategoryOptional = 'کارگزاری کی نوعیت منتخب کریں';
+  static const String emptyNoPending = 'الحمدللہ! فی الحال کوئی زیرِ التوا کام نہیں۔';
+  static const String emptyNoNotifications = 'ابھی کوئی نئی اطلاع موجود نہیں۔';
+  static const String emptyFirstKarGuzari =
+      'اپنی پہلی کارگزاری درج کریں اور اپنے عملی سفر کو ریکارڈ کریں۔';
+  static const String emptyNothingInCategory = 'اس نوعیت کی ابھی کوئی کارگزاری نہیں۔';
+  static const String reviewAndFeedback = 'جائزہ و رہنمائی';
+  static const String noReviewYet = 'ابھی جائزہ نہیں ہوا۔';
+
+  // Evidence review
+  static const String evidenceUnderReview = 'زیرِ جائزہ';
+  static const String evidenceApproved = 'منظور شدہ';
+  static const String evidenceNeedsInfo = 'مزید معلومات درکار ہیں';
+  static const String reviewEvidence = 'ثبوت کا جائزہ لیں';
+  static const String reviewNote = 'رائے';
+  static const String relatedKarGuzari = 'متعلقہ کارگزاری';
+  static const String uploadedOn = 'تاریخِ اندراج';
+  static const String evidenceReviewed = 'ثبوت کا جائزہ محفوظ کر دیا گیا ہے۔';
+
+  // Mentor review and today's work
+  static const String todaysWork = 'آج کے کام';
+  static const String awaitingYourReview = 'آپ کے جائزے کی منتظر';
+  static const String needsFeedback = 'رہنمائی کے منتظر فاضل / فاضلہ';
+  static const String reviewStepReport = 'کارگزاری';
+  static const String reviewStepEvidence = 'ثبوت';
+  static const String reviewStepAssessment = 'جائزہ';
+  static const String reviewStepComment = 'مربی کا تبصرہ';
+  static const String reviewStepGuidance = 'آئندہ رہنمائی';
+  static const String hintGuidance = 'آئندہ کے لیے عملی رہنمائی لکھیں';
+  static const String emptyNoReviewsWaiting = 'الحمدللہ! کوئی کارگزاری جائزے کی منتظر نہیں۔';
+
+  // Admin grouping
+  static const String groupManagement = 'انتظام';
+  static const String groupKarGuzari = 'کارگزاری';
+  static const String groupSystem = 'نظام';
+  static const String groupBackend = 'بیک اینڈ';
+  static const String backendDataManagement = 'بیک اینڈ ڈیٹا مینجمنٹ';
+  static const String allInstitutes = 'ادارے';
+  static const String allReviews = 'جائزے';
+  static const String statisticsReports = 'رپورٹس';
+
+  // Registration period
+  static const String coursePeriod = 'دورانیہ';
+  static const String hintCoursePeriod = 'مثلاً: مارچ تا جون 2024';
+  static const String regPeriodMismatch =
+      'درج کردہ دورانیہ ہمارے ریکارڈ سے مطابقت نہیں رکھتا۔ کورس کا سال ضرور لکھیں۔';
+  static const String recordMatched = 'آپ کا ریکارڈ مل گیا';
+  static const String continueRegistration = 'رجسٹریشن جاری رکھیں';
+
+  // ---------------------------------------------------------------------
   // Kar-guzari detail and the follow-up cycle
   // ---------------------------------------------------------------------
   static const String activityTypeLabel = 'سرگرمی کی نوعیت';
@@ -322,7 +388,7 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Graduate dashboard
   // ---------------------------------------------------------------------
-  static const String myJourney = 'میرا سفر';
+  static const String myJourney = 'میرا عملی سفر';
   static const String trainingStage = 'تربیتی مرحلہ';
   static const String currentStanding = 'موجودہ حیثیت';
   static const String pendingTasks = 'میرے زیرِ التوا کام';
