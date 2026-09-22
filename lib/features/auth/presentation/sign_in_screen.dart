@@ -84,17 +84,38 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       backTo: AppRoutes.welcome,
       // Wrap rather than Row: the Urdu prompt plus the action can exceed
       // one line on a narrow phone, and a Row would overflow.
-      footer: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      footer: Column(
         children: <Widget>[
-          Text(
-            AppStrings.noAccountYet,
-            style: Theme.of(context).textTheme.bodySmall,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                AppStrings.noAccountYet,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              TextButton(
+                onPressed: _busy ? null : () => context.push(AppRoutes.signUp),
+                child: const Text(AppStrings.signUp),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: _busy ? null : () => context.push(AppRoutes.signUp),
-            child: const Text(AppStrings.signUp),
+          // Mentors and administrators who are not on the course register
+          // join with the code an administrator sent them.
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                AppStrings.staffSignUpPrompt,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              TextButton(
+                onPressed:
+                    _busy ? null : () => context.push(AppRoutes.staffSignUp),
+                child: const Text(AppStrings.staffSignUpLink),
+              ),
+            ],
           ),
         ],
       ),

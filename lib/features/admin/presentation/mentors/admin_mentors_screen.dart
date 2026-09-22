@@ -24,6 +24,16 @@ class AdminMentorsScreen extends ConsumerWidget {
           '${item.name} ${item.placeLine ?? ""}',
       emptyIcon: Icons.supervisor_account_outlined,
       emptyTitle: AppStrings.noRecordsYet,
+      actions: <Widget>[
+        // For a mentor who is not on the course register. Someone who already
+        // has an account is made a mentor from their own screen instead.
+        IconButton(
+          tooltip: AppStrings.inviteMentor,
+          icon: const Icon(Icons.person_add_alt_outlined),
+          onPressed: () =>
+              context.push(AppRoutes.adminAddStaff, extra: AppRole.mentor),
+        ),
+      ],
       itemBuilder: (BuildContext context, MentorSummary item) => AppListTile(
         title: item.name,
         subtitle: item.placeLine,

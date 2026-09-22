@@ -209,6 +209,8 @@ void main() {
       AppRoutes.adminDashboard,
       AppRoutes.adminGraduates,
       AppRoutes.adminReports,
+      AppRoutes.adminStaff,
+      AppRoutes.adminAddStaff,
     ];
 
     for (final String route in protected) {
@@ -448,6 +450,102 @@ void main() {
     expect(parsed.rows[3].problem, CandidateProblem.missingNumber);
     // A quoted field keeps its comma instead of splitting into two columns.
     expect(good.last.fullName, 'خان, محمد');
+  });
+
+  testWidgets('an invited mentor or administrator signs up with a code',
+      (WidgetTester tester) async {
+    await _pumpApp(tester);
+    await tester.tap(find.text(AppStrings.continueAction));
+    await tester.pumpAndSettle();
+
+    final Finder link = find.text(AppStrings.staffSignUpLink);
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.staffSignUpTitle), findsOneWidget);
+    expect(find.text(AppStrings.labelEmail), findsOneWidget);
+    expect(find.text(AppStrings.inviteCode), findsOneWidget);
+    expect(find.text(AppStrings.registrationNumber), findsNothing,
+        reason: 'invited staff are not on the course register');
+    expect(find.text(AppStrings.labelPassword), findsNothing,
+        reason: 'a password must not be asked for before the invitation matches');
+
+    // The role is the invitation's, so there is nothing here to pick one.
+    for (final AppRole role in AppRole.values) {
+      expect(find.text(role.urduTitle), findsNothing);
+    }
+
+    // An empty form is refused rather than sent to the server.
+    final Finder verify =
+        find.widgetWithText(PrimaryButton, AppStrings.verifyInvite);
+    await tester.ensureVisible(verify);
+    await tester.pumpAndSettle();
+    await tester.tap(verify);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.validationRequired), findsWidgets);
+
+    // So is a code of the wrong length.
+    await tester.enterText(
+        find.byType(TextFormField).first, 'someone@example.org');
+    await tester.enterText(find.byType(TextFormField).last, 'ABC');
+    await tester.tap(verify);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.inviteCodeLength), findsOneWidget);
+  });
+
+  test('an invitation code matches however it is typed', () {
+    expect(StaffInvite.normaliseCode('abcd-2345'), 'ABCD2345');
+    expect(StaffInvite.normaliseCode(' ab cd 23 45 '), 'ABCD2345');
+    expect(StaffInvite.formatCode('abcd2345'), 'ABCD-2345');
+    // Anything other than eight characters is shown as typed, never padded
+    // out into something that looks valid.
+    expect(StaffInvite.formatCode('abc'), 'ABC');
+  });
+
+  test('an invitation check names the person only when it matched', () {
+    final StaffInviteCheck matched = StaffInviteCheck.fromMap(
+      <String, dynamic>{
+        'valid': true,
+        'reason': 'ok',
+        'invite_name': 'محمد عثمان',
+        'invite_role': 'admin',
+      },
+    );
+    expect(matched.valid, isTrue);
+    expect(matched.verdict, StaffInviteVerdict.ok);
+    expect(matched.name, 'محمد عثمان');
+    expect(matched.role, AppRole.admin);
+
+    final StaffInviteCheck taken = StaffInviteCheck.fromMap(
+      <String, dynamic>{
+        'valid': false,
+        'reason': 'email_registered',
+        'invite_name': null,
+        'invite_role': null,
+      },
+    );
+    expect(taken.valid, isFalse);
+    expect(taken.verdict, StaffInviteVerdict.emailRegistered);
+    expect(taken.name, isNull);
+    expect(taken.role, isNull);
+
+    // A role this build does not know is not guessed at.
+    expect(StaffInvite.fromMap(<String, dynamic>{
+      'id': 'i1',
+      'full_name': 'محمد عثمان',
+      'email': 'someone@example.org',
+      'role': 'superuser',
+      'code': 'ABCD2345',
+    }).role, isNull);
+  });
+
+  test('staff screens open with a back button; invited sign-up needs none', () {
+    expect(AppRoutes.isFullScreen(AppRoutes.adminStaff), isTrue);
+    expect(AppRoutes.isFullScreen(AppRoutes.adminAddStaff), isTrue);
+    expect(AppRoutes.publicRoutes, contains(AppRoutes.staffSignUp),
+        reason: 'the person signing up has no session yet');
   });
 
   test('a summary card counts exactly the rows its list will show', () {

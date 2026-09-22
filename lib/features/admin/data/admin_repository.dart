@@ -68,7 +68,7 @@ class AdminRepository {
 
     final PostgrestFilterBuilder<List<Map<String, dynamic>>> query = _client
         .from('profiles')
-        .select('id, full_name, city, stage, status, institutes(name)');
+        .select('id, full_name, email, city, stage, status, institutes(name)');
     final List<Map<String, dynamic>> rows = ids == null
         ? await query.order('full_name')
         : await query.inFilter('id', ids).order('full_name');
@@ -83,6 +83,7 @@ class AdminRepository {
         city: row['city'] as String?,
         stage: row['stage'] as String?,
         status: AppStatusX.fromDb(row['status'] as String?),
+        email: row['email'] as String?,
       );
     }).toList();
   }
@@ -461,20 +462,67 @@ class AdminRepository {
 
   /// Replaces a user's role, keeping exactly one role per account.
   ///
-  /// Deleting first is what makes the change a move rather than an addition:
-  /// promoting a graduate to mentor must also stop them being a graduate,
-  /// otherwise they would keep appearing in graduate listings. Only an
-  /// administrator may call this, and the `user_roles` policy enforces that
-  /// independently of this class.
+  /// A move rather than an addition: promoting a graduate to mentor must also
+  /// stop them being a graduate, or they would keep appearing in graduate
+  /// listings. It is one database call, so it happens completely or not at
+  /// all. As a delete followed by an insert, a dropped connection between the
+  /// two left the account with no role and in no list at all.
+  ///
+  /// `set_user_role` refuses anyone but an administrator, and refuses an
+  /// administrator changing their own role. Removing a mentor or graduate
+  /// role also ends the assignments that depended on it, because access to a
+  /// graduate's records follows the assignment.
   Future<void> setRole({
     required String userId,
     required AppRole role,
   }) async {
-    await _client.from('user_roles').delete().eq('user_id', userId);
-    await _client.from('user_roles').insert(<String, dynamic>{
-      'user_id': userId,
-      'role': role.id,
-    });
+    await _client.rpc<Object?>(
+      'set_user_role',
+      params: <String, dynamic>{'p_user_id': userId, 'p_role': role.id},
+    );
+  }
+
+  // -------------------------------------------------------------------
+  // Staff invitations
+  // -------------------------------------------------------------------
+
+  /// Invitations not yet used, newest first. Row level security shows them
+  /// to administrators only.
+  Future<List<StaffInvite>> openStaffInvites() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('staff_invites')
+        .select()
+        .isFilter('claimed_at', null)
+        .order('created_at', ascending: false);
+    return rows.map(StaffInvite.fromMap).toList();
+  }
+
+  /// Invites a مربی or منتظم who is not on the course register.
+  ///
+  /// The database issues the code, and refuses an address that already has
+  /// an account or an open invitation, so what comes back is always usable.
+  Future<StaffInvite> createStaffInvite({
+    required String fullName,
+    required String email,
+    required AppRole role,
+  }) async {
+    final Object? row = await _client.rpc<Object?>(
+      'create_staff_invite',
+      params: <String, dynamic>{
+        'p_full_name': fullName.trim(),
+        'p_email': email.trim(),
+        'p_role': role.id,
+      },
+    );
+    return StaffInvite.fromMap(row! as Map<String, dynamic>);
+  }
+
+  /// Withdraws an open invitation, so its code stops working.
+  Future<void> cancelStaffInvite(String id) async {
+    await _client.rpc<Object?>(
+      'cancel_staff_invite',
+      params: <String, dynamic>{'p_invite_id': id},
+    );
   }
 
   /// The mentor currently supervising [graduateId], or null.

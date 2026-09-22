@@ -16,6 +16,11 @@ class AppRoutes {
   static const String signUp = '/sign-up';
   static const String signUpName = 'signUp';
 
+  /// Sign-up for an invited مربی or منتظم, with an invitation code in place
+  /// of a رقمِ تسجیل.
+  static const String staffSignUp = '/staff-sign-up';
+  static const String staffSignUpName = 'staffSignUp';
+
   /// Shown when a signed-in account has no role granted yet.
   static const String noRole = '/no-role';
   static const String noRoleName = 'noRole';
@@ -25,6 +30,7 @@ class AppRoutes {
     welcome,
     signIn,
     signUp,
+    staffSignUp,
   };
 
   // ---------------------------------------------------------------------
@@ -130,6 +136,14 @@ class AppRoutes {
   static const String adminUser = '/admin/user';
   static const String adminUserName = 'adminUser';
 
+  /// Invitations, administrators, and accounts holding no role.
+  static const String adminStaff = '/admin/staff';
+  static const String adminStaffName = 'adminStaff';
+
+  /// The form that invites a mentor or administrator.
+  static const String adminAddStaff = '/admin/staff/add';
+  static const String adminAddStaffName = 'adminAddStaff';
+
   static const String adminProfile = '/admin/profile';
   static const String adminProfileName = 'adminProfile';
 
@@ -221,6 +235,8 @@ class AppRoutes {
     adminAddParticipant,
     adminActivities,
     adminUser,
+    adminStaff,
+    adminAddStaff,
     adminWifaqs,
     adminWifaqInstitutes,
     adminWifaqGraduates,

@@ -327,16 +327,23 @@ final graduatesOfProvider = FutureProvider.family<List<GraduateSummary>, String>
   return ref.watch(adminRepositoryProvider).graduatesOf(mentorId);
 });
 
+/// Invitations not yet used, for the staff screen.
+final FutureProvider<List<StaffInvite>> openStaffInvitesProvider =
+    FutureProvider<List<StaffInvite>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).openStaffInvites();
+});
+
 /// A profile paired with the role it currently holds.
 class AdminUserRow {
   const AdminUserRow({required this.profile, this.role});
 
   final GraduateSummary profile;
 
-  /// Null when the account holds the default graduate role.
+  /// Null when the account holds no role at all. Such an account is stuck on
+  /// the "no access" screen until an administrator grants one, so it must not
+  /// be mistaken for a graduate.
   final AppRole? role;
-
-  AppRole get effectiveRole => role ?? AppRole.graduate;
 }
 
 // ---------------------------------------------------------------------------

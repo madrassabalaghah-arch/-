@@ -99,6 +99,7 @@ class GraduateSummary {
     this.completedSteps = 0,
     this.totalSteps = 0,
     this.lastActivity,
+    this.email,
   });
 
   final String id;
@@ -107,6 +108,10 @@ class GraduateSummary {
   final String? city;
   final String? stage;
   final AppStatus status;
+
+  /// Filled in by the administrator's lists, where an account created
+  /// without a name would otherwise be impossible to tell apart.
+  final String? email;
 
   /// Progress is computed from real activity rows, never stored.
   final int completedSteps;

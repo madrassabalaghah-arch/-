@@ -156,6 +156,23 @@ class AppSessionNotifier extends AsyncNotifier<AppSession?> {
         );
   }
 
+  /// Signs up an invited mentor or administrator. Returns true when the
+  /// account is signed in straight away, and false when Supabase first wants
+  /// the email address confirmed.
+  Future<bool> signUpWithInvite({
+    required String email,
+    required String password,
+    required String inviteCode,
+  }) async {
+    final AuthResponse response =
+        await ref.read(authRepositoryProvider).signUpWithInvite(
+              email: email,
+              password: password,
+              inviteCode: inviteCode,
+            );
+    return response.session != null;
+  }
+
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
   }

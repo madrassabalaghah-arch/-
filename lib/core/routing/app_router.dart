@@ -15,6 +15,8 @@ import '../../features/admin/presentation/recognition/admin_recognition_screen.d
 import '../../features/admin/presentation/reports/admin_report_detail_screen.dart';
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
 import '../../features/admin/presentation/settings/admin_settings_screen.dart';
+import '../../features/admin/presentation/staff/admin_add_staff_screen.dart';
+import '../../features/admin/presentation/staff/admin_staff_screen.dart';
 import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
@@ -44,6 +46,7 @@ import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/no_role_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/auth/presentation/staff_sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
 import '../../shared/presentation/important_links_screen.dart';
@@ -156,6 +159,12 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         name: AppRoutes.signUpName,
         builder: (BuildContext context, GoRouterState state) =>
             const SignUpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.staffSignUp,
+        name: AppRoutes.staffSignUpName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const StaffSignUpScreen(),
       ),
       GoRoute(
         path: AppRoutes.noRole,
@@ -563,6 +572,21 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminUserName,
     builder: (BuildContext context, GoRouterState state) =>
         AdminUserScreen(user: state.extra! as GraduateSummary),
+  ),
+  GoRoute(
+    path: AppRoutes.adminStaff,
+    name: AppRoutes.adminStaffName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminStaffScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminAddStaff,
+    name: AppRoutes.adminAddStaffName,
+    // The mentors list opens this with the mentor role already chosen.
+    builder: (BuildContext context, GoRouterState state) => AdminAddStaffScreen(
+      initialRole:
+          state.extra is AppRole ? state.extra! as AppRole : AppRole.mentor,
+    ),
   ),
   GoRoute(
     path: AppRoutes.adminWifaqs,

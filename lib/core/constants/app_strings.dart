@@ -188,6 +188,70 @@ class AppStrings {
       'دورانیہ میں کورس کا سال لکھیں، مثلاً: مارچ تا جون 2024';
   static const String optionalMonths = 'داخلہ اور فراغت کے مہینے (اختیاری)';
 
+  // Mentors and administrators joining by invitation
+  static const String staffManagement = 'منتظمین اور دعوت نامے';
+  static const String inviteStaff = 'نیا مربی / منتظم شامل کریں';
+  static const String inviteMentor = 'نیا مربی شامل کریں';
+  static const String inviteStaffNote =
+      'یہ ان لوگوں کے لیے ہے جو کورس کے ریکارڈ میں شامل نہیں۔ جس فاضل / فاضلہ کا اکاؤنٹ پہلے سے موجود ہو، اس کی حیثیت "صارف کا انتظام" سے تبدیل کریں۔';
+  static const String staffFullName = 'پورا نام';
+  static const String inviteAs = 'کس حیثیت سے شامل کریں';
+  static const String createInvite = 'دعوت نامہ بنائیں';
+  static const String inviteCreated = 'دعوت نامہ تیار ہو گیا';
+  static const String inviteCode = 'دعوتی کوڈ';
+  static const String hintInviteCode = 'آٹھ حروف، مثلاً: ABCD-2345';
+  static const String inviteCodeLength = 'دعوتی کوڈ کے آٹھ حروف درج کریں۔';
+  static const String inviteInstructions =
+      'یہ کوڈ صرف اسی شخص کو بھیجیں۔ وہ ایپ میں "داخل ہوں" کے صفحے پر "دعوتی کوڈ سے اکاؤنٹ بنائیں" منتخب کر کے یہی ای میل اور یہ کوڈ درج کریں گے۔ کوڈ ایک ہی بار استعمال ہو سکتا ہے۔';
+  static const String copyCode = 'کوڈ کاپی کریں';
+  static const String codeCopied = 'دعوتی کوڈ کاپی ہو گیا ہے۔';
+  static const String openInvites = 'زیرِ التوا دعوت نامے';
+  static const String noOpenInvites = 'کوئی زیرِ التوا دعوت نامہ نہیں';
+  static const String invitedOn = 'دعوت کی تاریخ';
+  static const String cancelInvite = 'دعوت نامہ منسوخ کریں';
+  static const String cancelInviteQuestion =
+      'کیا آپ یہ دعوت نامہ منسوخ کرنا چاہتے ہیں؟ اس کے بعد یہ کوڈ کام نہیں کرے گا۔';
+  static const String inviteCancelled = 'دعوت نامہ منسوخ کر دیا گیا ہے۔';
+  static const String administrators = 'منتظمین';
+  static const String accountsWithoutRole = 'بغیر حیثیت کے اکاؤنٹ';
+  static const String accountsWithoutRoleNote =
+      'یہ اکاؤنٹ ایپ استعمال نہیں کر سکتے۔ کسی پر ٹیپ کر کے حیثیت مقرر کریں۔';
+  static const String unnamedAccount = 'بے نام اکاؤنٹ';
+  static const String inviteEmailRegistered =
+      'اس ای میل سے پہلے ہی اکاؤنٹ موجود ہے۔ دعوت نامے کے بجائے اس اکاؤنٹ کی حیثیت "صارف کا انتظام" سے تبدیل کریں۔';
+  static const String inviteAlreadyOpen =
+      'اس ای میل کے لیے ایک دعوت نامہ پہلے سے زیرِ التوا ہے۔';
+  static const String adminOnlyAction = 'یہ کام صرف منتظم کر سکتا ہے۔';
+
+  // Signing up with an invitation
+  static const String staffSignUpPrompt = 'مربی یا منتظم؟';
+  static const String staffSignUpLink = 'دعوتی کوڈ سے اکاؤنٹ بنائیں';
+  static const String staffSignUpTitle = 'دعوت نامے سے اکاؤنٹ بنائیں';
+  static const String staffSignUpSubtitle =
+      'وہی ای میل درج کریں جس پر منتظم نے دعوت دی ہے، اور ان کا بھیجا ہوا دعوتی کوڈ۔';
+  static const String verifyInvite = 'دعوت نامے کی تصدیق کریں';
+  static const String inviteMatched = 'آپ کا دعوت نامہ مل گیا';
+  static const String invitedAs = 'بطور';
+  static const String changeInvite = 'تبدیل کریں';
+  static const String inviteRequired = 'ای میل اور دعوتی کوڈ دونوں درج کریں۔';
+  static const String inviteNotFound =
+      'یہ ای میل اور دعوتی کوڈ کسی دعوت نامے سے مطابقت نہیں رکھتے۔ دونوں دوبارہ دیکھ لیں۔';
+  static const String inviteUsed = 'یہ دعوتی کوڈ پہلے ہی استعمال ہو چکا ہے۔';
+  static const String inviteEmailHasAccount =
+      'اس ای میل سے پہلے ہی اکاؤنٹ موجود ہے۔ "داخل ہوں" سے اپنے اکاؤنٹ میں داخل ہوں۔';
+  static const String staffAccountCreated = 'آپ کا اکاؤنٹ بن گیا ہے۔';
+
+  // Changing a role
+  static const String confirmRoleChange = 'حیثیت کی تبدیلی';
+  static const String newRole = 'نئی حیثیت';
+  static const String roleChangeEndsMentoring =
+      'ان کے زیرِ رہنمائی تمام فاضل / فاضلہ کی تفویض ختم ہو جائے گی۔';
+  static const String roleChangeEndsSupervision =
+      'ان کے مربی کی تفویض ختم ہو جائے گی۔';
+  static const String adminRoleWarning =
+      'منتظم کو پورے نظام اور تمام ریکارڈ تک رسائی ہوتی ہے۔';
+  static const String noRoleYet = 'کوئی حیثیت مقرر نہیں';
+
   // ---------------------------------------------------------------------
   // Kar-guzari detail and the follow-up cycle
   // ---------------------------------------------------------------------

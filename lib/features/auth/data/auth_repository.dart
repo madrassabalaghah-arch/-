@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/models/app_role.dart';
 import '../../../shared/models/people.dart';
+import '../../../shared/models/staff_invite.dart';
 
 /// All Supabase Auth and identity reads live here.
 ///
@@ -63,6 +64,46 @@ class AuthRepository {
         'institute_name': instituteName?.trim(),
         'course_period': coursePeriod?.trim(),
       },
+    );
+  }
+
+  /// Checks an invitation before a mentor or administrator signs up.
+  ///
+  /// Goes through an RPC because the caller has no account yet and must not
+  /// be able to read the invitations. The function answers only about the
+  /// email and code given, and names the invitation only when both match.
+  Future<StaffInviteCheck> verifyStaffInvite({
+    required String email,
+    required String code,
+  }) async {
+    final List<dynamic> rows = await _client.rpc<List<dynamic>>(
+      'verify_staff_invite',
+      params: <String, dynamic>{'p_email': email.trim(), 'p_code': code},
+    );
+    if (rows.isEmpty) {
+      return const StaffInviteCheck(
+        valid: false,
+        verdict: StaffInviteVerdict.unknown,
+      );
+    }
+    return StaffInviteCheck.fromMap(rows.first as Map<String, dynamic>);
+  }
+
+  /// Creates the account of an invited mentor or administrator.
+  ///
+  /// Only the code is sent. The signup trigger looks the invitation up by
+  /// this email and code, refuses the signup unless they match an open one,
+  /// and takes the role and the name from the invitation — so nothing the
+  /// client sends can choose a role.
+  Future<AuthResponse> signUpWithInvite({
+    required String email,
+    required String password,
+    required String inviteCode,
+  }) {
+    return _auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: <String, dynamic>{'invite_code': inviteCode.trim()},
     );
   }
 
