@@ -506,7 +506,7 @@ class AdminRepository {
     required String email,
     required AppRole role,
   }) async {
-    final Object? row = await _client.rpc<Object?>(
+    final Object? result = await _client.rpc<Object?>(
       'create_staff_invite',
       params: <String, dynamic>{
         'p_full_name': fullName.trim(),
@@ -514,7 +514,15 @@ class AdminRepository {
         'p_role': role.id,
       },
     );
-    return StaffInvite.fromMap(row! as Map<String, dynamic>);
+    // One row comes back as an object; accept a one-row list as well, so a
+    // change in how the API wraps it cannot turn a created invitation into
+    // an error message.
+    final Object? row =
+        result is List && result.isNotEmpty ? result.first : result;
+    if (row is! Map<String, dynamic>) {
+      throw StateError('create_staff_invite returned no invitation');
+    }
+    return StaffInvite.fromMap(row);
   }
 
   /// Withdraws an open invitation, so its code stops working.
