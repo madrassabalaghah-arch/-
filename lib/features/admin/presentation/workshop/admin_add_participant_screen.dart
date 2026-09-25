@@ -34,6 +34,10 @@ class _AdminAddParticipantScreenState
   final TextEditingController _period = TextEditingController();
   final TextEditingController _start = TextEditingController();
   final TextEditingController _end = TextEditingController();
+
+  /// null until the administrator says. It is counted as "not recorded"
+  /// rather than assumed either way.
+  String? _gender;
   bool _busy = false;
   String? _error;
 
@@ -76,8 +80,11 @@ class _AdminAddParticipantScreenState
             coursePeriod: _period.text,
             courseStartDate: _start.text,
             courseCompletionDate: _end.text,
+            gender: _gender,
           );
       ref.invalidate(courseParticipantsProvider);
+      // The register is what کل فاضل / کل فاضلہ are counted from.
+      ref.invalidate(adminStatisticsProvider);
       if (!mounted) {
         return;
       }
@@ -93,7 +100,10 @@ class _AdminAddParticipantScreenState
         ]) {
           c.clear();
         }
-        setState(() => _busy = false);
+        setState(() {
+          _busy = false;
+          _gender = null;
+        });
       } else {
         Navigator.of(context).maybePop();
       }
@@ -172,6 +182,32 @@ class _AdminAddParticipantScreenState
               enabled: !_busy,
               prefixIcon: Icons.date_range_outlined,
               validator: _needsYear,
+            ),
+            AppSpacing.gapLg,
+            const SectionHeader(title: AppStrings.participantGender),
+            SegmentedButton<String>(
+              segments: const <ButtonSegment<String>>[
+                // فاضل first, فاضلہ second, then the honest third option.
+                ButtonSegment<String>(
+                  value: 'male',
+                  label: Text(AppStrings.genderMale),
+                ),
+                ButtonSegment<String>(
+                  value: 'female',
+                  label: Text(AppStrings.genderFemale),
+                ),
+                ButtonSegment<String>(
+                  value: '',
+                  label: Text(AppStrings.genderUnknown),
+                ),
+              ],
+              selected: <String>{_gender ?? ''},
+              onSelectionChanged: _busy
+                  ? null
+                  : (Set<String> selection) => setState(
+                        () => _gender =
+                            selection.first.isEmpty ? null : selection.first,
+                      ),
             ),
             AppSpacing.gapXl,
             const SectionHeader(title: AppStrings.optionalMonths),

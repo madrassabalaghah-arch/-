@@ -76,6 +76,38 @@ class _OfflineAuthRepository extends AuthRepository {
   }
 }
 
+/// A signed-in account holding whatever roles a test asks for, so routing
+/// can be checked for a role without a real session.
+class _RoleAuthRepository extends AuthRepository {
+  _RoleAuthRepository(super.client, this.roles);
+
+  final List<AppRole> roles;
+
+  static const User _user = User(
+    id: '22222222-2222-2222-2222-222222222222',
+    appMetadata: <String, dynamic>{},
+    userMetadata: <String, dynamic>{},
+    aud: 'authenticated',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    email: 'guest@example.org',
+  );
+
+  @override
+  User? get currentUser => _user;
+
+  @override
+  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
+
+  @override
+  Future<AppUser?> loadProfile(String userId) async => const AppUser(
+        id: '22222222-2222-2222-2222-222222222222',
+        fullName: 'مہمان',
+      );
+
+  @override
+  Future<List<AppRole>> loadRoles(String userId) async => roles;
+}
+
 Future<void> _pumpApp(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1200, 3000);
   tester.view.devicePixelRatio = 3.0;
@@ -546,6 +578,189 @@ void main() {
     expect(AppRoutes.isFullScreen(AppRoutes.adminAddStaff), isTrue);
     expect(AppRoutes.publicRoutes, contains(AppRoutes.staffSignUp),
         reason: 'the person signing up has no session yet');
+  });
+
+  testWidgets('a مہمان lands on the public figures and cannot leave them',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(
+          _RoleAuthRepository(
+            Supabase.instance.client,
+            const <AppRole>[AppRole.guest],
+          ),
+        ),
+      ],
+      child: const MadrassaApp(),
+    ));
+    // Not pumpAndSettle: the figures are loading from a server this test
+    // cannot reach, and their spinner never settles.
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text(AppStrings.guestIntroTitle), findsOneWidget,
+        reason: 'a مہمان lands on the institution figures');
+
+    // Nothing that writes is offered anywhere on the screen.
+    for (final String action in <String>[
+      AppStrings.newKarGuzari,
+      AppStrings.uploadEvidence,
+      AppStrings.addByForm,
+      AppStrings.reviewEvidence,
+      AppStrings.delete,
+      AppStrings.save,
+    ]) {
+      expect(find.text(action), findsNothing,
+          reason: 'a مہمان must not be offered "$action"');
+    }
+
+    // Typing an address of another area gets them sent straight back.
+    final ProviderContainer container =
+        ProviderScope.containerOf(tester.element(find.byType(MadrassaApp)));
+    for (final String route in <String>[
+      AppRoutes.adminDashboard,
+      AppRoutes.mentorDashboard,
+      AppRoutes.graduateDashboard,
+      AppRoutes.graduateReports,
+      AppRoutes.adminStaff,
+    ]) {
+      container.read(routerProvider).go(route);
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text(AppStrings.guestIntroTitle), findsOneWidget,
+          reason: '$route must send a مہمان back to the public figures');
+    }
+  });
+
+  test('کل and فعال are separate figures, counted from different things', () {
+    // The row the database function returns.
+    final AdminStatistics s = AdminStatistics.fromMap(<String, dynamic>{
+      'total_male': 40,
+      'total_female': 60,
+      'total_unrecorded_gender': 0,
+      'total_graduates': 100,
+      'active_male': 25,
+      'active_female': 35,
+      'active_unrecorded': 0,
+      'active_graduates': 60,
+      'accounts_without_record': 2,
+      'mentors': 3,
+      'admins': 1,
+      'guests': 0,
+      'active_assignments': 1,
+      'pending_reports': 4,
+      'under_review': 2,
+      'late_reports': 1,
+    });
+
+    // کل is the register: 40 + 60, whether or not those people signed up.
+    expect(s.totalMale, 40);
+    expect(s.totalFemale, 60);
+    expect(s.totalGraduates, 100);
+
+    // فعال is the accounts, and it does not disturb the totals.
+    expect(s.activeMale, 25);
+    expect(s.activeFemale, 35);
+    expect(s.activeGraduates, 60);
+    expect(s.totalGraduates, 100);
+
+    // A mentor counts by role. The figure used to come from
+    // mentor_assignments, so a mentor with nobody assigned went missing.
+    expect(s.mentors, 3);
+    expect(s.accountsWithoutRecord, 2);
+  });
+
+  test('the public figures carry no private detail', () {
+    final PublicStatistics p = PublicStatistics.fromMap(<String, dynamic>{
+      'total_male': 40,
+      'total_female': 60,
+      'total_graduates': 100,
+      'total_reports': 12,
+      'social_activities': 5,
+      'practical_services': 7,
+      'completed_projects': 3,
+    });
+
+    expect(p.totalMale, 40);
+    expect(p.totalFemale, 60);
+    expect(p.totalGraduates, 100);
+    expect(p.totalReports, 12);
+    expect(p.socialActivities, 5);
+    expect(p.practicalServices, 7);
+    expect(p.completedProjects, 3);
+  });
+
+  test('the register reads جنس only when the file says it plainly', () {
+    expect(ParticipantFile.genderFrom('مرد'), 'male');
+    expect(ParticipantFile.genderFrom('فاضل'), 'male');
+    expect(ParticipantFile.genderFrom('Female'), 'female');
+    expect(ParticipantFile.genderFrom('فاضلہ'), 'female');
+
+    // Anything unclear is left unrecorded rather than guessed, because a
+    // guess would be counted as a fact in کل فاضل / کل فاضلہ.
+    expect(ParticipantFile.genderFrom(''), isNull);
+    expect(ParticipantFile.genderFrom('نامعلوم'), isNull);
+    expect(ParticipantFile.genderFrom('1'), isNull);
+  });
+
+  test('evidence and reviews name the people they belong to', () {
+    final EvidenceItem evidence = EvidenceItem.fromMap(<String, dynamic>{
+      'id': 'e1',
+      'title': 'تصویر',
+      'graduate_id': 'g1',
+      'storage_path': 'g1/x.jpg',
+      'kind': 'image',
+      'graduate': <String, dynamic>{
+        'full_name': 'صبیحہ پرویز',
+        'gender': 'female',
+      },
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+    });
+    expect(evidence.graduateName, 'صبیحہ پرویز');
+    expect(evidence.graduateLabel, 'فاضلہ');
+    expect(evidence.reportTitle, 'اصلاحی حلقہ');
+
+    // Without the embed the file is still readable, and simply says nothing
+    // it does not know.
+    final EvidenceItem bare = EvidenceItem.fromMap(<String, dynamic>{
+      'id': 'e2',
+      'title': 'دستاویز',
+      'graduate_id': 'g2',
+      'storage_path': 'g2/y.pdf',
+    });
+    expect(bare.graduateName, isNull);
+    expect(bare.graduateLabel, 'فاضل / فاضلہ');
+
+    final EvaluationItem review = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'v1',
+      'report_id': 'r1',
+      'graduate_id': 'g1',
+      'mentor_id': 'm1',
+      'comment': 'بہت خوب',
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+      'mentor': <String, dynamic>{'full_name': 'محمد اسلم'},
+      'graduate': <String, dynamic>{'full_name': 'صبیحہ پرویز'},
+    });
+    expect(review.mentorName, 'محمد اسلم');
+    expect(review.graduateName, 'صبیحہ پرویز');
+    expect(review.title, 'اصلاحی حلقہ');
+
+    final MentorFeedback feedback = MentorFeedback.fromMap(<String, dynamic>{
+      'id': 'f1',
+      'subject': 'حوصلہ افزائی',
+      'message': 'بہت خوب',
+      'report_id': 'r1',
+      'mentor': <String, dynamic>{'full_name': 'محمد اسلم'},
+      'graduate': <String, dynamic>{'full_name': 'صبیحہ پرویز'},
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+    });
+    expect(feedback.mentorName, 'محمد اسلم');
+    expect(feedback.graduateName, 'صبیحہ پرویز');
+    expect(feedback.reportTitle, 'اصلاحی حلقہ');
+    expect(feedback.reportId, 'r1');
   });
 
   test('a summary card counts exactly the rows its list will show', () {

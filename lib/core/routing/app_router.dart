@@ -34,6 +34,7 @@ import '../../features/graduate/presentation/practical_activities/practical_acti
 import '../../features/graduate/presentation/profile/graduate_profile_screen.dart';
 import '../../features/graduate/presentation/recognition/graduate_recognition_screen.dart';
 import '../../features/graduate/presentation/report_editor/report_editor_screen.dart';
+import '../../features/guest/presentation/guest_dashboard_screen.dart';
 import '../../features/mentor/presentation/dashboard/mentor_dashboard_screen.dart';
 import '../../features/mentor/presentation/evaluations/mentor_evaluations_screen.dart';
 import '../../features/mentor/presentation/evidence/mentor_evidence_screen.dart';
@@ -113,6 +114,12 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
 
       final String home = homeFor(role);
 
+      // Already there. A مہمان lands on a route that is public as well, so
+      // without this the redirect would send it to itself for ever.
+      if (location == home) {
+        return null;
+      }
+
       // Signed in with a role: the public routes and the no-role holding
       // screen are no longer meaningful, so send them home.
       if (isPublic || location == AppRoutes.noRole) {
@@ -167,6 +174,12 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
             const StaffSignUpScreen(),
       ),
       GoRoute(
+        path: AppRoutes.guestDashboard,
+        name: AppRoutes.guestDashboardName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const GuestDashboardScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.noRole,
         name: AppRoutes.noRoleName,
         builder: (BuildContext context, GoRouterState state) =>
@@ -191,6 +204,8 @@ String homeFor(AppRole role) {
       return AppRoutes.mentorDashboard;
     case AppRole.admin:
       return AppRoutes.adminDashboard;
+    case AppRole.guest:
+      return AppRoutes.guestDashboard;
   }
 }
 

@@ -18,3 +18,4 @@ export 'work_items.dart';
 export 'course_participant.dart';
 export 'follow_up_status.dart';
 export 'staff_invite.dart';
+export 'statistics.dart';

@@ -13,35 +13,23 @@ class AdminRepository {
 
   final SupabaseClient _client;
 
-  Future<int> _count(String table) async {
-    return _client.from(table).count(CountOption.exact);
-  }
-
-  /// count() returns a filter builder, so the filter chains after it and the
-  /// whole thing awaits to an int.
-  Future<int> _countWhere(String table, String column, List<String> values) {
-    return _client.from(table).count(CountOption.exact).inFilter(column, values);
-  }
-
-  /// Dashboard figures, every one of them a real count.
-  Future<Map<String, int>> statistics() async {
-    final List<int> counts = await Future.wait<int>(<Future<int>>[
-      _count('profiles'),
-      _countWhere('profiles', 'status', <String>['active']),
-      _count('mentor_assignments'),
-      _countWhere('reports', 'status', <String>['pending', 'draft']),
-      _countWhere('reports', 'status', <String>['under_review', 'submitted']),
-      _countWhere('reports', 'status', <String>['late']),
-    ]);
-
-    return <String, int>{
-      'graduates': counts[0],
-      'activeGraduates': counts[1],
-      'mentorAssignments': counts[2],
-      'pendingReports': counts[3],
-      'underReview': counts[4],
-      'lateReports': counts[5],
-    };
+  /// Dashboard figures, counted in the database where the facts live.
+  ///
+  /// This used to count rows of `profiles` and call the answer "فاضل /
+  /// فاضلہ", which counted mentors and administrators too, and it read the
+  /// mentor figure from `mentor_assignments`, which counts links rather than
+  /// mentors — a mentor with nobody assigned was simply missing. One
+  /// function now answers all of it, so the register, the accounts and the
+  /// roles cannot be counted from three unrelated places again.
+  Future<AdminStatistics> statistics() async {
+    final Object? result =
+        await _client.rpc<Object?>('admin_dashboard_statistics');
+    final Object? row =
+        result is List && result.isNotEmpty ? result.first : result;
+    if (row is! Map<String, dynamic>) {
+      return const AdminStatistics();
+    }
+    return AdminStatistics.fromMap(row);
   }
 
   /// The role held by every account, keyed by user id.
@@ -169,7 +157,9 @@ class AdminRepository {
   Future<List<EvidenceItem>> evidence() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evidence')
-        .select()
+        .select(
+            '*, graduate:profiles!evidence_graduate_id_fkey(full_name, gender), '
+            'report:reports!evidence_report_id_fkey(title)')
         .order('created_at', ascending: false);
     return rows.map(EvidenceItem.fromMap).toList();
   }
@@ -239,14 +229,28 @@ class AdminRepository {
         .toList();
   }
 
-  /// Every evaluation written. Row level security admits an administrator to
-  /// all of them.
+  /// Every evaluation written, with both sides named: which mentor wrote it,
+  /// about which فاضل / فاضلہ, on which کارگزاری.
   Future<List<EvaluationItem>> evaluations() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evaluations')
-        .select('*, reports(title)')
+        .select('*, report:reports(title), '
+            'mentor:profiles!evaluations_mentor_id_fkey(full_name), '
+            'graduate:profiles!evaluations_graduate_id_fkey(full_name)')
         .order('created_at', ascending: false);
     return rows.map(EvaluationItem.fromMap).toList();
+  }
+
+  /// Guidance and appreciation mentors have written, named the same way.
+  Future<List<MentorFeedback>> mentorFeedback() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('mentor_feedback')
+        .select('*, report:reports(title), '
+            'mentor:profiles!mentor_feedback_mentor_id_fkey(full_name), '
+            'graduate:profiles!mentor_feedback_graduate_id_fkey(full_name)')
+        .order('created_at', ascending: false)
+        .limit(100);
+    return rows.map(MentorFeedback.fromMap).toList();
   }
 
   /// کارگزاری counted by status and by category.

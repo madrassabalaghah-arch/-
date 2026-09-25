@@ -5,6 +5,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/app_navigation.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/providers/data_providers.dart';
@@ -48,25 +49,112 @@ class AdminInstitutesScreen extends ConsumerWidget {
   }
 }
 
-/// جائزے: every evaluation mentors have written.
+/// جائزے: every review and every piece of guidance mentors have written,
+/// each one saying which mentor wrote it, for which فاضل / فاضلہ, and on
+/// which کارگزاری. Without those three a remark such as "بہت خوب" belongs
+/// to nobody.
 class AdminEvaluationsScreen extends ConsumerWidget {
   const AdminEvaluationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SearchableListScreen<EvaluationItem>(
+    final AsyncValue<List<EvaluationItem>> reviews =
+        ref.watch(adminEvaluationsProvider);
+    final AsyncValue<List<MentorFeedback>> feedback =
+        ref.watch(adminFeedbackProvider);
+
+    Future<void> refresh() async {
+      ref.invalidate(adminEvaluationsProvider);
+      ref.invalidate(adminFeedbackProvider);
+      await Future.wait<Object?>(<Future<Object?>>[
+        ref.read(adminEvaluationsProvider.future),
+        ref.read(adminFeedbackProvider.future),
+      ]);
+    }
+
+    return AppScaffold(
       title: AppStrings.allReviews,
-      items: ref.watch(adminEvaluationsProvider),
-      onRefresh: () => ref.refresh(adminEvaluationsProvider.future),
-      searchText: (EvaluationItem e) => '${e.title ?? ''} ${e.comment ?? ''}',
-      emptyIcon: Icons.fact_check_outlined,
-      emptyTitle: AppStrings.noRecordsYet,
-      itemBuilder: (BuildContext context, EvaluationItem e) => AppListTile(
-        title: e.title ?? AppStrings.reviewStepReport,
-        subtitle: e.comment,
-        detail: UrduNumbers.fromInt(e.score),
-        icon: Icons.fact_check_outlined,
-        accentColor: AppColors.oliveGreen,
+      body: RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          padding: const EdgeInsetsDirectional.only(
+            bottom: AppSpacing.bottomSafeArea,
+          ),
+          children: <Widget>[
+            const SectionHeader(title: AppStrings.allReviews),
+            AsyncSection<List<EvaluationItem>>(
+              value: reviews,
+              isEmpty: (List<EvaluationItem> items) => items.isEmpty,
+              emptyTitle: AppStrings.noRecordsYet,
+              emptyIcon: Icons.fact_check_outlined,
+              onRetry: () => ref.invalidate(adminEvaluationsProvider),
+              builder: (BuildContext context, List<EvaluationItem> items) =>
+                  Column(
+                children: <Widget>[
+                  for (final EvaluationItem e in items)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        bottom: AppSpacing.md,
+                      ),
+                      child: AppListTile(
+                        title: e.graduateName ?? AppStrings.graduates,
+                        subtitle: e.comment,
+                        detail: <String>[
+                          '${AppStrings.mentorLabel}: '
+                              '${e.mentorName ?? AppStrings.mentorNotRecorded}',
+                          if (e.title != null)
+                            '${AppStrings.relatedKarGuzari}: ${e.title}',
+                          e.dateLabel,
+                        ].join(' • '),
+                        icon: Icons.fact_check_outlined,
+                        accentColor: AppColors.oliveGreen,
+                        trailing: Text(
+                          UrduNumbers.ratio(e.score, e.maxScore),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(color: AppColors.earthBrown),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            AppSpacing.gapXl,
+            const SectionHeader(title: AppStrings.feedbackAndGuidance),
+            AsyncSection<List<MentorFeedback>>(
+              value: feedback,
+              isEmpty: (List<MentorFeedback> items) => items.isEmpty,
+              emptyTitle: AppStrings.noFeedbackYet,
+              emptyIcon: Icons.forum_outlined,
+              onRetry: () => ref.invalidate(adminFeedbackProvider),
+              builder: (BuildContext context, List<MentorFeedback> items) =>
+                  Column(
+                children: <Widget>[
+                  for (final MentorFeedback f in items)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        bottom: AppSpacing.md,
+                      ),
+                      child: AppListTile(
+                        title: f.graduateName ?? AppStrings.graduates,
+                        subtitle: f.message,
+                        detail: <String>[
+                          '${AppStrings.mentorLabel}: '
+                              '${f.mentorName ?? AppStrings.mentorNotRecorded}',
+                          if (f.reportTitle != null)
+                            '${AppStrings.relatedKarGuzari}: ${f.reportTitle}',
+                          f.dateLabel,
+                        ].join(' • '),
+                        icon: Icons.forum_outlined,
+                        accentColor: AppColors.gold,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -20,6 +20,7 @@ class CandidateRow {
     this.courseStartDate,
     this.courseCompletionDate,
     this.coursePeriod,
+    this.gender,
     this.problem,
   });
 
@@ -30,6 +31,10 @@ class CandidateRow {
 
   /// دورانیہ, for a file that records the period as one column.
   final String? coursePeriod;
+
+  /// 'male' or 'female' when the file said so, null when it did not. It is
+  /// what کل فاضل and کل فاضلہ are counted from, so it is never inferred.
+  final String? gender;
 
   /// Null when the row is importable.
   final CandidateProblem? problem;
@@ -42,6 +47,7 @@ class CandidateRow {
         courseStartDate: courseStartDate,
         courseCompletionDate: courseCompletionDate,
         coursePeriod: coursePeriod,
+        gender: gender,
         problem: problem,
       );
 
@@ -51,6 +57,7 @@ class CandidateRow {
         'course_start_date': courseStartDate,
         'course_completion_date': courseCompletionDate,
         'course_period': coursePeriod,
+        'gender': gender,
       };
 }
 
@@ -138,6 +145,7 @@ class CourseRepository {
     String? courseStartDate,
     String? courseCompletionDate,
     String? coursePeriod,
+    String? gender,
   }) async {
     await _client.from('course_participants').insert(<String, dynamic>{
       'registration_number': registrationNumber.trim(),
@@ -145,7 +153,18 @@ class CourseRepository {
       'course_start_date': _clean(courseStartDate),
       'course_completion_date': _clean(courseCompletionDate),
       'course_period': _clean(coursePeriod),
+      'gender': gender,
     });
+  }
+
+  /// Records فاضل or فاضلہ against a register row, or clears it. This is
+  /// what makes the کل فاضل and کل فاضلہ figures possible for records
+  /// imported before the register had the column.
+  Future<void> setGender({required String id, required String? gender}) async {
+    await _client
+        .from('course_participants')
+        .update(<String, dynamic>{'gender': gender})
+        .eq('id', id);
   }
 
   /// True when this رقمِ تسجیل is already on the register.

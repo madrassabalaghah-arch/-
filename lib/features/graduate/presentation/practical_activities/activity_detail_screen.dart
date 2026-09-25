@@ -164,7 +164,9 @@ class ActivityDetailScreen extends ConsumerWidget {
                     child: AppListTile(
                       title: e.title ?? AppStrings.reviewStepReport,
                       subtitle: e.comment,
-                      detail: e.reviewerName,
+                      detail: e.mentorName == null
+                          ? null
+                          : '${AppStrings.mentorLabel}: ${e.mentorName}',
                       icon: Icons.fact_check_outlined,
                       accentColor: AppColors.oliveGreen,
                     ),

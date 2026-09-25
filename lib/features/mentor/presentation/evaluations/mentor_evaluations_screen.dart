@@ -18,12 +18,16 @@ class MentorEvaluationsScreen extends ConsumerWidget {
       title: AppStrings.assessment,
       items: ref.watch(mentorEvaluationsProvider),
       onRefresh: () => ref.refresh(mentorEvaluationsProvider.future),
-      searchText: (EvaluationItem item) => item.title ?? '',
+      searchText: (EvaluationItem item) =>
+          '${item.title ?? ''} ${item.graduateName ?? ''}',
       emptyIcon: Icons.fact_check_outlined,
       itemBuilder: (BuildContext context, EvaluationItem item) => AppListTile(
         title: item.title ?? AppStrings.evaluation,
         subtitle: item.comment,
-        detail: item.dateLabel,
+        // Which فاضل / فاضلہ this review was written for.
+        detail: item.graduateName == null
+            ? item.dateLabel
+            : '${item.graduateName} • ${item.dateLabel}',
         icon: Icons.fact_check_outlined,
         status: item.status,
         progress: item.ratio,

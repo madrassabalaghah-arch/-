@@ -117,16 +117,21 @@ class MentorRepository {
     }
     final List<Map<String, dynamic>> rows = await _client
         .from('evidence')
-        .select()
+        .select(
+            '*, graduate:profiles!evidence_graduate_id_fkey(full_name, gender), '
+            'report:reports!evidence_report_id_fkey(title)')
         .inFilter('graduate_id', ids)
         .order('created_at', ascending: false);
     return rows.map(EvidenceItem.fromMap).toList();
   }
 
+  /// This mentor's own reviews, each naming the فاضل / فاضلہ it was written
+  /// for and the کارگزاری it was written about.
   Future<List<EvaluationItem>> completedEvaluations() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evaluations')
-        .select('*, reports(title)')
+        .select('*, report:reports(title), '
+            'graduate:profiles!evaluations_graduate_id_fkey(full_name)')
         .eq('mentor_id', _uid)
         .order('created_at', ascending: false);
     return rows.map(EvaluationItem.fromMap).toList();
@@ -220,20 +225,29 @@ class MentorRepository {
       'graduate_id': graduateId,
       'subject': 'اصلاح درکار',
       'message': comment.trim(),
+      // The کارگزاری being handed back, so the graduate is told what this
+      // is about rather than receiving a loose remark.
+      'report_id': reportId,
     });
   }
 
   /// Writes guidance for an assigned graduate.
+  ///
+  /// [reportId] names the کارگزاری the guidance followed, when it followed
+  /// one. The mentor is never taken from the client: the row is written as
+  /// the signed-in mentor, and the policy refuses any other.
   Future<void> sendFeedback({
     required String graduateId,
     required String subject,
     required String message,
+    String? reportId,
   }) async {
     await _client.from('mentor_feedback').insert(<String, dynamic>{
       'mentor_id': _uid,
       'graduate_id': graduateId,
       'subject': subject,
       'message': message,
+      'report_id': reportId,
     });
   }
 

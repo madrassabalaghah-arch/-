@@ -24,6 +24,13 @@ enum AppRole {
     urduTitle: 'منتظم',
     urduDescription: 'فاضل / فاضلہ، مربیوں، کارگزاریوں اور نظام کا انتظام کریں۔',
     icon: Icons.admin_panel_settings_outlined,
+  ),
+  guest(
+    id: 'guest',
+    urduTitle: 'مہمان',
+    urduDescription:
+        'ادارے کے مجموعی اعداد و شمار اور عملی خدمات کا تعارف دیکھیں۔ صرف دیکھ سکتے ہیں، کوئی تبدیلی نہیں۔',
+    icon: Icons.visibility_outlined,
   );
 
   const AppRole({
@@ -63,6 +70,9 @@ enum AppRole {
 
   /// Picks the strongest role when a user holds more than one. A person who
   /// is both a mentor and an administrator lands on the administrator area.
+  ///
+  /// مہمان is last: it can only view, so any other role an account holds is
+  /// the one worth landing on.
   static AppRole? highest(Iterable<AppRole> roles) {
     if (roles.contains(AppRole.admin)) {
       return AppRole.admin;
@@ -72,6 +82,9 @@ enum AppRole {
     }
     if (roles.contains(AppRole.graduate)) {
       return AppRole.graduate;
+    }
+    if (roles.contains(AppRole.guest)) {
+      return AppRole.guest;
     }
     return null;
   }

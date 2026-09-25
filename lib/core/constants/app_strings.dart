@@ -241,6 +241,53 @@ class AppStrings {
       'اس ای میل سے پہلے ہی اکاؤنٹ موجود ہے۔ "داخل ہوں" سے اپنے اکاؤنٹ میں داخل ہوں۔';
   static const String staffAccountCreated = 'آپ کا اکاؤنٹ بن گیا ہے۔';
 
+  // The register, the accounts, and the difference between them
+  static const String registerSection = 'کورس رجسٹر — کل';
+  static const String accountsSection = 'اکاؤنٹس — فعال';
+  static const String totalMale = 'کل فاضل';
+  static const String totalFemale = 'کل فاضلہ';
+  static const String totalBoth = 'کل فاضل و فاضلہ';
+  static const String activeMale = 'فعال فاضل';
+  static const String activeFemale = 'فعال فاضلہ';
+  static const String activeBoth = 'فعال فاضل و فاضلہ';
+  static const String genderNotRecorded = 'جنس درج نہیں';
+  static const String accountsWithoutRecord = 'رجسٹر سے غیر منسلک اکاؤنٹ';
+  static const String countsExplained =
+      'کل: کورس رجسٹر کے تمام اہل ریکارڈ۔ فعال: وہ ریکارڈ جن کا ایپ اکاؤنٹ بن چکا ہے۔';
+  static const String participantGender = 'جنس';
+  static const String genderMale = 'فاضل';
+  static const String genderFemale = 'فاضلہ';
+  static const String genderUnknown = 'درج نہیں';
+  static const String setGender = 'جنس درج کریں';
+  static const String genderUpdated = 'جنس درج کر دی گئی ہے۔';
+
+  // مہمان
+  static const String guestArea = 'ادارے کا تعارف و کارکردگی';
+  static const String viewAsGuest = 'مہمان کے طور پر دیکھیں';
+  static const String guestIntroTitle = 'ادارے کا تعارف';
+  static const String guestIntro =
+      'یہ صفحہ ادارے کے فضلاء اور ان کی عملی خدمات کا مجموعی خلاصہ پیش کرتا ہے۔ تمام اعداد و شمار ادارے کے اپنے ریکارڈ سے لیے گئے ہیں۔';
+  static const String guestStatistics = 'مجموعی اعداد و شمار';
+  static const String practicalServices = 'عملی خدمات';
+  static const String practicalImpact = 'معاشرے میں عملی کردار';
+  static const String guestReadOnly =
+      'مہمان اکاؤنٹ صرف دیکھنے کے لیے ہے۔ کسی قسم کا اندراج یا تبدیلی ممکن نہیں۔';
+  static const String noPublicActivityYet =
+      'ابھی کوئی عوامی کارگزاری درج نہیں ہوئی';
+  static const String ourWebsite = 'ہماری ویب سائٹ';
+  static const String websiteInvite =
+      'مدرسہ ڈاٹ پی کے کا مزید تعارف اور معلومات دیکھنے کے لیے ہماری ویب سائٹ ملاحظہ کریں۔';
+  static const String visitWebsite = 'ویب سائٹ دیکھیں';
+
+  // Evidence and feedback, with the people they belong to
+  static const String submittedBy = 'جمع کروانے والے';
+  static const String submittedOn = 'جمع کروانے کی تاریخ';
+  static const String mentorLabel = 'مربی';
+  static const String mentorNotRecorded = 'مربی درج نہیں';
+  static const String feedbackAndGuidance = 'مربی کی رائے اور رہنمائی';
+  static const String noFeedbackYet = 'ابھی کوئی رائے درج نہیں';
+  static const String searchEvidenceHint = 'نام یا کارگزاری سے تلاش کریں';
+
   // Changing a role
   static const String confirmRoleChange = 'حیثیت کی تبدیلی';
   static const String newRole = 'نئی حیثیت';

@@ -83,6 +83,7 @@ class CourseParticipant {
     this.eligible = true,
     this.accountCreated = false,
     this.linkedUserId,
+    this.gender,
   });
 
   final String id;
@@ -109,6 +110,23 @@ class CourseParticipant {
   final bool accountCreated;
   final String? linkedUserId;
 
+  /// 'male' or 'female' as the organisation recorded it, or as the person
+  /// chose at signup. Null means nobody has said, and it is counted as
+  /// such rather than assumed.
+  final String? gender;
+
+  /// فاضل, فاضلہ, or a plain statement that it is not recorded.
+  String get genderLabel {
+    switch (gender) {
+      case 'male':
+        return 'فاضل';
+      case 'female':
+        return 'فاضلہ';
+      default:
+        return 'درج نہیں';
+    }
+  }
+
   factory CourseParticipant.fromMap(Map<String, dynamic> row) {
     return CourseParticipant(
       id: row['id'] as String,
@@ -120,6 +138,7 @@ class CourseParticipant {
       eligible: row['eligible'] != false,
       accountCreated: row['account_created'] == true,
       linkedUserId: nullableString(row, 'linked_user_id'),
+      gender: nullableString(row, 'gender'),
     );
   }
 

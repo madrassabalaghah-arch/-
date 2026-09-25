@@ -32,8 +32,10 @@ class _AdminAddStaffScreenState extends ConsumerState<AdminAddStaffScreen> {
   final GlobalKey<FormState> _form = GlobalKey<FormState>();
   final TextEditingController _name = TextEditingController();
   final TextEditingController _email = TextEditingController();
-  late AppRole _role =
-      widget.initialRole == AppRole.admin ? AppRole.admin : AppRole.mentor;
+  late AppRole _role = const <AppRole>{AppRole.admin, AppRole.guest}
+          .contains(widget.initialRole)
+      ? widget.initialRole
+      : AppRole.mentor;
   bool _busy = false;
   String? _error;
 
@@ -216,6 +218,8 @@ class _AdminAddStaffScreenState extends ConsumerState<AdminAddStaffScreen> {
                 for (final AppRole role in <AppRole>[
                   AppRole.mentor,
                   AppRole.admin,
+                  // A مہمان is invited the same way, and can only view.
+                  AppRole.guest,
                 ])
                   ButtonSegment<AppRole>(
                     value: role,

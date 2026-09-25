@@ -36,10 +36,13 @@ class GraduateRepository {
     return rows.map(EvidenceItem.fromMap).toList();
   }
 
+  /// Reviews written about this graduate, each naming the mentor who wrote
+  /// it. A review whose author is unknown tells the graduate nothing.
   Future<List<EvaluationItem>> evaluations() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evaluations')
-        .select('*, reports(title)')
+        .select('*, report:reports(title), '
+            'mentor:profiles!evaluations_mentor_id_fkey(full_name)')
         .eq('graduate_id', _uid)
         .order('created_at', ascending: false);
     return rows.map(EvaluationItem.fromMap).toList();
@@ -84,7 +87,8 @@ class GraduateRepository {
   Future<MentorFeedback?> latestFeedback() async {
     final Map<String, dynamic>? row = await _client
         .from('mentor_feedback')
-        .select()
+        .select('*, report:reports(title), '
+            'mentor:profiles!mentor_feedback_mentor_id_fkey(full_name)')
         .eq('graduate_id', _uid)
         .order('created_at', ascending: false)
         .limit(1)

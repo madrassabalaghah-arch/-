@@ -23,7 +23,11 @@ class GraduateEvaluationsScreen extends ConsumerWidget {
       itemBuilder: (BuildContext context, EvaluationItem item) => AppListTile(
         title: item.title ?? AppStrings.evaluation,
         subtitle: item.comment,
-        detail: '${item.reviewerName} • ${item.dateLabel}',
+        // Who wrote it, then when. It used to print "null" where the
+        // mentor's name belongs, because the query never asked for it.
+        detail: '${AppStrings.mentorLabel}: '
+            '${item.mentorName ?? AppStrings.mentorNotRecorded}'
+            ' • ${item.dateLabel}',
         icon: Icons.fact_check_outlined,
         status: item.status,
         progress: item.status == AppStatus.underReview ? null : item.ratio,

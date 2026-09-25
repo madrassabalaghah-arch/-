@@ -135,6 +135,60 @@ class AdminParticipantsScreen extends ConsumerWidget {
     );
   }
 
+  /// Records فاضل or فاضلہ against a register row, or clears it.
+  ///
+  /// The register is where کل فاضل and کل فاضلہ come from, and rows imported
+  /// before the register had the column have nothing recorded, so this is
+  /// how an administrator fills them in without touching the database.
+  static Future<void> _setGender(
+    BuildContext context,
+    WidgetRef ref,
+    CourseParticipant participant,
+  ) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final String? choice = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => SimpleDialog(
+        title: const Text(AppStrings.setGender),
+        children: <Widget>[
+          for (final ({String label, String? value}) option
+              in <({String label, String? value})>[
+            (label: AppStrings.genderMale, value: 'male'),
+            (label: AppStrings.genderFemale, value: 'female'),
+            (label: AppStrings.genderUnknown, value: null),
+          ])
+            SimpleDialogOption(
+              // An empty string carries "clear it", because null would be
+              // indistinguishable from dismissing the dialog.
+              onPressed: () => Navigator.of(context).pop(option.value ?? ''),
+              child: Text(option.label),
+            ),
+        ],
+      ),
+    );
+    if (choice == null) {
+      return;
+    }
+
+    try {
+      await ref.read(courseRepositoryProvider).setGender(
+            id: participant.id,
+            gender: choice.isEmpty ? null : choice,
+          );
+      ref.invalidate(courseParticipantsProvider);
+      ref.invalidate(adminStatisticsProvider);
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(const SnackBar(content: Text(AppStrings.genderUpdated)));
+    } catch (error) {
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(
+          content: Text('${AppStrings.somethingWentWrong} — $error'),
+        ));
+    }
+  }
+
   static Future<void> _showHistory(BuildContext context, WidgetRef ref) {
     return showModalBottomSheet<void>(
       context: context,
@@ -235,9 +289,11 @@ class AdminParticipantsScreen extends ConsumerWidget {
       itemBuilder: (BuildContext context, CourseParticipant p) => AppListTile(
         title: '${p.registrationNumber} — ${p.fullName}',
         subtitle: p.coursePeriod,
-        detail: p.accountCreated
-            ? AppStrings.accountCreated
-            : AppStrings.accountNotCreated,
+        // The جنس is shown on every row because کل فاضل and کل فاضلہ are
+        // counted from it; tapping the row is how it gets recorded.
+        detail: '${AppStrings.participantGender}: ${p.genderLabel} • '
+            '${p.accountCreated ? AppStrings.accountCreated : AppStrings.accountNotCreated}',
+        onTap: () => _setGender(context, ref, p),
         icon: p.accountCreated
             ? Icons.verified_user_outlined
             : Icons.person_outline,

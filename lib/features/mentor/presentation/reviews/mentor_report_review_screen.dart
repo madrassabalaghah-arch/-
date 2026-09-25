@@ -59,6 +59,9 @@ class _MentorReportReviewScreenState
           graduateId: widget.report.graduateId,
           subject: AppStrings.reviewStepGuidance,
           message: text,
+          // The کارگزاری under review, so the graduate and the administrator
+          // can both see what the guidance was about.
+          reportId: widget.report.id,
         );
   }
 

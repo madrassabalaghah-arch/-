@@ -52,7 +52,43 @@ class ParticipantFile {
       'course_completion_date',
       'course completion',
     ],
+    'gender': <String>[
+      'جنس',
+      'صنف',
+      'فاضل / فاضلہ',
+      'gender',
+      'sex',
+    ],
   };
+
+  /// Reads فاضل / فاضلہ from a cell.
+  ///
+  /// Only values that plainly say one or the other are accepted. Anything
+  /// else — a blank, an initial, a word this does not know — is left unset
+  /// rather than guessed, because a guessed جنس would go straight into the
+  /// کل فاضل and کل فاضلہ figures as though it were a fact.
+  static String? genderFrom(String value) {
+    final String v = normalise(value);
+    if (v.isEmpty) {
+      return null;
+    }
+    const List<String> male = <String>['مرد', 'فاضل', 'male', 'm', 'ذکر'];
+    const List<String> female = <String>[
+      'عورت',
+      'خاتون',
+      'فاضلہ',
+      'female',
+      'f',
+      'انثی',
+    ];
+    if (male.any((String m) => normalise(m) == v)) {
+      return 'male';
+    }
+    if (female.any((String f) => normalise(f) == v)) {
+      return 'female';
+    }
+    return null;
+  }
 
   /// Normalises a heading so spacing, diacritics and the zero-width joiners an
   /// Urdu keyboard inserts do not stop a column being recognised.
@@ -251,6 +287,9 @@ class ParticipantFile {
         courseStartDate: start.isEmpty ? null : start,
         courseCompletionDate: end.isEmpty ? null : end,
         coursePeriod: period.isEmpty ? null : period,
+        // Optional. A file without this column imports exactly as before,
+        // and those records simply have no جنس recorded yet.
+        gender: genderFrom(cell(line, 'gender')),
         problem: problem,
       ));
     }

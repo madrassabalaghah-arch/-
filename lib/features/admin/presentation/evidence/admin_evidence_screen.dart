@@ -22,15 +22,27 @@ class AdminEvidenceScreen extends ConsumerWidget {
       title: AppStrings.evidence,
       items: ref.watch(adminEvidenceProvider),
       onRefresh: () => ref.refresh(adminEvidenceProvider.future),
-      searchText: (EvidenceItem item) => '${item.title} ${item.typeLabel}',
+      searchHint: AppStrings.searchEvidenceHint,
+      searchText: (EvidenceItem item) =>
+          '${item.title} ${item.graduateName ?? ''} ${item.reportTitle ?? ''} '
+          '${item.typeLabel}',
       emptyIcon: Icons.folder_open_outlined,
       emptyTitle: AppStrings.noRecordsYet,
+      // The owner leads each row, and the کارگزاری it belongs to is on the
+      // line below, so a file is never an anonymous item in a pile.
       itemBuilder: (BuildContext context, EvidenceItem item) => AppListTile(
-        title: item.title,
-        subtitle: '${item.typeLabel} • ${item.reviewLabel}',
-        detail: item.reviewNote == null
-            ? item.dateLabel
-            : '${item.dateLabel} — ${item.reviewNote}',
+        title: item.graduateName == null
+            ? item.title
+            : '${item.graduateLabel}: ${item.graduateName}',
+        subtitle: item.graduateName == null
+            ? '${item.typeLabel} • ${item.reviewLabel}'
+            : '${item.title} • ${item.typeLabel} • ${item.reviewLabel}',
+        detail: <String>[
+          if (item.reportTitle != null)
+            '${AppStrings.relatedKarGuzari}: ${item.reportTitle}',
+          item.dateLabel,
+          if (item.reviewNote != null) item.reviewNote!,
+        ].join(' • '),
         icon: item.icon,
         status: item.status,
         accentColor: AppColors.tealGreen,

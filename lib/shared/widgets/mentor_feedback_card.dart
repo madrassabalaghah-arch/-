@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../models/work_items.dart';
@@ -39,12 +40,23 @@ class MentorFeedbackCard extends StatelessWidget {
           ),
           AppSpacing.gapSm,
           Text(feedback.message, style: theme.textTheme.bodySmall),
+          // Which کارگزاری the guidance followed, when it followed one.
+          if (feedback.reportTitle != null) ...<Widget>[
+            AppSpacing.gapXs,
+            Text(
+              '${AppStrings.relatedKarGuzari}: ${feedback.reportTitle}',
+              style: theme.textTheme.labelSmall,
+            ),
+          ],
           AppSpacing.gapMd,
           Row(
             children: <Widget>[
               Expanded(
                 child: Text(
-                  feedback.mentorName ?? '',
+                  // Named, so the graduate knows which مربی is speaking.
+                  feedback.mentorName == null
+                      ? AppStrings.mentorNotRecorded
+                      : '${AppStrings.mentorLabel}: ${feedback.mentorName}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: AppColors.primaryGreen,
                     fontWeight: FontWeight.w700,

@@ -6,6 +6,7 @@ import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/data/course_repository.dart';
 import '../../features/graduate/data/graduate_repository.dart';
+import '../../features/guest/data/public_repository.dart';
 import '../../features/mentor/data/mentor_repository.dart';
 import '../data/reference_repository.dart';
 import '../models/models.dart';
@@ -174,11 +175,32 @@ final StreamProvider<List<NotificationItem>> mentorNotificationsProvider =
 // Admin
 // ---------------------------------------------------------------------------
 
-final FutureProvider<Map<String, int>> adminStatisticsProvider =
-    FutureProvider<Map<String, int>>((Ref ref) {
+final FutureProvider<AdminStatistics> adminStatisticsProvider =
+    FutureProvider<AdminStatistics>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).statistics();
 });
+
+// ---------------------------------------------------------------------------
+// Public figures, for مہمان
+// ---------------------------------------------------------------------------
+
+final Provider<PublicRepository> publicRepositoryProvider =
+    Provider<PublicRepository>(
+  (Ref ref) => PublicRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Deliberately not tied to the session: a visitor who is not signed in can
+/// still read these, and the database functions are what decide that.
+final FutureProvider<PublicStatistics> publicStatisticsProvider =
+    FutureProvider<PublicStatistics>(
+  (Ref ref) => ref.watch(publicRepositoryProvider).statistics(),
+);
+
+final FutureProvider<List<PublicActivityCount>> publicActivityProvider =
+    FutureProvider<List<PublicActivityCount>>(
+  (Ref ref) => ref.watch(publicRepositoryProvider).activityBreakdown(),
+);
 
 final FutureProvider<List<GraduateSummary>> adminGraduatesProvider =
     FutureProvider<List<GraduateSummary>>((Ref ref) {
@@ -509,6 +531,13 @@ final FutureProvider<List<EvaluationItem>> adminEvaluationsProvider =
     FutureProvider<List<EvaluationItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).evaluations();
+});
+
+/// Guidance and appreciation mentors have written, for the administrator.
+final FutureProvider<List<MentorFeedback>> adminFeedbackProvider =
+    FutureProvider<List<MentorFeedback>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).mentorFeedback();
 });
 
 final FutureProvider<List<({String section, String label, int total})>>

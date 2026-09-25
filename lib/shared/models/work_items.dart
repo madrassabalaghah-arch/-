@@ -166,6 +166,9 @@ class EvidenceItem {
     this.status = AppStatus.submitted,
     this.createdAt,
     this.reviewNote,
+    this.graduateName,
+    this.graduateGender,
+    this.reportTitle,
   });
 
   /// What the reviewer said, shown to the graduate beside the verdict.
@@ -174,6 +177,17 @@ class EvidenceItem {
   final String id;
   final String title;
   final String graduateId;
+
+  /// Who submitted it, and the کارگزاری it belongs to. Filled in for the
+  /// mentor and administrator lists, where a file without its owner is not
+  /// evidence of anything. Null on a graduate's own list, which is all
+  /// theirs already.
+  final String? graduateName;
+
+  /// 'male' or 'female' from the owner's profile, so the label reads فاضل
+  /// or فاضلہ rather than guessing one of them.
+  final String? graduateGender;
+  final String? reportTitle;
 
   /// Object path inside the private evidence bucket.
   final String storagePath;
@@ -187,6 +201,11 @@ class EvidenceItem {
   final DateTime? createdAt;
 
   factory EvidenceItem.fromMap(Map<String, dynamic> row) {
+    // Present only when the query embedded them; the graduate's own list
+    // does not, because every row there is theirs.
+    final Object? graduate = row['graduate'] ?? row['profiles'];
+    final Object? report = row['report'] ?? row['reports'];
+
     return EvidenceItem(
       id: row['id'] as String,
       title: (row['title'] as String?) ?? '',
@@ -199,7 +218,27 @@ class EvidenceItem {
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
       reviewNote: nullableString(row, 'review_note'),
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
+          : null,
+      graduateGender: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'gender')
+          : null,
+      reportTitle:
+          report is Map<String, dynamic> ? nullableString(report, 'title') : null,
     );
+  }
+
+  /// فاضل or فاضلہ for the owner, or the pair when the profile does not say.
+  String get graduateLabel {
+    switch (graduateGender) {
+      case 'male':
+        return 'فاضل';
+      case 'female':
+        return 'فاضلہ';
+      default:
+        return 'فاضل / فاضلہ';
+    }
   }
 
   /// The verdict in the words the brief uses for evidence, which differ from
@@ -251,7 +290,8 @@ class EvaluationItem {
     required this.graduateId,
     required this.mentorId,
     this.title,
-    this.reviewerName,
+    this.mentorName,
+    this.graduateName,
     this.comment,
     this.score = 0,
     this.maxScore = 0,
@@ -263,8 +303,14 @@ class EvaluationItem {
   final String reportId;
   final String graduateId;
   final String mentorId;
+
+  /// The کارگزاری this review is about.
   final String? title;
-  final String? reviewerName;
+
+  /// Who wrote the review, and about whom. A review that cannot name both
+  /// tells nobody anything, so every screen that shows one asks for them.
+  final String? mentorName;
+  final String? graduateName;
   final String? comment;
   final int score;
   final int maxScore;
@@ -272,8 +318,11 @@ class EvaluationItem {
   final DateTime? createdAt;
 
   factory EvaluationItem.fromMap(Map<String, dynamic> row) {
-    final Object? report = row['reports'];
-    final Object? mentor = row['profiles'];
+    final Object? report = row['report'] ?? row['reports'];
+    // Two profiles are embedded under names of their own, because a row
+    // that simply said "profiles" could not say which side it meant.
+    final Object? mentor = row['mentor'] ?? row['profiles'];
+    final Object? graduate = row['graduate'];
 
     return EvaluationItem(
       id: row['id'] as String,
@@ -283,8 +332,11 @@ class EvaluationItem {
       title: report is Map<String, dynamic>
           ? nullableString(report, 'title')
           : null,
-      reviewerName: mentor is Map<String, dynamic>
+      mentorName: mentor is Map<String, dynamic>
           ? nullableString(mentor, 'full_name')
+          : null,
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
           : null,
       comment: nullableString(row, 'comment'),
       score: intOr(row, 'total_score'),
@@ -379,17 +431,30 @@ class MentorFeedback {
     required this.subject,
     required this.message,
     this.mentorName,
+    this.graduateName,
+    this.reportId,
+    this.reportTitle,
     this.createdAt,
   });
 
   final String id;
   final String subject;
   final String message;
+
+  /// The mentor who wrote it. The graduate is told who is speaking to them.
   final String? mentorName;
+
+  /// Who it was written for, and the کارگزاری it followed, when it followed
+  /// one. Both are filled in for the administrator's view.
+  final String? graduateName;
+  final String? reportId;
+  final String? reportTitle;
   final DateTime? createdAt;
 
   factory MentorFeedback.fromMap(Map<String, dynamic> row) {
-    final Object? mentor = row['profiles'];
+    final Object? mentor = row['mentor'] ?? row['profiles'];
+    final Object? graduate = row['graduate'];
+    final Object? report = row['report'] ?? row['reports'];
 
     return MentorFeedback(
       id: row['id'] as String,
@@ -398,6 +463,12 @@ class MentorFeedback {
       mentorName: mentor is Map<String, dynamic>
           ? nullableString(mentor, 'full_name')
           : null,
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
+          : null,
+      reportId: nullableString(row, 'report_id'),
+      reportTitle:
+          report is Map<String, dynamic> ? nullableString(report, 'title') : null,
       createdAt: dateOf(row, 'created_at'),
     );
   }
