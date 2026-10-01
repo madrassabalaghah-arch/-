@@ -107,8 +107,8 @@ class AdminWifaqsScreen extends ConsumerWidget {
           AppListTile(
         title: item.displayName,
         subtitle:
-            '${AppStrings.maleLabel} ${UrduNumbers.fromInt(item.maleCount)}'
-            '   ${AppStrings.femaleLabel} ${UrduNumbers.fromInt(item.femaleCount)}',
+            '${AppStrings.malePlural} ${UrduNumbers.fromInt(item.maleCount)}'
+            '   ${AppStrings.femalePlural} ${UrduNumbers.fromInt(item.femaleCount)}',
         detail: '${AppStrings.institutes}: '
             '${UrduNumbers.fromInt(item.instituteCount)}   •   '
             '${AppStrings.totalGraduates}: '

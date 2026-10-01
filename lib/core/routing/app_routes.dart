@@ -25,19 +25,12 @@ class AppRoutes {
   static const String noRole = '/no-role';
   static const String noRoleName = 'noRole';
 
-  /// The institution's public figures. A مہمان lands here, and a visitor
-  /// who is not signed in at all can open it from the welcome screen: it
-  /// shows totals and nothing about any one person.
-  static const String guestDashboard = '/guest/dashboard';
-  static const String guestDashboardName = 'guestDashboard';
-
   /// Routes reachable without a session.
   static const Set<String> publicRoutes = <String>{
     welcome,
     signIn,
     signUp,
     staffSignUp,
-    guestDashboard,
   };
 
   // ---------------------------------------------------------------------

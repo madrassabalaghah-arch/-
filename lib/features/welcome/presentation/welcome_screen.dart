@@ -82,14 +82,6 @@ class WelcomeScreen extends StatelessWidget {
                     icon: Icons.arrow_forward_rounded,
                     onPressed: () => context.push(AppRoutes.signIn),
                   ),
-                  AppSpacing.gapMd,
-                  // The institution's own figures, for anyone who wants to
-                  // see them without an account. It shows totals only.
-                  SecondaryButton(
-                    label: AppStrings.viewAsGuest,
-                    icon: Icons.visibility_outlined,
-                    onPressed: () => context.push(AppRoutes.guestDashboard),
-                  ),
                 ],
               ),
             ),

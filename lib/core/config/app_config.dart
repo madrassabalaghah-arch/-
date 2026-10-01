@@ -1,16 +1,16 @@
 /// Centralised application configuration.
 ///
-/// The final product name has NOT been decided yet. Every user facing
-/// reference to the application name must be read from here so that a single
-/// edit in this file renames the entire application.
+/// Every user facing reference to the application name is read from here, so
+/// renaming the application is one edit in this file. The organisation,
+/// MADRASSA.PK, is a different thing and is not stored here.
 class AppConfig {
   const AppConfig._();
 
-  /// Temporary product name (English form, used for tooling / window titles).
-  static const String appName = 'MADRASSA.PK Graduate Platform';
+  /// Product name (English form, used for tooling / window titles).
+  static const String appName = 'Madrassa Tarbiat App';
 
-  /// Temporary product name shown to users inside the Urdu interface.
-  static const String appNameUrdu = 'کاروان فضلاء مدرسہ ڈاٹ پی کے';
+  /// Product name shown to users inside the Urdu interface.
+  static const String appNameUrdu = 'مدرسہ تربیت ایپ';
 
   /// Secondary line displayed under the brand mark.
   static const String appTaglineUrdu = 'علم سے عمل، عمل سے اثر تک';

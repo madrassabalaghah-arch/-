@@ -37,8 +37,8 @@ class AdminWifaqInstitutesScreen extends ConsumerWidget {
       itemBuilder: (BuildContext context, InstituteDirectoryEntry item) =>
           AppListTile(
         title: item.displayName,
-        subtitle: '${AppStrings.maleLabel} ${UrduNumbers.fromInt(item.maleCount)}'
-            '   ${AppStrings.femaleLabel} ${UrduNumbers.fromInt(item.femaleCount)}',
+        subtitle: '${AppStrings.malePlural} ${UrduNumbers.fromInt(item.maleCount)}'
+            '   ${AppStrings.femalePlural} ${UrduNumbers.fromInt(item.femaleCount)}',
         detail:
             '${AppStrings.totalGraduates}: ${UrduNumbers.fromInt(item.graduateTotal)}',
         icon: Icons.location_city_outlined,

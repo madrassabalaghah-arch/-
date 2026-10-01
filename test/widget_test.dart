@@ -351,7 +351,7 @@ void main() {
   });
 
   test('the official name and tagline are exact', () {
-    expect(AppConfig.appNameUrdu, 'کاروان فضلاء مدرسہ ڈاٹ پی کے');
+    expect(AppConfig.appNameUrdu, 'مدرسہ تربیت ایپ');
     expect(AppConfig.appTaglineUrdu, 'علم سے عمل، عمل سے اثر تک');
   });
 
@@ -580,59 +580,35 @@ void main() {
         reason: 'the person signing up has no session yet');
   });
 
-  testWidgets('a مہمان lands on the public figures and cannot leave them',
-      (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1200, 3000);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  test('only three roles exist, and nothing points at a guest area', () {
+    expect(AppRole.values, <AppRole>[
+      AppRole.graduate,
+      AppRole.mentor,
+      AppRole.admin,
+    ]);
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(
-          _RoleAuthRepository(
-            Supabase.instance.client,
-            const <AppRole>[AppRole.guest],
-          ),
-        ),
-      ],
-      child: const MadrassaApp(),
-    ));
-    // Not pumpAndSettle: the figures are loading from a server this test
-    // cannot reach, and their spinner never settles.
-    await tester.pump(const Duration(seconds: 1));
-
-    expect(find.text(AppStrings.guestIntroTitle), findsOneWidget,
-        reason: 'a مہمان lands on the institution figures');
-
-    // Nothing that writes is offered anywhere on the screen.
-    for (final String action in <String>[
-      AppStrings.newKarGuzari,
-      AppStrings.uploadEvidence,
-      AppStrings.addByForm,
-      AppStrings.reviewEvidence,
-      AppStrings.delete,
-      AppStrings.save,
-    ]) {
-      expect(find.text(action), findsNothing,
-          reason: 'a مہمان must not be offered "$action"');
-    }
-
-    // Typing an address of another area gets them sent straight back.
-    final ProviderContainer container =
-        ProviderScope.containerOf(tester.element(find.byType(MadrassaApp)));
+    // No route, public or otherwise, leads anywhere called guest.
     for (final String route in <String>[
-      AppRoutes.adminDashboard,
-      AppRoutes.mentorDashboard,
-      AppRoutes.graduateDashboard,
-      AppRoutes.graduateReports,
-      AppRoutes.adminStaff,
+      ...AppRoutes.publicRoutes,
+      ...AppRoutes.fullScreenRoutes,
     ]) {
-      container.read(routerProvider).go(route);
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.text(AppStrings.guestIntroTitle), findsOneWidget,
-          reason: '$route must send a مہمان back to the public figures');
+      expect(route.contains('guest'), isFalse,
+          reason: '$route still points at the removed guest area');
     }
+  });
+
+  test('each role lands on its own dashboard', () {
+    // The router sends an account to homeFor(role); a mentor reaching the
+    // graduate area or the no-role screen would start here.
+    expect(homeFor(AppRole.mentor), AppRoutes.mentorDashboard);
+    expect(homeFor(AppRole.graduate), AppRoutes.graduateDashboard);
+    expect(homeFor(AppRole.admin), AppRoutes.adminDashboard);
+
+    // An account holding both lands on the stronger one.
+    expect(
+      AppRole.highest(const <AppRole>[AppRole.graduate, AppRole.mentor]),
+      AppRole.mentor,
+    );
   });
 
   test('کل and فعال are separate figures, counted from different things', () {
@@ -671,26 +647,6 @@ void main() {
     // mentor_assignments, so a mentor with nobody assigned went missing.
     expect(s.mentors, 3);
     expect(s.accountsWithoutRecord, 2);
-  });
-
-  test('the public figures carry no private detail', () {
-    final PublicStatistics p = PublicStatistics.fromMap(<String, dynamic>{
-      'total_male': 40,
-      'total_female': 60,
-      'total_graduates': 100,
-      'total_reports': 12,
-      'social_activities': 5,
-      'practical_services': 7,
-      'completed_projects': 3,
-    });
-
-    expect(p.totalMale, 40);
-    expect(p.totalFemale, 60);
-    expect(p.totalGraduates, 100);
-    expect(p.totalReports, 12);
-    expect(p.socialActivities, 5);
-    expect(p.practicalServices, 7);
-    expect(p.completedProjects, 3);
   });
 
   test('the register reads جنس only when the file says it plainly', () {

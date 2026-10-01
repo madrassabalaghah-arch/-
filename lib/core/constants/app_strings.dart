@@ -86,7 +86,7 @@ class AppStrings {
   static const String mentorRemoved = 'مربی ہٹا دیا گیا ہے۔';
   static const String cannotChangeOwnRole =
       'آپ اپنی حیثیت خود تبدیل نہیں کر سکتے۔';
-  static const String supervisedGraduates = 'زیرِ رہنمائی فاضل / فاضلہ';
+  static const String supervisedGraduates = 'زیرِ رہنمائی فضلاء و فاضلات';
   static const String roleChangeNote =
       'حیثیت تبدیل ہونے کے بعد صارف کو دوبارہ داخل ہونا ہوگا۔';
 
@@ -151,7 +151,7 @@ class AppStrings {
   // Mentor review and today's work
   static const String todaysWork = 'آج کے کام';
   static const String awaitingYourReview = 'آپ کے جائزے کی منتظر';
-  static const String needsFeedback = 'رہنمائی کے منتظر فاضل / فاضلہ';
+  static const String needsFeedback = 'رہنمائی کے منتظر فضلاء و فاضلات';
   static const String reviewStepReport = 'کارگزاری';
   static const String reviewStepEvidence = 'ثبوت';
   static const String reviewStepAssessment = 'جائزہ';
@@ -244,12 +244,13 @@ class AppStrings {
   // The register, the accounts, and the difference between them
   static const String registerSection = 'کورس رجسٹر — کل';
   static const String accountsSection = 'اکاؤنٹس — فعال';
-  static const String totalMale = 'کل فاضل';
-  static const String totalFemale = 'کل فاضلہ';
-  static const String totalBoth = 'کل فاضل و فاضلہ';
-  static const String activeMale = 'فعال فاضل';
-  static const String activeFemale = 'فعال فاضلہ';
-  static const String activeBoth = 'فعال فاضل و فاضلہ';
+  // Group figures, so the plural forms: فضلاء and فاضلات.
+  static const String totalMale = 'کل فضلاء';
+  static const String totalFemale = 'کل فاضلات';
+  static const String totalBoth = 'کل فضلاء و فاضلات';
+  static const String activeMale = 'فعال فضلاء';
+  static const String activeFemale = 'فعال فاضلات';
+  static const String activeBoth = 'فعال فضلاء و فاضلات';
   static const String genderNotRecorded = 'جنس درج نہیں';
   static const String accountsWithoutRecord = 'رجسٹر سے غیر منسلک اکاؤنٹ';
   static const String countsExplained =
@@ -261,23 +262,6 @@ class AppStrings {
   static const String setGender = 'جنس درج کریں';
   static const String genderUpdated = 'جنس درج کر دی گئی ہے۔';
 
-  // مہمان
-  static const String guestArea = 'ادارے کا تعارف و کارکردگی';
-  static const String viewAsGuest = 'مہمان کے طور پر دیکھیں';
-  static const String guestIntroTitle = 'ادارے کا تعارف';
-  static const String guestIntro =
-      'یہ صفحہ ادارے کے فضلاء اور ان کی عملی خدمات کا مجموعی خلاصہ پیش کرتا ہے۔ تمام اعداد و شمار ادارے کے اپنے ریکارڈ سے لیے گئے ہیں۔';
-  static const String guestStatistics = 'مجموعی اعداد و شمار';
-  static const String practicalServices = 'عملی خدمات';
-  static const String practicalImpact = 'معاشرے میں عملی کردار';
-  static const String guestReadOnly =
-      'مہمان اکاؤنٹ صرف دیکھنے کے لیے ہے۔ کسی قسم کا اندراج یا تبدیلی ممکن نہیں۔';
-  static const String noPublicActivityYet =
-      'ابھی کوئی عوامی کارگزاری درج نہیں ہوئی';
-  static const String ourWebsite = 'ہماری ویب سائٹ';
-  static const String websiteInvite =
-      'مدرسہ ڈاٹ پی کے کا مزید تعارف اور معلومات دیکھنے کے لیے ہماری ویب سائٹ ملاحظہ کریں۔';
-  static const String visitWebsite = 'ویب سائٹ دیکھیں';
 
   // Evidence and feedback, with the people they belong to
   static const String submittedBy = 'جمع کروانے والے';
@@ -292,7 +276,7 @@ class AppStrings {
   static const String confirmRoleChange = 'حیثیت کی تبدیلی';
   static const String newRole = 'نئی حیثیت';
   static const String roleChangeEndsMentoring =
-      'ان کے زیرِ رہنمائی تمام فاضل / فاضلہ کی تفویض ختم ہو جائے گی۔';
+      'ان کے زیرِ رہنمائی تمام فضلاء و فاضلات کی تفویض ختم ہو جائے گی۔';
   static const String roleChangeEndsSupervision =
       'ان کے مربی کی تفویض ختم ہو جائے گی۔';
   static const String adminRoleWarning =
@@ -328,7 +312,7 @@ class AppStrings {
   static const String systemSettings = 'نظام کی ترتیبات';
   static const String followUpIntervalLabel = 'کارگزاری کا وقفہ';
   static const String followUpIntervalHelp =
-      'ہر کتنے ماہ بعد فاضل / فاضلہ سے کارگزاری طلب کی جائے۔';
+      'ہر کتنے ماہ بعد فضلاء و فاضلات سے کارگزاری طلب کی جائے۔';
   static const String settingSaved = 'ترتیب محفوظ کر دی گئی ہے۔';
   static const String recognitionRules = 'اعزازات کے اصول';
   static const String addRecognitionRule = 'نیا اصول شامل کریں';
@@ -374,8 +358,13 @@ class AppStrings {
   static const String couldNotOpenEvidence = 'ثبوت کھولا نہیں جا سکا۔';
   static const String linkMustBeHttp =
       'لنک http:// یا https:// سے شروع ہونا چاہیے۔';
+  // One person, naming themselves or one record: the singular forms.
   static const String maleLabel = 'فاضل';
   static const String femaleLabel = 'فاضلہ';
+
+  // The same people counted as a group: the plural forms.
+  static const String malePlural = 'فضلاء';
+  static const String femalePlural = 'فاضلات';
   static const String unassignedWifaq = 'غیر منسلک وفاق';
   static const String unassignedInstitute = 'ادارہ درج نہیں';
   static const String noGraduatesHere = 'یہاں ابھی کوئی فاضل / فاضلہ نہیں۔';
@@ -531,14 +520,14 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Mentor dashboard
   // ---------------------------------------------------------------------
-  static const String myGraduates = 'میرے زیرِ رہنمائی فاضل / فاضلہ';
+  static const String myGraduates = 'میرے زیرِ رہنمائی فضلاء و فاضلات';
   static const String newReports = 'نئی کارگزاریاں';
   static const String awaitingReview = 'جائزے کے لیے منتظر';
   static const String underReview = 'زیرِ جائزہ';
   static const String completedReviews = 'مکمل جائزے';
   static const String lateSubmissions = 'تاخیر سے جمع ہونے والی';
   static const String pendingReviews = 'زیرِ التوا جائزے';
-  static const String recentGraduates = 'حالیہ فاضل / فاضلہ';
+  static const String recentGraduates = 'حالیہ فضلاء و فاضلات';
   static const String graduateName = 'فاضل / فاضلہ کا نام';
   static const String instituteName = 'ادارے کا نام';
   static const String reportStatus = 'کارگزاری کی حیثیت';
@@ -550,19 +539,19 @@ class AppStrings {
   // ---------------------------------------------------------------------
   // Admin dashboard
   // ---------------------------------------------------------------------
-  static const String totalGraduates = 'کل فاضل / فاضلہ';
-  static const String activeGraduates = 'فعال فاضل / فاضلہ';
+  static const String totalGraduates = 'کل فضلاء و فاضلات';
+  static const String activeGraduates = 'فعال فضلاء و فاضلات';
   static const String totalMentors = 'کل مربی';
   static const String pendingReports = 'زیرِ التوا کارگزاریاں';
   static const String managementAreas = 'انتظامی حصے';
-  static const String graduateManagement = 'فاضل / فاضلہ کا انتظام';
+  static const String graduateManagement = 'فضلاء و فاضلات کا انتظام';
   static const String mentorManagement = 'مربیوں کا انتظام';
   static const String wifaqManagement = 'وفاق کا انتظام';
   static const String courses = 'کورسز';
   static const String assignments = 'ذمہ داریاں';
   static const String allReports = 'کارگزاریاں';
   static const String standards = 'جانچ کے معیارات';
-  static const String graduates = 'فاضل / فاضلہ';
+  static const String graduates = 'فضلاء و فاضلات';
   static const String mentors = 'مربی';
   static const String wifaqs = 'وفاق';
   static const String systemOverview = 'نظام کا خلاصہ';

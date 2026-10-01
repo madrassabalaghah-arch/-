@@ -30,8 +30,8 @@ class AdminInstitutesScreen extends ConsumerWidget {
           AppListTile(
         title: i.displayName,
         subtitle: i.wifaqName ?? AppStrings.unassignedWifaq,
-        detail: '${AppStrings.maleLabel} ${UrduNumbers.fromInt(i.maleCount)}'
-            '   ${AppStrings.femaleLabel} ${UrduNumbers.fromInt(i.femaleCount)}'
+        detail: '${AppStrings.malePlural} ${UrduNumbers.fromInt(i.maleCount)}'
+            '   ${AppStrings.femalePlural} ${UrduNumbers.fromInt(i.femaleCount)}'
             '   •   ${AppStrings.totalGraduates}: '
             '${UrduNumbers.fromInt(i.graduateTotal)}',
         icon: Icons.location_city_outlined,
