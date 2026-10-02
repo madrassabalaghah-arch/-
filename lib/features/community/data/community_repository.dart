@@ -4,8 +4,8 @@ import '../../../shared/models/models.dart';
 
 /// The کمیونٹی بورڈ: what everybody may see, and what each role may add.
 ///
-/// Reading goes through `community_feed()` and `community_karguzari()`,
-/// which return a fixed set of safe columns. Writing goes to the tables
+/// Reading goes through `community_feed()`, which returns a fixed set of
+/// safe columns. Writing goes to the tables
 /// directly, where the policies decide: a مربی or منتظم may post, all three
 /// roles may comment as themselves, nobody may edit another person's words,
 /// and a منتظم moderates by hiding rather than deleting.
@@ -34,25 +34,6 @@ class CommunityRepository {
         .map((dynamic row) => CommunityItem.fromMap(row as Map<String, dynamic>))
         .toList();
   }
-
-  /// One shared کارگزاری, with the same safe columns the feed uses.
-  Future<CommunityItem?> karguzari(String reportId) async {
-    final List<dynamic> rows = await _client.rpc<List<dynamic>>(
-      'community_karguzari',
-      params: <String, dynamic>{'p_report_id': reportId},
-    );
-    if (rows.isEmpty) {
-      return null;
-    }
-    final Map<String, dynamic> row = rows.first as Map<String, dynamic>;
-    return CommunityItem.fromMap(<String, dynamic>{
-      ...row,
-      'kind': 'karguzari',
-      'report_id': row['id'],
-      'author_role': 'graduate',
-    });
-  }
-
   Future<List<CommunityComment>> comments({
     String? reportId,
     String? postId,
