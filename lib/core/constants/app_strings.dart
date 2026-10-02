@@ -129,7 +129,6 @@ class AppStrings {
   static const String evidenceDocuments = 'دستاویزات';
   static const String evidenceOther = 'دیگر متعلقہ فائلیں';
   static const String category = 'نوعیت';
-  static const String selectCategoryOptional = 'کارگزاری کی نوعیت منتخب کریں';
 
   /// The کارگزاری is filed under one of four main categories, then one of
   /// that category's three sub criteria.

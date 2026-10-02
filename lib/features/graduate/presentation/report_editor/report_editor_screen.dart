@@ -42,20 +42,26 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   /// stored as nothing rather than as an empty string.
   final Map<String, TextEditingController> _extra =
       <String, TextEditingController>{
-    for (final String key in <String>[
-      'type', 'location', 'organisation', 'beneficiaries',
-      'learning', 'impact', 'results', 'challenges', 'plan',
-    ])
-      key: TextEditingController(),
-  };
+        for (final String key in <String>[
+          'type',
+          'location',
+          'organisation',
+          'beneficiaries',
+          'learning',
+          'impact',
+          'results',
+          'challenges',
+          'plan',
+        ])
+          key: TextEditingController(),
+      };
 
   String? _activityId;
   bool _busy = false;
 
   bool get _isEditing => widget.report != null;
 
-  bool get _isLocked =>
-      _isEditing && widget.report!.status != AppStatus.draft;
+  bool get _isLocked => _isEditing && widget.report!.status != AppStatus.draft;
 
   @override
   void initState() {
@@ -176,7 +182,8 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   }
 
   Future<void> _delete() async {
-    final bool confirmed = await showDialog<bool>(
+    final bool confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (BuildContext context) => AlertDialog(
             title: const Text(AppStrings.deleteDraft),
@@ -226,8 +233,9 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final AsyncValue<List<ActivityItem>> activities =
-        ref.watch(activityCatalogueProvider);
+    final AsyncValue<List<ActivityItem>> activities = ref.watch(
+      activityCatalogueProvider,
+    );
 
     return AppScaffold(
       title: _isEditing ? AppStrings.editReport : AppStrings.newReport,
@@ -249,8 +257,11 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
                 accentColor: AppColors.warning,
                 child: Row(
                   children: <Widget>[
-                    const Icon(Icons.lock_outline,
-                        size: 18, color: AppColors.warning),
+                    const Icon(
+                      Icons.lock_outline,
+                      size: 18,
+                      color: AppColors.warning,
+                    ),
                     AppSpacing.hGapSm,
                     Expanded(
                       child: Text(
@@ -273,23 +284,24 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
                 onRetry: () => ref.invalidate(activityCatalogueProvider),
                 builder: (BuildContext context, List<ActivityItem> items) =>
                     Column(
-                  children: <Widget>[
-                    for (final ActivityItem activity in items)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          bottom: AppSpacing.sm,
-                        ),
-                        child: _ActivityChoice(
-                          activity: activity,
-                          selected: _activityId == activity.id,
-                          onTap: _busy
-                              ? null
-                              : () =>
-                                  setState(() => _activityId = activity.id),
-                        ),
-                      ),
-                  ],
-                ),
+                      children: <Widget>[
+                        for (final ActivityItem activity in items)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            child: _ActivityChoice(
+                              activity: activity,
+                              selected: _activityId == activity.id,
+                              onTap: _busy
+                                  ? null
+                                  : () => setState(
+                                      () => _activityId = activity.id,
+                                    ),
+                            ),
+                          ),
+                      ],
+                    ),
               ),
               AppSpacing.gapXl,
             ],
@@ -312,100 +324,107 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
               enabled: !_busy && !_isLocked,
               validator: (String? value) =>
                   (value == null || value.trim().isEmpty)
-                      ? AppStrings.validationReportDetail
-                      : null,
+                  ? AppStrings.validationReportDetail
+                  : null,
             ),
             AppSpacing.gapXl,
             if (!_isLocked) ...<Widget>[
-            AppSpacing.gapXl,
-            // The بنیادی شعبہ first, then the ذیلی معیار within it. Both
-            // read the same report_categories rows the منتظم maintains — a
-            // group is a شعبہ, each row one of its three معیار — so the form
-            // and the dashboard can never offer different lists.
-            Consumer(
-              builder: (BuildContext context, WidgetRef ref, Widget? child) {
-                return AsyncSection<List<ReportCategory>>(
-                  value: ref.watch(reportCategoriesProvider),
-                  isEmpty: (List<ReportCategory> c) => c.isEmpty,
-                  emptyTitle: AppStrings.noCategoriesYet,
-                  emptyIcon: Icons.category_outlined,
-                  onRetry: () => ref.invalidate(reportCategoriesProvider),
-                  builder: (
-                    BuildContext context,
-                    List<ReportCategory> categories,
-                  ) {
-                    final Map<String, List<ReportCategory>> groups =
-                        <String, List<ReportCategory>>{};
-                    for (final ReportCategory c in categories) {
-                      groups
-                          .putIfAbsent(c.groupKey, () => <ReportCategory>[])
-                          .add(c);
-                    }
+              // The بنیادی شعبہ first, then the ذیلی معیار within it. Both
+              // read the same report_categories rows the منتظم maintains — a
+              // group is a شعبہ, each row one of its three معیار — so the form
+              // and the dashboard can never offer different lists.
+              Consumer(
+                builder: (BuildContext context, WidgetRef ref, Widget? child) {
+                  return AsyncSection<List<ReportCategory>>(
+                    value: ref.watch(reportCategoriesProvider),
+                    isEmpty: (List<ReportCategory> c) => c.isEmpty,
+                    emptyTitle: AppStrings.noCategoriesYet,
+                    emptyIcon: Icons.category_outlined,
+                    onRetry: () => ref.invalidate(reportCategoriesProvider),
+                    builder:
+                        (
+                          BuildContext context,
+                          List<ReportCategory> categories,
+                        ) {
+                          final Map<String, List<ReportCategory>> groups =
+                              <String, List<ReportCategory>>{};
+                          for (final ReportCategory c in categories) {
+                            groups
+                                .putIfAbsent(
+                                  c.groupKey,
+                                  () => <ReportCategory>[],
+                                )
+                                .add(c);
+                          }
 
-                    final String? group = _selectedGroup(categories);
-                    final List<ReportCategory> subCriteria =
-                        groups[group] ?? const <ReportCategory>[];
+                          final String? group = _selectedGroup(categories);
+                          final List<ReportCategory> subCriteria =
+                              groups[group] ?? const <ReportCategory>[];
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        const SectionHeader(
-                          title: AppStrings.selectMainCategory,
-                        ),
-                        for (final List<ReportCategory> g in groups.values)
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                              bottom: AppSpacing.sm,
-                            ),
-                            child: _CategoryChoice(
-                              label: g.first.groupTitle,
-                              icon: g.first.groupIcon,
-                              selected: g.first.groupKey == group,
-                              onTap: _busy ? null : () => _chooseGroup(g),
-                            ),
-                          ),
-                        if (subCriteria.isNotEmpty) ...<Widget>[
-                          AppSpacing.gapLg,
-                          const SectionHeader(
-                            title: AppStrings.selectSubCriterion,
-                          ),
-                          for (final ReportCategory c in subCriteria)
-                            Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                bottom: AppSpacing.sm,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              const SectionHeader(
+                                title: AppStrings.selectMainCategory,
                               ),
-                              child: _CategoryChoice(
-                                label: c.title,
-                                icon: c.icon,
-                                selected: c.id == _categoryId,
-                                onTap: _busy
-                                    ? null
-                                    : () => setState(() => _categoryId = c.id),
-                              ),
-                            ),
-                        ],
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-            AppSpacing.gapLg,
-            const SectionHeader(title: AppStrings.moreDetails),
-            for (final ({String key, String label, String? hint, int lines})
-                field in _extraFields) ...<Widget>[
-              AppFormField(
-                label: field.label,
-                hintText: field.hint,
-                controller: _extra[field.key],
-                enabled: !_busy,
-                maxLines: field.lines,
-                keyboardType: field.key == 'beneficiaries'
-                    ? TextInputType.number
-                    : null,
+                              for (final List<ReportCategory> g
+                                  in groups.values)
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    bottom: AppSpacing.sm,
+                                  ),
+                                  child: _CategoryChoice(
+                                    label: g.first.groupTitle,
+                                    icon: g.first.groupIcon,
+                                    selected: g.first.groupKey == group,
+                                    onTap: _busy ? null : () => _chooseGroup(g),
+                                  ),
+                                ),
+                              if (subCriteria.isNotEmpty) ...<Widget>[
+                                AppSpacing.gapLg,
+                                const SectionHeader(
+                                  title: AppStrings.selectSubCriterion,
+                                ),
+                                for (final ReportCategory c in subCriteria)
+                                  Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                      bottom: AppSpacing.sm,
+                                    ),
+                                    child: _CategoryChoice(
+                                      label: c.title,
+                                      icon: c.icon,
+                                      selected: c.id == _categoryId,
+                                      onTap: _busy
+                                          ? null
+                                          : () => setState(
+                                              () => _categoryId = c.id,
+                                            ),
+                                    ),
+                                  ),
+                              ],
+                            ],
+                          );
+                        },
+                  );
+                },
               ),
               AppSpacing.gapLg,
-            ],
+              const SectionHeader(title: AppStrings.moreDetails),
+              for (final ({String key, String label, String? hint, int lines})
+                  field
+                  in _extraFields) ...<Widget>[
+                AppFormField(
+                  label: field.label,
+                  hintText: field.hint,
+                  controller: _extra[field.key],
+                  enabled: !_busy,
+                  maxLines: field.lines,
+                  keyboardType: field.key == 'beneficiaries'
+                      ? TextInputType.number
+                      : null,
+                ),
+                AppSpacing.gapLg,
+              ],
               PrimaryButton(
                 label: AppStrings.submitReport,
                 icon: Icons.send_outlined,
@@ -426,7 +445,6 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   }
 }
 
-/// A selectable practical activity the report will be filed against.
 /// One بنیادی شعبہ or one ذیلی معیار, offered as a tappable row.
 class _CategoryChoice extends StatelessWidget {
   const _CategoryChoice({
@@ -465,9 +483,7 @@ class _CategoryChoice extends StatelessWidget {
             ),
           ),
           AppSpacing.hGapMd,
-          Expanded(
-            child: Text(label, style: theme.textTheme.titleSmall),
-          ),
+          Expanded(child: Text(label, style: theme.textTheme.titleSmall)),
           Icon(
             selected
                 ? Icons.radio_button_checked
@@ -481,6 +497,7 @@ class _CategoryChoice extends StatelessWidget {
   }
 }
 
+/// A selectable practical activity the report will be filed against.
 class _ActivityChoice extends StatelessWidget {
   const _ActivityChoice({
     required this.activity,
@@ -549,17 +566,38 @@ class _ActivityChoice extends StatelessWidget {
 /// The optional detail a کارگزاری may carry, in the order the brief lists it.
 const List<({String key, String label, String? hint, int lines})> _extraFields =
     <({String key, String label, String? hint, int lines})>[
-  (key: 'type', label: AppStrings.activityTypeLabel,
-      hint: AppStrings.activityTypeHint, lines: 1),
-  (key: 'location', label: AppStrings.locationLabel, hint: null, lines: 1),
-  (key: 'organisation', label: AppStrings.organisationLabel, hint: null,
-      lines: 1),
-  (key: 'beneficiaries', label: AppStrings.beneficiariesLabel, hint: null,
-      lines: 1),
-  (key: 'learning', label: AppStrings.learningAppliedLabel, hint: null,
-      lines: 3),
-  (key: 'impact', label: AppStrings.impactLabel, hint: null, lines: 3),
-  (key: 'results', label: AppStrings.resultsLabel, hint: null, lines: 3),
-  (key: 'challenges', label: AppStrings.challengesLabel, hint: null, lines: 3),
-  (key: 'plan', label: AppStrings.futurePlanLabel, hint: null, lines: 3),
-];
+      (
+        key: 'type',
+        label: AppStrings.activityTypeLabel,
+        hint: AppStrings.activityTypeHint,
+        lines: 1,
+      ),
+      (key: 'location', label: AppStrings.locationLabel, hint: null, lines: 1),
+      (
+        key: 'organisation',
+        label: AppStrings.organisationLabel,
+        hint: null,
+        lines: 1,
+      ),
+      (
+        key: 'beneficiaries',
+        label: AppStrings.beneficiariesLabel,
+        hint: null,
+        lines: 1,
+      ),
+      (
+        key: 'learning',
+        label: AppStrings.learningAppliedLabel,
+        hint: null,
+        lines: 3,
+      ),
+      (key: 'impact', label: AppStrings.impactLabel, hint: null, lines: 3),
+      (key: 'results', label: AppStrings.resultsLabel, hint: null, lines: 3),
+      (
+        key: 'challenges',
+        label: AppStrings.challengesLabel,
+        hint: null,
+        lines: 3,
+      ),
+      (key: 'plan', label: AppStrings.futurePlanLabel, hint: null, lines: 3),
+    ];
