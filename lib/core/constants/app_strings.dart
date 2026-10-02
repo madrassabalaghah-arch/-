@@ -272,6 +272,49 @@ class AppStrings {
   static const String noFeedbackYet = 'ابھی کوئی رائے درج نہیں';
   static const String searchEvidenceHint = 'نام یا کارگزاری سے تلاش کریں';
 
+  // کمیونٹی بورڈ
+  static const String communityBoard = 'کمیونٹی بورڈ';
+  static const String communityBoardSubtitle =
+      'فضلاء و فاضلات کی مشترکہ سرگرمیاں، حوصلہ افزائی اور مفید تجربات۔';
+  static const String communityAll = 'تمام سرگرمیاں';
+  static const String communityKarguzari = 'کارگزاریاں';
+  static const String communityPosts = 'مربیوں کی پوسٹس';
+  static const String communityEmpty = 'ابھی کوئی نئی سرگرمی موجود نہیں';
+  static const String communityLoadMore = 'مزید دیکھیں';
+
+  // عوامی تبصرہ، اور اس سے بالکل الگ: نجی جائزہ
+  static const String publicComment = 'عوامی تبصرہ';
+  static const String publicCommentNote =
+      'یہ تبصرہ کمیونٹی بورڈ پر سب کو نظر آئے گا۔';
+  static const String publicCommentHint = 'حوصلہ افزائی یا مفید رائے لکھیں';
+  static const String addComment = 'تبصرہ شامل کریں';
+  static const String commentAdded = 'آپ کا تبصرہ شامل ہو گیا ہے۔';
+  static const String noComments = 'ابھی کوئی تبصرہ نہیں';
+  static const String privateReview = 'نجی جائزہ';
+  static const String privateReviewNote =
+      'نجی جائزہ صرف متعلقہ فاضل / فاضلہ، ان کے مربی اور منتظم کو نظر آتا ہے۔ کمیونٹی بورڈ پر کبھی نہیں۔';
+
+  // مربیوں کی پوسٹس
+  static const String newPost = 'نئی پوسٹ';
+  static const String postTitle = 'عنوان';
+  static const String postBody = 'تفصیل';
+  static const String postPublished = 'پوسٹ شائع ہو گئی ہے۔';
+  static const String hideFromBoard = 'بورڈ سے چھپائیں';
+  static const String hiddenFromBoard = 'بورڈ سے چھپا دیا گیا ہے۔';
+
+  // کارگزاری کو کمیونٹی بورڈ پر شیئر کرنا
+  static const String shareToCommunity = 'کمیونٹی بورڈ پر شیئر کریں';
+  static const String shareToCommunityNote =
+      'شیئر کرنے پر آپ کا نام، کارگزاری کا عنوان، تفصیل، زمرہ اور تاریخ سب کو نظر آئے گی۔ نجی جائزہ کبھی نظر نہیں آتا۔';
+  static const String sharedToCommunity =
+      'کارگزاری کمیونٹی بورڈ پر شیئر کر دی گئی ہے۔';
+  static const String unsharedFromCommunity =
+      'کارگزاری کمیونٹی بورڈ سے ہٹا دی گئی ہے۔';
+
+  // کارگزاری اپ لوڈ
+  static const String uploadWorkPhotosNote =
+      'براہِ کرم کام کی تصاویر اپ لوڈ کریں، اپنی تصاویر نہیں۔';
+
   // Changing a role
   static const String confirmRoleChange = 'حیثیت کی تبدیلی';
   static const String newRole = 'نئی حیثیت';

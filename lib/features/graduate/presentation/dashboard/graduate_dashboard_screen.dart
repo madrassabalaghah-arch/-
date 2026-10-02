@@ -77,8 +77,33 @@ class GraduateDashboardScreen extends ConsumerWidget {
                         context.goToRoute(AppRoutes.graduateReportEditor),
                   ),
                   AppSpacing.gapXl,
-                  // 4
-                  const _SummaryCards(),
+                  // 4: the shared کمیونٹی بورڈ, open to every role.
+                  DashboardCard(
+                    variant: DashboardCardVariant.info,
+                    accentColor: AppColors.oliveGreen,
+                    onTap: () => context.goToRoute(AppRoutes.communityBoard),
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(Icons.forum_outlined,
+                            color: AppColors.oliveGreen),
+                        AppSpacing.hGapMd,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(AppStrings.communityBoard,
+                                  style: Theme.of(context).textTheme.titleSmall),
+                              AppSpacing.gapXxs,
+                              Text(AppStrings.communityBoardSubtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelSmall),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   AppSpacing.gapXl,
                   // 5
                   const SectionHeader(title: AppStrings.quickActions),
@@ -226,61 +251,6 @@ class GraduateDashboardScreen extends ConsumerWidget {
 }
 
 /// The three figures the brief asks for. Each opens exactly the list it
-/// counted, so the number on the card is the number of rows behind it.
-class _SummaryCards extends ConsumerWidget {
-  const _SummaryCards();
-
-  static const List<(KarGuzariFilter, String)> _targets =
-      <(KarGuzariFilter, String)>[
-    (KarGuzariFilter.all, AppStrings.totalKarGuzari),
-    (KarGuzariFilter.social, AppStrings.socialActivities),
-    (KarGuzariFilter.completed, AppStrings.completedProjects),
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AsyncSection<({int total, int social, int completed})>(
-      value: ref.watch(karGuzariSummaryProvider),
-      onRetry: () => ref.invalidate(karGuzariSummaryProvider),
-      builder: (
-        BuildContext context,
-        ({int total, int social, int completed}) counts,
-      ) =>
-          StatGrid(
-        stats: <StatItem>[
-          StatItem(
-            label: AppStrings.totalKarGuzari,
-            value: UrduNumbers.fromInt(counts.total),
-            icon: Icons.description_outlined,
-          ),
-          StatItem(
-            label: AppStrings.socialActivities,
-            value: UrduNumbers.fromInt(counts.social),
-            icon: Icons.volunteer_activism_outlined,
-            tone: StatTone.teal,
-          ),
-          StatItem(
-            label: AppStrings.completedProjects,
-            value: UrduNumbers.fromInt(counts.completed),
-            icon: Icons.task_alt_outlined,
-            tone: StatTone.gold,
-          ),
-        ],
-        onTap: (int index) => context.goToRoute(
-          AppRoutes.graduateReports,
-          extra: (
-            filter: _targets[index].$1,
-            categoryKey: null,
-            title: _targets[index].$2,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Quick access grouped by the kind of work. The work groups come from
-/// `report_categories`, so their names and order are the organisation's;
 /// evidence is grouped by the file kind `evidence.kind` records.
 class _QuickAccess extends ConsumerWidget {
   const _QuickAccess();

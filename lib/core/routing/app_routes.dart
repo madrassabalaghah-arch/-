@@ -25,6 +25,18 @@ class AppRoutes {
   static const String noRole = '/no-role';
   static const String noRoleName = 'noRole';
 
+  /// کمیونٹی بورڈ. No role prefix, because every signed-in role shares it.
+  static const String communityBoard = '/community';
+  static const String communityBoardName = 'communityBoard';
+
+  /// One shared کارگزاری or board post, with its عوامی تبصرے.
+  static const String communityItem = '/community/item';
+  static const String communityItemName = 'communityItem';
+
+  /// نئی پوسٹ, for a مربی or منتظم.
+  static const String communityNewPost = '/community/new-post';
+  static const String communityNewPostName = 'communityNewPost';
+
   /// Routes reachable without a session.
   static const Set<String> publicRoutes = <String>{
     welcome,
@@ -203,6 +215,9 @@ class AppRoutes {
   /// switched rather than stacked. Navigation goes through this set so a
   /// screen never has to remember which kind of destination it is opening.
   static const Set<String> fullScreenRoutes = <String>{
+    communityBoard,
+    communityItem,
+    communityNewPost,
     // Screens that used to be bottom-navigation branches. They are opened
     // from the dashboard now, so they push and carry a back button rather
     // than switching the bar underneath the user.

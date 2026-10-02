@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
@@ -28,6 +29,63 @@ class GraduateReportsScreen extends ConsumerWidget {
   final String? title;
 
   bool get _narrowed => filter != KarGuzariFilter.all || categoryKey != null;
+
+  /// Puts one کارگزاری on the کمیونٹی بورڈ, or takes it back off.
+  ///
+  /// Sharing is explained before it happens, because it is the one action
+  /// here that other people can see.
+  static Future<void> _toggleShared(
+    BuildContext context,
+    WidgetRef ref,
+    ReportItem item,
+  ) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final bool share = item.sharedAt == null;
+
+    if (share) {
+      final bool confirmed = await showDialog<bool>(
+            context: context,
+            builder: (BuildContext context) => AlertDialog(
+              title: const Text(AppStrings.shareToCommunity),
+              content: const Text(AppStrings.shareToCommunityNote),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(AppStrings.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(AppStrings.shareToCommunity),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    try {
+      await ref
+          .read(communityRepositoryProvider)
+          .setShared(reportId: item.id, shared: share);
+      ref.invalidate(graduateReportsProvider);
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(
+          content: Text(share
+              ? AppStrings.sharedToCommunity
+              : AppStrings.unsharedFromCommunity),
+        ));
+    } catch (error) {
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(
+          content: Text('${AppStrings.somethingWentWrong} — $error'),
+        ));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -85,9 +143,24 @@ class GraduateReportsScreen extends ConsumerWidget {
           if (categoryTitles[item.categoryId] != null)
             categoryTitles[item.categoryId]!,
           item.dateLabel,
+          if (item.sharedAt != null) AppStrings.communityBoard,
         ].join(' • '),
         icon: Icons.description_outlined,
         status: item.status,
+        // Sharing is the graduate's own decision, one کارگزاری at a time.
+        // Nothing reaches the board without this.
+        trailing: IconButton(
+          tooltip: AppStrings.shareToCommunity,
+          icon: Icon(
+            item.sharedAt == null
+                ? Icons.ios_share_outlined
+                : Icons.check_circle_outline,
+            color: item.sharedAt == null
+                ? AppColors.gray
+                : AppColors.primaryGreen,
+          ),
+          onPressed: () => _toggleShared(context, ref, item),
+        ),
         onTap: () => context.push(AppRoutes.graduateReportEditor, extra: item),
       ),
     );

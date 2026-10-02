@@ -167,6 +167,33 @@ class _MentorBody extends ConsumerWidget {
         else
           const DashboardCard(child: LoadingState(compact: true)),
         AppSpacing.gapXl,
+        // The shared کمیونٹی بورڈ, open to every role.
+        DashboardCard(
+          variant: DashboardCardVariant.info,
+          accentColor: AppColors.oliveGreen,
+          onTap: () => context.goToRoute(AppRoutes.communityBoard),
+          child: Row(
+            children: <Widget>[
+              const Icon(Icons.forum_outlined, color: AppColors.oliveGreen),
+              AppSpacing.hGapMd,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(AppStrings.communityBoard,
+                        style: Theme.of(context).textTheme.titleSmall),
+                    AppSpacing.gapXxs,
+                    Text(AppStrings.communityBoardSubtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        AppSpacing.gapXl,
         const _TodaysWork(),
         AppSpacing.gapXl,
         const SectionHeader(title: AppStrings.recentGraduates),

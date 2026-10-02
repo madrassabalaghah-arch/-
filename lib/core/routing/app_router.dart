@@ -45,6 +45,9 @@ import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/no_role_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/community/presentation/community_board_screen.dart';
+import '../../features/community/presentation/community_item_screen.dart';
+import '../../features/community/presentation/community_new_post_screen.dart';
 import '../../features/auth/presentation/staff_sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
@@ -171,6 +174,7 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         builder: (BuildContext context, GoRouterState state) =>
             const StaffSignUpScreen(),
       ),
+      // Shared by every role, so these sit outside the role shells.
       GoRoute(
         path: AppRoutes.noRole,
         name: AppRoutes.noRoleName,

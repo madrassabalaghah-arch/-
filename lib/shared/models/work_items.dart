@@ -103,6 +103,7 @@ class ReportItem {
     this.dueAt,
     this.createdAt,
     this.categoryId,
+    this.sharedAt,
     this.details = const KarGuzariDetails(),
   });
 
@@ -117,6 +118,10 @@ class ReportItem {
   /// The `report_categories` row this کارگزاری was filed under, if any.
   final String? categoryId;
   final String? summary;
+
+  /// When the graduate chose to show this کارگزاری on the کمیونٹی بورڈ.
+  /// Null means it is private, which is how every کارگزاری starts.
+  final DateTime? sharedAt;
   final String? graduateName;
   final String? activityType;
   final AppStatus status;
@@ -144,6 +149,7 @@ class ReportItem {
       dueAt: dateOf(row, 'due_at'),
       createdAt: dateOf(row, 'created_at'),
       categoryId: nullableString(row, 'category_id'),
+      sharedAt: dateOf(row, 'shared_at'),
       details: KarGuzariDetails.fromMap(row),
     );
   }

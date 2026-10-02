@@ -74,6 +74,7 @@ class AppQuickActions {
         ManagementArea(title: AppStrings.graduateManagement, subtitle: 'اندراج، حیثیت اور تفصیلات۔', icon: Icons.school_outlined, route: AppRoutes.adminGraduates),
         ManagementArea(title: AppStrings.mentorManagement, subtitle: 'مربیوں کی تفویض اور نگرانی۔', icon: Icons.supervisor_account_outlined, route: AppRoutes.adminMentors),
         ManagementArea(title: AppStrings.staffManagement, subtitle: 'نئے مربی یا منتظم کو دعوت دیں، منتظمین دیکھیں۔', icon: Icons.admin_panel_settings_outlined, route: AppRoutes.adminStaff),
+        ManagementArea(title: AppStrings.communityBoard, subtitle: 'مشترکہ سرگرمیاں، عوامی تبصرے اور حوصلہ افزائی۔', icon: Icons.forum_outlined, route: AppRoutes.communityBoard),
         ManagementArea(title: AppStrings.wifaqManagement, subtitle: 'وفاق، ان کے ادارے اور فضلاء و فاضلات۔', icon: Icons.account_balance_outlined, route: AppRoutes.adminWifaqs),
         ManagementArea(title: AppStrings.allInstitutes, subtitle: 'تمام ادارے اور ان کے فضلاء و فاضلات۔', icon: Icons.location_city_outlined, route: AppRoutes.adminInstitutes),
         ManagementArea(title: AppStrings.courses, subtitle: 'کورسز اور تربیتی نصاب۔', icon: Icons.menu_book_outlined, route: AppRoutes.adminCourses),

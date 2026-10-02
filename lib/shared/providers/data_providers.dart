@@ -5,6 +5,7 @@ import '../../core/constants/app_strings.dart';
 import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/data/course_repository.dart';
+import '../../features/community/data/community_repository.dart';
 import '../../features/graduate/data/graduate_repository.dart';
 import '../../features/mentor/data/mentor_repository.dart';
 import '../data/reference_repository.dart';
@@ -23,6 +24,23 @@ final Provider<MentorRepository> mentorRepositoryProvider =
 final Provider<AdminRepository> adminRepositoryProvider =
     Provider<AdminRepository>(
   (Ref ref) => AdminRepository(ref.watch(supabaseClientProvider)),
+);
+
+final Provider<CommunityRepository> communityRepositoryProvider =
+    Provider<CommunityRepository>(
+  (Ref ref) => CommunityRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// The عوامی تبصرے on one کارگزاری or one board post.
+final communityCommentsProvider = FutureProvider.family<List<CommunityComment>,
+    ({String? reportId, String? postId})>(
+  (Ref ref, ({String? reportId, String? postId}) target) {
+    _dependOnSession(ref);
+    return ref.watch(communityRepositoryProvider).comments(
+          reportId: target.reportId,
+          postId: target.postId,
+        );
+  },
 );
 
 /// Rebuilds every data provider when the session changes, so signing in as a
