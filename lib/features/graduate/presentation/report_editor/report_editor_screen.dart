@@ -87,6 +87,54 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// The two step choice: the four بنیادی شعبے, and then the three ذیلی
+  /// معیار of whichever one is open.
+  Widget _categoryPicker(
+    BuildContext context,
+    List<ReportCategory> categories,
+  ) {
+    final Map<String, List<ReportCategory>> groups =
+        <String, List<ReportCategory>>{};
+    for (final ReportCategory c in categories) {
+      groups.putIfAbsent(c.groupKey, () => <ReportCategory>[]).add(c);
+    }
+
+    final String? group = _selectedGroup(categories);
+    final List<ReportCategory> subCriteria =
+        groups[group] ?? const <ReportCategory>[];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const SectionHeader(title: AppStrings.selectMainCategory),
+        for (final List<ReportCategory> g in groups.values)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
+            child: _CategoryChoice(
+              label: g.first.groupTitle,
+              icon: g.first.groupIcon,
+              selected: g.first.groupKey == group,
+              onTap: _busy ? null : () => _chooseGroup(g),
+            ),
+          ),
+        if (subCriteria.isNotEmpty) ...<Widget>[
+          AppSpacing.gapLg,
+          const SectionHeader(title: AppStrings.selectSubCriterion),
+          for (final ReportCategory c in subCriteria)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
+              child: _CategoryChoice(
+                label: c.title,
+                icon: c.icon,
+                selected: c.id == _categoryId,
+                onTap: _busy ? null : () => setState(() => _categoryId = c.id),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
   /// Which بنیادی شعبہ is open: the one tapped, or the one the saved
   /// ذیلی معیار belongs to when an existing کارگزاری is reopened.
   String? _selectedGroup(List<ReportCategory> categories) {
@@ -334,79 +382,15 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
               // group is a شعبہ, each row one of its three معیار — so the form
               // and the dashboard can never offer different lists.
               Consumer(
-                builder: (BuildContext context, WidgetRef ref, Widget? child) {
-                  return AsyncSection<List<ReportCategory>>(
-                    value: ref.watch(reportCategoriesProvider),
-                    isEmpty: (List<ReportCategory> c) => c.isEmpty,
-                    emptyTitle: AppStrings.noCategoriesYet,
-                    emptyIcon: Icons.category_outlined,
-                    onRetry: () => ref.invalidate(reportCategoriesProvider),
-                    builder:
-                        (
-                          BuildContext context,
-                          List<ReportCategory> categories,
-                        ) {
-                          final Map<String, List<ReportCategory>> groups =
-                              <String, List<ReportCategory>>{};
-                          for (final ReportCategory c in categories) {
-                            groups
-                                .putIfAbsent(
-                                  c.groupKey,
-                                  () => <ReportCategory>[],
-                                )
-                                .add(c);
-                          }
-
-                          final String? group = _selectedGroup(categories);
-                          final List<ReportCategory> subCriteria =
-                              groups[group] ?? const <ReportCategory>[];
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              const SectionHeader(
-                                title: AppStrings.selectMainCategory,
-                              ),
-                              for (final List<ReportCategory> g
-                                  in groups.values)
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                    bottom: AppSpacing.sm,
-                                  ),
-                                  child: _CategoryChoice(
-                                    label: g.first.groupTitle,
-                                    icon: g.first.groupIcon,
-                                    selected: g.first.groupKey == group,
-                                    onTap: _busy ? null : () => _chooseGroup(g),
-                                  ),
-                                ),
-                              if (subCriteria.isNotEmpty) ...<Widget>[
-                                AppSpacing.gapLg,
-                                const SectionHeader(
-                                  title: AppStrings.selectSubCriterion,
-                                ),
-                                for (final ReportCategory c in subCriteria)
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      bottom: AppSpacing.sm,
-                                    ),
-                                    child: _CategoryChoice(
-                                      label: c.title,
-                                      icon: c.icon,
-                                      selected: c.id == _categoryId,
-                                      onTap: _busy
-                                          ? null
-                                          : () => setState(
-                                              () => _categoryId = c.id,
-                                            ),
-                                    ),
-                                  ),
-                              ],
-                            ],
-                          );
-                        },
-                  );
-                },
+                builder: (BuildContext context, WidgetRef ref, Widget? child) =>
+                    AsyncSection<List<ReportCategory>>(
+                      value: ref.watch(reportCategoriesProvider),
+                      isEmpty: (List<ReportCategory> c) => c.isEmpty,
+                      emptyTitle: AppStrings.noCategoriesYet,
+                      emptyIcon: Icons.category_outlined,
+                      onRetry: () => ref.invalidate(reportCategoriesProvider),
+                      builder: _categoryPicker,
+                    ),
               ),
               AppSpacing.gapLg,
               const SectionHeader(title: AppStrings.moreDetails),
