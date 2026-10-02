@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../shared/models/app_role.dart';
 import '../../../shared/models/people.dart';
 import '../../../shared/models/staff_invite.dart';
@@ -50,6 +51,9 @@ class AuthRepository {
     return _auth.signUp(
       email: email.trim(),
       password: password,
+      // Brings the reader back into the application once the address is
+      // confirmed, instead of to a web page that does not exist.
+      emailRedirectTo: AppConfig.authRedirectUrl,
       // The registration number is re-verified by the signup trigger. The
       // check the app performs first is a courtesy; this is what the database
       // actually enforces, so calling the API directly cannot bypass it.
@@ -103,6 +107,7 @@ class AuthRepository {
     return _auth.signUp(
       email: email.trim(),
       password: password,
+      emailRedirectTo: AppConfig.authRedirectUrl,
       data: <String, dynamic>{'invite_code': inviteCode.trim()},
     );
   }
@@ -110,7 +115,27 @@ class AuthRepository {
   Future<void> signOut() => _auth.signOut();
 
   Future<void> sendPasswordReset(String email) =>
-      _auth.resetPasswordForEmail(email.trim());
+      _auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: AppConfig.authRedirectUrl,
+      );
+
+  /// Sends the confirmation message again.
+  ///
+  /// Supabase refuses this for an address that is already confirmed, which is
+  /// why the caller offers it only after a sign in failed for that reason.
+  Future<void> resendConfirmation(String email) => _auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: AppConfig.authRedirectUrl,
+      );
+
+  /// Stores a new password for the account that is already signed in.
+  ///
+  /// Used at the end of a recovery link, where Supabase has signed the
+  /// account in for exactly this purpose.
+  Future<void> updatePassword(String password) =>
+      _auth.updateUser(UserAttributes(password: password));
 
   /// Loads the signed-in user's profile, with institute and wifaq names.
   ///

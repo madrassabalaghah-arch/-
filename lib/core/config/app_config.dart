@@ -23,6 +23,24 @@ class AppConfig {
   /// Displayed in the profile / settings screens.
   static const String appVersion = '1.0.0';
 
+  /// Where Supabase sends the reader after an email link is opened.
+  ///
+  /// A confirmation or password link goes to Supabase first, which verifies
+  /// the token and then redirects here. Left at Supabase's default of
+  /// `http://localhost:3000` the phone has nothing to open and shows "this
+  /// site can't be reached", so the account looks unconfirmed even though it
+  /// was confirmed. This is a scheme the application itself registers, in the
+  /// Android manifest and the iOS Info.plist, so Android and iOS hand the
+  /// link straight back to the application.
+  ///
+  /// It must also be listed in the Supabase dashboard under
+  /// Authentication -> URL Configuration -> Redirect URLs, or Supabase
+  /// refuses to redirect to it.
+  static const String authRedirectScheme = 'pk.madrassa.tarbiat';
+  static const String authRedirectHost = 'auth-callback';
+  static const String authRedirectUrl =
+      '$authRedirectScheme://$authRedirectHost';
+
   /// The interface is Urdu-first and therefore right-to-left by default.
   static const String defaultLanguageCode = 'ur';
   static const String defaultCountryCode = 'PK';

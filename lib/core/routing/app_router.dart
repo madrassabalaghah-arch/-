@@ -43,6 +43,7 @@ import '../../features/mentor/presentation/reviews/mentor_report_review_screen.d
 import '../../features/mentor/presentation/reviews/mentor_reviews_screen.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/no_role_screen.dart';
+import '../../features/auth/presentation/new_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/community/presentation/community_board_screen.dart';
@@ -116,8 +117,13 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
 
       final String home = homeFor(role);
 
-      // Already there. A مہمان lands on a route that is public as well, so
-      // without this the redirect would send it to itself for ever.
+      // A recovery link signs the account in, so without this the redirect
+      // would send it straight to a dashboard and the password it came to
+      // change would never be asked for.
+      if (location == AppRoutes.newPassword) {
+        return null;
+      }
+
       if (location == home) {
         return null;
       }
@@ -176,6 +182,12 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
             const StaffSignUpScreen(),
       ),
       // Shared by every role, so these sit outside the role shells.
+      GoRoute(
+        path: AppRoutes.newPassword,
+        name: AppRoutes.newPasswordName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const NewPasswordScreen(),
+      ),
       GoRoute(
         path: AppRoutes.communityBoard,
         name: AppRoutes.communityBoardName,

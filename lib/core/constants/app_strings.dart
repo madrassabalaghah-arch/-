@@ -636,6 +636,17 @@ class AppStrings {
   static const String validationPasswordMatch = 'دونوں پاس ورڈ یکساں نہیں ہیں۔';
   static const String emailNotConfirmed =
       'آپ کا ای میل پتہ ابھی تصدیق شدہ نہیں ہے۔ تصدیقی پیغام دیکھیں۔';
+  static const String resendConfirmation = 'تصدیقی پیغام دوبارہ بھیجیں';
+  static const String confirmationResent =
+      'تصدیقی پیغام دوبارہ بھیج دیا گیا ہے۔ اپنا ای میل دیکھیں۔';
+
+  // A پاس ورڈ بھول گئے؟ link opens the application here.
+  static const String newPasswordTitle = 'نیا پاس ورڈ مقرر کریں';
+  static const String newPasswordSubtitle =
+      'اپنا نیا پاس ورڈ دو بار لکھیں تاکہ آپ دوبارہ داخل ہو سکیں۔';
+  static const String savePassword = 'پاس ورڈ محفوظ کریں';
+  static const String passwordChanged =
+      'آپ کا پاس ورڈ تبدیل ہو گیا ہے۔';
   static const String networkError =
       'انٹرنیٹ سے رابطہ نہیں ہو سکا۔ اپنا کنکشن دیکھ کر دوبارہ کوشش کریں۔';
   static const String tooManyAttempts =

@@ -25,6 +25,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   bool _busy = false;
   String? _error;
 
+  /// True when the last sign in failed because the address is not confirmed.
+  /// Only then is resending offered, because Supabase refuses to resend for
+  /// an address that is already confirmed.
+  bool _needsConfirmation = false;
+
   @override
   void dispose() {
     _email.dispose();
@@ -39,6 +44,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _needsConfirmation = false;
     });
 
     try {
@@ -48,6 +54,40 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           );
       // The router redirect sends the user to their own dashboard once the
       // session and role have loaded, so nothing to navigate to here.
+    } catch (error) {
+      final String message = authErrorMessage(error);
+      setState(() {
+        _error = message;
+        _needsConfirmation = message == AppStrings.emailNotConfirmed;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  /// Sends the confirmation message again, for an address that was never
+  /// confirmed — for example because the first message was lost, or the link
+  /// in it had already expired.
+  Future<void> _resendConfirmation() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .resendConfirmation(_email.text.trim());
+      if (!mounted) {
+        return;
+      }
+      setState(() => _needsConfirmation = false);
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(content: Text(AppStrings.confirmationResent)),
+        );
     } catch (error) {
       setState(() => _error = authErrorMessage(error));
     } finally {
@@ -164,6 +204,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             if (_error != null) ...<Widget>[
               AppSpacing.gapSm,
               AuthErrorBanner(message: _error!),
+              if (_needsConfirmation)
+                Align(
+                  alignment: AlignmentDirectional.center,
+                  child: TextButton.icon(
+                    onPressed: _busy ? null : _resendConfirmation,
+                    icon: const Icon(Icons.mark_email_unread_outlined,
+                        size: 18),
+                    label: const Text(AppStrings.resendConfirmation),
+                  ),
+                ),
             ],
             AppSpacing.gapLg,
             PrimaryButton(

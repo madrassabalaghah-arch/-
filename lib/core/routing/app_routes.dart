@@ -21,6 +21,11 @@ class AppRoutes {
   static const String staffSignUp = '/staff-sign-up';
   static const String staffSignUpName = 'staffSignUp';
 
+  /// Where a password recovery link lands. Not public: the link signs the
+  /// account in first, so there is always a session by the time it opens.
+  static const String newPassword = '/new-password';
+  static const String newPasswordName = 'newPassword';
+
   /// Shown when a signed-in account has no role granted yet.
   static const String noRole = '/no-role';
   static const String noRoleName = 'noRole';

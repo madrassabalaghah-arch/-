@@ -29,6 +29,21 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Confirmation and password links come back to the
+                 application through this scheme. Without it Android hands the
+                 link to the browser, which has no such site to open, and the
+                 reader is told the site cannot be reached even though the
+                 address was in fact confirmed. The same string is
+                 AppConfig.authRedirectUrl and must be listed in Supabase
+                 under Authentication -> URL Configuration -> Redirect URLs. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="pk.madrassa.tarbiat"
+                    android:host="auth-callback"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

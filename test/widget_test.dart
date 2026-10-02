@@ -323,6 +323,39 @@ void main() {
     expect(AppConfig.appTaglineUrdu, 'علم سے عمل، عمل سے اثر تک');
   });
 
+  test('the email link comes back to the application, not to localhost', () {
+    // A confirmation or recovery link is only useful if Supabase redirects to
+    // a scheme the phone hands back to this application. Three files have to
+    // agree on that scheme — if they drift, the reader is told the site
+    // cannot be reached and the account looks unconfirmed.
+    expect(AppConfig.authRedirectUrl,
+        '${AppConfig.authRedirectScheme}://${AppConfig.authRedirectHost}');
+    expect(AppConfig.authRedirectUrl.startsWith('http'), isFalse,
+        reason: 'an http redirect is what produced the localhost failure');
+
+    final String manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
+    expect(manifest, contains('android:scheme="${AppConfig.authRedirectScheme}"'));
+    expect(manifest, contains('android:host="${AppConfig.authRedirectHost}"'));
+    expect(manifest, contains('android.intent.category.BROWSABLE'),
+        reason: 'without BROWSABLE Android will not hand a link to the app');
+
+    final String plist = File('ios/Runner/Info.plist').readAsStringSync();
+    expect(plist, contains('<string>${AppConfig.authRedirectScheme}</string>'));
+
+    // The address is confirmed by opening the link, never by writing to the
+    // account, so nothing in the application may set these columns.
+    for (final String column in <String>['email_confirmed_at', 'confirmed_at']) {
+      for (final FileSystemEntity entity
+          in Directory('lib').listSync(recursive: true)) {
+        if (entity is File && entity.path.endsWith('.dart')) {
+          expect(entity.readAsStringSync(), isNot(contains(column)),
+              reason: '${entity.path} writes or reads $column');
+        }
+      }
+    }
+  });
+
   test('فاضل is written before فاضلہ, and no greeting survives', () {
     // Spec order: فاضل first, فاضلہ second, everywhere the two appear together.
     for (final String text in <String>[
