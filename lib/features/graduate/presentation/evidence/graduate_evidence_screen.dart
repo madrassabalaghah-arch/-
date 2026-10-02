@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/application/auth_providers.dart';
 import '../../../../shared/models/models.dart';
 import '../../../../shared/presentation/evidence_viewer.dart';
 import '../../../../shared/providers/data_providers.dart';
@@ -138,6 +140,23 @@ class _GraduateEvidenceScreenState
                     .toList(),
               ),
       searchText: (EvidenceItem item) => '${item.title} ${item.typeLabel}',
+      // What a فاضلہ uploads should be her work, not herself. The note
+      // stands above the list so it is read before the upload button is
+      // reached, not after.
+      header: ref.watch(currentProfileProvider)?.isFemale ?? false
+          ? const DashboardCard(
+              variant: DashboardCardVariant.info,
+              accentColor: AppColors.tealGreen,
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.info_outline, size: 18,
+                      color: AppColors.tealGreen),
+                  AppSpacing.hGapSm,
+                  Expanded(child: Text(AppStrings.uploadWorkPhotosNote)),
+                ],
+              ),
+            )
+          : null,
       emptyIcon: Icons.folder_open_outlined,
       emptyTitle: AppStrings.noEvidenceYet,
       actions: <Widget>[

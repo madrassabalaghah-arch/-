@@ -20,6 +20,7 @@ class AppUser {
     this.phone,
     this.email,
     this.stage,
+    this.gender,
     this.avatarPath,
     this.status = AppStatus.active,
     this.joinedOn,
@@ -39,6 +40,10 @@ class AppUser {
 
   /// تربیتی مرحلہ
   final String? stage;
+
+  /// 'male' or 'female' as the profile records it, or null when it was never
+  /// recorded. The app addresses the person as فاضل or فاضلہ from this.
+  final String? gender;
 
   /// Object path inside the avatars bucket, not a URL.
   final String? avatarPath;
@@ -68,11 +73,14 @@ class AppUser {
       phone: _str(row, 'phone'),
       email: _str(row, 'email'),
       stage: _str(row, 'stage'),
+      gender: _str(row, 'gender'),
       avatarPath: _str(row, 'avatar_path'),
       status: AppStatusX.fromDb(_str(row, 'status')),
       joinedOn: joined is String ? DateTime.tryParse(joined) : null,
     );
   }
+
+  bool get isFemale => gender == 'female';
 
   /// First letter of the name, used inside the avatar circle.
   String get avatarLabel => fullName.isEmpty ? '؟' : fullName.substring(0, 1);
