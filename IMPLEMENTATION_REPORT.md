@@ -1,7 +1,7 @@
 # Implementation report — مدرسہ تربیت ایپ
 
-Post-demo feedback and final updates. Six commits, `e99e292..5dbfacc`,
-45 files, +2221 / −977.
+Post-demo feedback and final updates. Twelve commits (this report is the
+last), `e99e292..HEAD`, 48 files.
 
 **How to read this report.** "Verified" means I ran it and watched the result.
 "NOT VERIFIED" means the code is written and reviewed but I did not observe it
@@ -139,7 +139,11 @@ order by group_key, sort_order;
 - A کارگزاری reaches the board only when its owner shares it, one at a time,
   from their own list, after a dialog explaining that other people will see it.
   `reports.shared_at` records that choice and taking it back is one tap.
-- An منتظم can hide any post or comment.
+- An منتظم can hide any post or comment. Hiding a post was the one piece of
+  moderation that existed in the repository and in the policy but had no
+  button; it has one now, behind a confirmation. A کارگزاری has no hide
+  button on purpose — it is on the board because its owner shared it, and
+  unsharing is theirs to do.
 
 **Public and private are separate paths, not one path with a flag.** A عوامی
 تبصرہ is a row in `community_comments`. A نجی جائزہ is a row in the evaluation
@@ -323,7 +327,28 @@ The verification I would ask you to do, in this order:
 
 ## 13. APK
 
-Reported below once the build finishes.
+Built from the final commit. One APK per architecture, which is what the
+README documents and what the last delivery used — a single universal APK is
+57 MB, three times the download for no benefit.
+
+| File | Size | For |
+|---|---|---|
+| `app-arm64-v8a-release.apk` | 20.3 MB | every current Android phone |
+| `app-armeabi-v7a-release.apk` | 18.1 MB | older 32-bit phones |
+| `app-x86_64-release.apk` | 21.7 MB | emulators |
+
+In `build/app/outputs/flutter-apk/`. Hand out the **arm64-v8a** file unless
+you know the phone is old.
+
+A release build is a stronger check than the analyzer: it compiles the whole
+application ahead of time and merges the Android manifest. I read the merged
+manifest afterwards and confirmed it carries
+`android:host="auth-callback"` and `android:label="مدرسہ تربیت ایپ"`, so the
+deep link and the new name are really in the APK. That still says nothing
+about behaviour at runtime.
+
+**This APK is signed with the debug keystore** — see §14.1. It installs and
+runs, and it cannot be published.
 
 ---
 
@@ -359,9 +384,10 @@ Nothing here has been published, as instructed. This is the list.
    all stored on Supabase; whether data is encrypted in transit (it is, HTTPS);
    and whether a user can request deletion.
 
-5. **Target API level.** Play enforces a floor that rises each year. The build
-   takes `targetSdk` from the Flutter SDK, so check the current requirement
-   before the first upload.
+5. **Target API level.** This build targets **API 36** and supports back to
+   **API 24** (Android 7), both taken from the Flutter SDK and read out of the
+   merged manifest. Play's floor rises each year, so confirm 36 is still
+   accepted when you upload.
 
 ### Needed for the listing
 
@@ -394,5 +420,7 @@ Nothing here has been published, as instructed. This is the list.
 - A locked (submitted) کارگزاری hides its معیار along with the rest of the
   form. The list screen shows it, so nothing is lost, but it reads oddly.
 - `karGuzariSummaryProvider` is unused since the summary cards went; harmless,
-  but it is dead code.
+  but it is dead code. (`CommunityRepository.karguzari` was the same and has
+  been removed; its SQL function remains if a link to one board item is ever
+  wanted.)
 - No in-app account deletion (see §14.13).
