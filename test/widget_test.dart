@@ -76,38 +76,6 @@ class _OfflineAuthRepository extends AuthRepository {
   }
 }
 
-/// A signed-in account holding whatever roles a test asks for, so routing
-/// can be checked for a role without a real session.
-class _RoleAuthRepository extends AuthRepository {
-  _RoleAuthRepository(super.client, this.roles);
-
-  final List<AppRole> roles;
-
-  static const User _user = User(
-    id: '22222222-2222-2222-2222-222222222222',
-    appMetadata: <String, dynamic>{},
-    userMetadata: <String, dynamic>{},
-    aud: 'authenticated',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    email: 'guest@example.org',
-  );
-
-  @override
-  User? get currentUser => _user;
-
-  @override
-  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
-
-  @override
-  Future<AppUser?> loadProfile(String userId) async => const AppUser(
-        id: '22222222-2222-2222-2222-222222222222',
-        fullName: 'مہمان',
-      );
-
-  @override
-  Future<List<AppRole>> loadRoles(String userId) async => roles;
-}
-
 Future<void> _pumpApp(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1200, 3000);
   tester.view.devicePixelRatio = 3.0;

@@ -130,6 +130,15 @@ class AppStrings {
   static const String evidenceOther = 'دیگر متعلقہ فائلیں';
   static const String category = 'نوعیت';
   static const String selectCategoryOptional = 'کارگزاری کی نوعیت منتخب کریں';
+
+  /// The کارگزاری is filed under one of four main categories, then one of
+  /// that category's three sub criteria.
+  static const String selectMainCategory = 'بنیادی شعبہ منتخب کریں';
+  static const String selectSubCriterion = 'ذیلی معیار منتخب کریں';
+  static const String subCriterionNeeded =
+      'براہِ کرم ذیلی معیار منتخب کریں۔';
+  static const String noCategoriesYet =
+      'ابھی کوئی شعبہ متعین نہیں۔';
   static const String emptyNoPending = 'الحمدللہ! فی الحال کوئی زیرِ التوا کام نہیں۔';
   static const String emptyNoNotifications = 'ابھی کوئی نئی اطلاع موجود نہیں۔';
   static const String emptyFirstKarGuzari =

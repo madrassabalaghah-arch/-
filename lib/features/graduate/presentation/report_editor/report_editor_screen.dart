@@ -34,6 +34,9 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
   /// and quick access lists are built from.
   String? _categoryId;
 
+  /// The main category chosen on the way to a sub-criterion.
+  String? _groupKey;
+
   /// The fuller record of the activity. Every one of these is optional: a
   /// participant filing quickly should not be blocked, and a blank box is
   /// stored as nothing rather than as an empty string.
@@ -78,12 +81,42 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Which بنیادی شعبہ is open: the one tapped, or the one the saved
+  /// ذیلی معیار belongs to when an existing کارگزاری is reopened.
+  String? _selectedGroup(List<ReportCategory> categories) {
+    if (_groupKey != null) {
+      return _groupKey;
+    }
+    for (final ReportCategory c in categories) {
+      if (c.id == _categoryId) {
+        return c.groupKey;
+      }
+    }
+    return null;
+  }
+
+  void _chooseGroup(List<ReportCategory> group) {
+    setState(() {
+      _groupKey = group.first.groupKey;
+      // A معیار from the شعبہ just left no longer applies.
+      if (!group.any((ReportCategory c) => c.id == _categoryId)) {
+        _categoryId = null;
+      }
+    });
+  }
+
   Future<void> _save({required bool submit}) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
     if (!_isEditing && _activityId == null) {
       _toast(AppStrings.selectActivityFirst);
+      return;
+    }
+    // The معیار is what the کارگزاری is judged against, so a submission
+    // without one comes back here. A draft may still be saved without it.
+    if (submit && _categoryId == null) {
+      _toast(AppStrings.subCriterionNeeded);
       return;
     }
 
@@ -285,31 +318,75 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
             AppSpacing.gapXl,
             if (!_isLocked) ...<Widget>[
             AppSpacing.gapXl,
+            // The بنیادی شعبہ first, then the ذیلی معیار within it. Both
+            // read the same report_categories rows the منتظم maintains — a
+            // group is a شعبہ, each row one of its three معیار — so the form
+            // and the dashboard can never offer different lists.
             Consumer(
               builder: (BuildContext context, WidgetRef ref, Widget? child) {
-                final List<ReportCategory> categories =
-                    ref.watch(reportCategoriesProvider).value ??
-                        const <ReportCategory>[];
-                return DropdownButtonFormField<String>(
-                  initialValue: categories
-                          .any((ReportCategory c) => c.id == _categoryId)
-                      ? _categoryId
-                      : null,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.selectCategoryOptional,
-                    prefixIcon: Icon(Icons.category_outlined, size: 20),
-                  ),
-                  items: <DropdownMenuItem<String>>[
-                    for (final ReportCategory c in categories)
-                      DropdownMenuItem<String>(
-                        value: c.id,
-                        child: Text('${c.groupTitle} — ${c.title}'),
-                      ),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (String? value) => setState(() => _categoryId = value),
+                return AsyncSection<List<ReportCategory>>(
+                  value: ref.watch(reportCategoriesProvider),
+                  isEmpty: (List<ReportCategory> c) => c.isEmpty,
+                  emptyTitle: AppStrings.noCategoriesYet,
+                  emptyIcon: Icons.category_outlined,
+                  onRetry: () => ref.invalidate(reportCategoriesProvider),
+                  builder: (
+                    BuildContext context,
+                    List<ReportCategory> categories,
+                  ) {
+                    final Map<String, List<ReportCategory>> groups =
+                        <String, List<ReportCategory>>{};
+                    for (final ReportCategory c in categories) {
+                      groups
+                          .putIfAbsent(c.groupKey, () => <ReportCategory>[])
+                          .add(c);
+                    }
+
+                    final String? group = _selectedGroup(categories);
+                    final List<ReportCategory> subCriteria =
+                        groups[group] ?? const <ReportCategory>[];
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        const SectionHeader(
+                          title: AppStrings.selectMainCategory,
+                        ),
+                        for (final List<ReportCategory> g in groups.values)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            child: _CategoryChoice(
+                              label: g.first.groupTitle,
+                              icon: g.first.groupIcon,
+                              selected: g.first.groupKey == group,
+                              onTap: _busy ? null : () => _chooseGroup(g),
+                            ),
+                          ),
+                        if (subCriteria.isNotEmpty) ...<Widget>[
+                          AppSpacing.gapLg,
+                          const SectionHeader(
+                            title: AppStrings.selectSubCriterion,
+                          ),
+                          for (final ReportCategory c in subCriteria)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(
+                                bottom: AppSpacing.sm,
+                              ),
+                              child: _CategoryChoice(
+                                label: c.title,
+                                icon: c.icon,
+                                selected: c.id == _categoryId,
+                                onTap: _busy
+                                    ? null
+                                    : () => setState(() => _categoryId = c.id),
+                              ),
+                            ),
+                        ],
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -350,6 +427,60 @@ class _ReportEditorScreenState extends ConsumerState<ReportEditorScreen> {
 }
 
 /// A selectable practical activity the report will be filed against.
+/// One بنیادی شعبہ or one ذیلی معیار, offered as a tappable row.
+class _CategoryChoice extends StatelessWidget {
+  const _CategoryChoice({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DashboardCard(
+      onTap: onTap,
+      padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+      child: Row(
+        children: <Widget>[
+          Container(
+            padding: const EdgeInsetsDirectional.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.primaryGreen.withValues(alpha: 0.14)
+                  : AppColors.surfaceSoft,
+              borderRadius: AppRadius.radiusSm,
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: selected ? AppColors.primaryGreen : AppColors.gray,
+            ),
+          ),
+          AppSpacing.hGapMd,
+          Expanded(
+            child: Text(label, style: theme.textTheme.titleSmall),
+          ),
+          Icon(
+            selected
+                ? Icons.radio_button_checked
+                : Icons.radio_button_unchecked,
+            color: selected ? AppColors.primaryGreen : AppColors.lightGray,
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ActivityChoice extends StatelessWidget {
   const _ActivityChoice({
     required this.activity,

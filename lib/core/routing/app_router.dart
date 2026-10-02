@@ -51,6 +51,7 @@ import '../../features/community/presentation/community_new_post_screen.dart';
 import '../../features/auth/presentation/staff_sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
+import '../../shared/models/community.dart';
 import '../../shared/presentation/important_links_screen.dart';
 import '../../shared/models/directory_entries.dart';
 import '../../shared/models/people.dart';
@@ -175,6 +176,24 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
             const StaffSignUpScreen(),
       ),
       // Shared by every role, so these sit outside the role shells.
+      GoRoute(
+        path: AppRoutes.communityBoard,
+        name: AppRoutes.communityBoardName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const CommunityBoardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communityItem,
+        name: AppRoutes.communityItemName,
+        builder: (BuildContext context, GoRouterState state) =>
+            CommunityItemScreen(item: state.extra! as CommunityItem),
+      ),
+      GoRoute(
+        path: AppRoutes.communityNewPost,
+        name: AppRoutes.communityNewPostName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const CommunityNewPostScreen(),
+      ),
       GoRoute(
         path: AppRoutes.noRole,
         name: AppRoutes.noRoleName,

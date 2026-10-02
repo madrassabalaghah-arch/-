@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'app_status.dart';
 import 'work_items.dart';
 
@@ -98,8 +100,14 @@ class ReportCategory {
   final String title;
   final int sortOrder;
 
-  /// The group whose کارگزاری count as معاشرتی و اصلاحی سرگرمیاں.
-  static const String socialGroup = 'social';
+  /// The group whose کارگزاری count as سماجی و دعوتی کردار.
+  static const String socialGroup = 'social_dawah';
+
+  /// The icon of this sub criterion, and of the main شعبہ it sits under.
+  /// Both live with the model so the dashboard and the کارگزاری form cannot
+  /// drift apart.
+  IconData get icon => reportCategoryIcon(key);
+  IconData get groupIcon => reportGroupIcon(groupKey);
 
   factory ReportCategory.fromMap(Map<String, dynamic> row) => ReportCategory(
         id: row['id'] as String,
@@ -109,4 +117,56 @@ class ReportCategory {
         title: (row['title'] as String?) ?? '',
         sortOrder: intOr(row, 'sort_order'),
       );
+}
+
+/// The icon of one of the twelve ذیلی معیار.
+IconData reportCategoryIcon(String key) {
+  switch (key) {
+    // ذاتی و علمی ترقی
+    case 'positive_personal_change':
+      return Icons.self_improvement_outlined;
+    case 'academic_research':
+      return Icons.menu_book_outlined;
+    case 'technical_skills':
+      return Icons.devices_outlined;
+    // مسجد و مدرسہ میں عملی کردار
+    case 'teaching_improvement':
+      return Icons.school_outlined;
+    case 'mosque_madrasa_change':
+      return Icons.mosque_outlined;
+    case 'people_building':
+      return Icons.groups_2_outlined;
+    // سماجی و دعوتی کردار
+    case 'positive_social_role':
+      return Icons.volunteer_activism_outlined;
+    case 'outreach_influence':
+      return Icons.campaign_outlined;
+    case 'unity_cooperation':
+      return Icons.handshake_outlined;
+    // عملی نتائج و اثرات
+    case 'observable_results':
+      return Icons.fact_check_outlined;
+    case 'effectiveness':
+      return Icons.trending_up;
+    case 'continuity':
+      return Icons.repeat_outlined;
+    default:
+      return Icons.category_outlined;
+  }
+}
+
+/// The icon of one of the four بنیادی شعبے.
+IconData reportGroupIcon(String groupKey) {
+  switch (groupKey) {
+    case 'personal_academic':
+      return Icons.auto_stories_outlined;
+    case 'mosque_madrasa':
+      return Icons.mosque_outlined;
+    case ReportCategory.socialGroup:
+      return Icons.groups_outlined;
+    case 'results_impact':
+      return Icons.insights_outlined;
+    default:
+      return Icons.category_outlined;
+  }
 }

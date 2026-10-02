@@ -255,23 +255,6 @@ class GraduateDashboardScreen extends ConsumerWidget {
 class _QuickAccess extends ConsumerWidget {
   const _QuickAccess();
 
-  static IconData _iconFor(String key) {
-    switch (key) {
-      case 'teaching':
-        return Icons.menu_book_outlined;
-      case 'administration':
-        return Icons.admin_panel_settings_outlined;
-      case 'reform_circles':
-        return Icons.groups_2_outlined;
-      case 'counselling':
-        return Icons.support_agent_outlined;
-      case 'social_service':
-        return Icons.volunteer_activism_outlined;
-      default:
-        return Icons.category_outlined;
-    }
-  }
-
   static const List<(String, String, IconData)> _evidenceKinds =
       <(String, String, IconData)>[
     ('image', AppStrings.evidenceImages, Icons.image_outlined),
@@ -301,7 +284,7 @@ class _QuickAccess extends ConsumerWidget {
                   for (final ReportCategory c in group)
                     _QuickTile(
                       label: c.title,
-                      icon: _iconFor(c.key),
+                      icon: c.icon,
                       onTap: () => context.goToRoute(
                         AppRoutes.graduateReports,
                         extra: (
