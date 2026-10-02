@@ -76,40 +76,6 @@ class CourseItem {
       );
 }
 
-/// An evaluation standard used when reviewing reports.
-class StandardItem {
-  const StandardItem({
-    required this.id,
-    required this.title,
-    this.detail,
-    this.weight = 0,
-    this.status = AppStatus.active,
-  });
-
-  final String id;
-
-  /// Urdu title of the standard.
-  final String title;
-
-  /// Urdu explanation of what the standard measures.
-  final String? detail;
-
-  /// Weight of the standard as a percentage.
-  final int weight;
-  final AppStatus status;
-
-  factory StandardItem.fromMap(Map<String, dynamic> row) => StandardItem(
-        id: row['id'] as String,
-        title: (row['title'] as String?) ?? '',
-        detail: nullableString(row, 'detail'),
-        weight: intOr(row, 'weight'),
-        status: AppStatusX.fromDb(nullableString(row, 'status')),
-      );
-}
-
-/// One category a کارگزاری can belong to, grouped under a heading.
-///
-/// Curated by an administrator in `report_categories`, so the grouping shown
 /// on the dashboard comes from the database rather than from this file.
 class ReportCategory {
   const ReportCategory({

@@ -30,14 +30,7 @@ class MentorEvaluationsScreen extends ConsumerWidget {
             : '${item.graduateName} • ${item.dateLabel}',
         icon: Icons.fact_check_outlined,
         status: item.status,
-        progress: item.ratio,
         accentColor: AppColors.gold,
-        trailing: Text(
-          UrduNumbers.ratio(item.score, item.maxScore),
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.earthBrown,
-              ),
-        ),
       ),
     );
   }

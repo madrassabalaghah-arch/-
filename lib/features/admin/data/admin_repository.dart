@@ -372,13 +372,6 @@ class AdminRepository {
     return rows.map(TaskItem.fromMap).toList();
   }
 
-  Future<List<StandardItem>> standards() async {
-    final List<Map<String, dynamic>> rows = await _client
-        .from('evaluation_standards')
-        .select()
-        .order('weight', ascending: false);
-    return rows.map(StandardItem.fromMap).toList();
-  }
 
   Future<List<ReportItem>> reports() async {
     final List<Map<String, dynamic>> rows = await _client

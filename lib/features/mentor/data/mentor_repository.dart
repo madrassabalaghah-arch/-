@@ -146,44 +146,23 @@ class MentorRepository {
     return rows.map(NotificationItem.fromMap).toList();
   }
 
-  /// Records an evaluation against a report, with its per-standard scores.
+  /// Records the written جائزہ against a کارگزاری.
+  ///
+  /// No score is written. The score columns and the `evaluation_scores`
+  /// rows that older reviews left behind are untouched; nothing adds to
+  /// them any more.
   Future<void> submitEvaluation({
     required String reportId,
     required String graduateId,
-    required Map<String, int> scoresByStandard,
-    required int maxScore,
     String? comment,
   }) async {
-    final int total = scoresByStandard.values.fold<int>(0, (int a, int b) => a + b);
-
-    final Map<String, dynamic> evaluation = await _client
-        .from('evaluations')
-        .upsert(<String, dynamic>{
-          'report_id': reportId,
-          'mentor_id': _uid,
-          'graduate_id': graduateId,
-          'comment': comment,
-          'total_score': total,
-          'max_score': maxScore,
-          'status': 'completed',
-        }, onConflict: 'report_id,mentor_id')
-        .select()
-        .single();
-
-    final String evaluationId = evaluation['id'] as String;
-
-    if (scoresByStandard.isNotEmpty) {
-      await _client.from('evaluation_scores').upsert(
-            scoresByStandard.entries
-                .map((MapEntry<String, int> e) => <String, dynamic>{
-                      'evaluation_id': evaluationId,
-                      'standard_id': e.key,
-                      'score': e.value,
-                    })
-                .toList(),
-            onConflict: 'evaluation_id,standard_id',
-          );
-    }
+    await _client.from('evaluations').upsert(<String, dynamic>{
+      'report_id': reportId,
+      'mentor_id': _uid,
+      'graduate_id': graduateId,
+      'comment': comment,
+      'status': 'completed',
+    }, onConflict: 'report_id,mentor_id');
 
     // Move the report out of the review queue.
     await _client

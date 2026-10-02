@@ -30,7 +30,6 @@ class MentorReportReviewScreen extends ConsumerStatefulWidget {
 class _MentorReportReviewScreenState
     extends ConsumerState<MentorReportReviewScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final Map<String, double> _scores = <String, double>{};
   final TextEditingController _comment = TextEditingController();
   final TextEditingController _guidance = TextEditingController();
   bool _busy = false;
@@ -65,10 +64,13 @@ class _MentorReportReviewScreenState
         );
   }
 
-  /// Completes the review: the evaluation and its scores, any guidance, and
-  /// the report's new status. Row level security refuses it unless the
-  /// graduate is assigned to this mentor.
-  Future<void> _submit(List<StandardItem> standards) async {
+  /// Completes the review: the written جائزہ, any guidance, and the
+  /// report's new status. Row level security refuses it unless the graduate
+  /// is assigned to this mentor.
+  ///
+  /// There is no mark, score or grade here. A جائزہ is appreciation and
+  /// guidance in words.
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
@@ -78,12 +80,6 @@ class _MentorReportReviewScreenState
             reportId: widget.report.id,
             graduateId: widget.report.graduateId,
             comment: _comment.text.trim(),
-            maxScore: standards.fold<int>(
-                0, (int sum, StandardItem s) => sum + s.weight),
-            scoresByStandard: <String, int>{
-              for (final StandardItem s in standards)
-                s.id: (_scores[s.id] ?? 0).round(),
-            },
           );
       await _sendGuidance();
       ref.invalidate(mentorReportsProvider);
@@ -146,10 +142,6 @@ class _MentorReportReviewScreenState
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ReportItem report = widget.report;
-    final List<StandardItem> standards =
-        (ref.watch(adminStandardsProvider).value ?? const <StandardItem>[])
-            .where((StandardItem s) => s.weight > 0)
-            .toList();
     final KarGuzariDetails d = report.details;
 
     return AppScaffold(
@@ -261,38 +253,8 @@ class _MentorReportReviewScreenState
             ),
             AppSpacing.gapXl,
 
-            // 3. Assess it against the administrator's standards.
-            const _Step(number: 3, title: AppStrings.reviewStepAssessment),
-            DashboardCard(
-              child: standards.isEmpty
-                  ? const LoadingState(compact: true)
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        for (final StandardItem s in standards) ...<Widget>[
-                          Text(
-                            '${s.title} — '
-                            '${UrduNumbers.fromInt((_scores[s.id] ?? 0).round())}'
-                            ' / ${UrduNumbers.fromInt(s.weight)}',
-                            style: theme.textTheme.labelLarge,
-                          ),
-                          Slider(
-                            value: _scores[s.id] ?? 0,
-                            max: s.weight.toDouble(),
-                            divisions: s.weight,
-                            onChanged: _busy
-                                ? null
-                                : (double v) =>
-                                    setState(() => _scores[s.id] = v),
-                          ),
-                        ],
-                      ],
-                    ),
-            ),
-            AppSpacing.gapXl,
-
-            // 4. The mentor's comment.
-            const _Step(number: 4, title: AppStrings.reviewStepComment),
+            // 3. The mentor's جائزہ, in words.
+            const _Step(number: 3, title: AppStrings.reviewStepComment),
             AppFormField(
               label: AppStrings.reviewStepComment,
               hintText: AppStrings.hintReportDetail,
@@ -304,8 +266,8 @@ class _MentorReportReviewScreenState
             ),
             AppSpacing.gapXl,
 
-            // 5. Guidance for what comes next.
-            const _Step(number: 5, title: AppStrings.reviewStepGuidance),
+            // 4. Guidance for what comes next.
+            const _Step(number: 4, title: AppStrings.reviewStepGuidance),
             AppFormField(
               label: AppStrings.reviewStepGuidance,
               hintText: AppStrings.hintGuidance,
@@ -319,7 +281,7 @@ class _MentorReportReviewScreenState
               label: AppStrings.save,
               icon: Icons.check_circle_outline,
               isLoading: _busy,
-              onPressed: _busy ? null : () => _submit(standards),
+              onPressed: _busy ? null : _submit,
             ),
             AppSpacing.gapMd,
             SecondaryButton(

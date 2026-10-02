@@ -30,16 +30,7 @@ class GraduateEvaluationsScreen extends ConsumerWidget {
             ' • ${item.dateLabel}',
         icon: Icons.fact_check_outlined,
         status: item.status,
-        progress: item.status == AppStatus.underReview ? null : item.ratio,
         accentColor: AppColors.gold,
-        trailing: item.status == AppStatus.underReview
-            ? null
-            : Text(
-                UrduNumbers.ratio(item.score, item.maxScore),
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.earthBrown,
-                    ),
-              ),
       ),
     );
   }

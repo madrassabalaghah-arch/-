@@ -190,9 +190,6 @@ class AppRoutes {
   static const String adminReports = '/admin/reports';
   static const String adminReportsName = 'adminReports';
 
-  static const String adminStandards = '/admin/standards';
-  static const String adminStandardsName = 'adminStandards';
-
   static const String adminRecognition = '/admin/recognition';
   static const String adminRecognitionName = 'adminRecognition';
 
@@ -243,7 +240,6 @@ class AppRoutes {
     adminCourses,
     adminAssignments,
     adminReports,
-    adminStandards,
     adminRecognition,
   };
 

@@ -17,7 +17,6 @@ import '../../features/admin/presentation/reports/admin_reports_screen.dart';
 import '../../features/admin/presentation/settings/admin_settings_screen.dart';
 import '../../features/admin/presentation/staff/admin_add_staff_screen.dart';
 import '../../features/admin/presentation/staff/admin_staff_screen.dart';
-import '../../features/admin/presentation/standards/admin_standards_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaq_institutes_screen.dart';
@@ -636,12 +635,6 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminReportsName,
     builder: (BuildContext context, GoRouterState state) =>
         const AdminReportsScreen(),
-  ),
-  GoRoute(
-    path: AppRoutes.adminStandards,
-    name: AppRoutes.adminStandardsName,
-    builder: (BuildContext context, GoRouterState state) =>
-        const AdminStandardsScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminRecognition,

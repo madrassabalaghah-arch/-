@@ -108,13 +108,6 @@ class AdminEvaluationsScreen extends ConsumerWidget {
                         ].join(' • '),
                         icon: Icons.fact_check_outlined,
                         accentColor: AppColors.oliveGreen,
-                        trailing: Text(
-                          UrduNumbers.ratio(e.score, e.maxScore),
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(color: AppColors.earthBrown),
-                        ),
                       ),
                     ),
                 ],

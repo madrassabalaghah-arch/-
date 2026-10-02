@@ -271,12 +271,6 @@ final FutureProvider<List<TaskItem>> adminAssignmentsProvider =
   return ref.watch(adminRepositoryProvider).assignments();
 });
 
-final FutureProvider<List<StandardItem>> adminStandardsProvider =
-    FutureProvider<List<StandardItem>>((Ref ref) {
-  _dependOnSession(ref);
-  return ref.watch(adminRepositoryProvider).standards();
-});
-
 /// Live: the administrator's report list reflects submissions as they land.
 final StreamProvider<List<ReportItem>> adminReportsProvider =
     StreamProvider<List<ReportItem>>((Ref ref) {

@@ -293,8 +293,6 @@ class EvaluationItem {
     this.mentorName,
     this.graduateName,
     this.comment,
-    this.score = 0,
-    this.maxScore = 0,
     this.status = AppStatus.underReview,
     this.createdAt,
   });
@@ -312,8 +310,6 @@ class EvaluationItem {
   final String? mentorName;
   final String? graduateName;
   final String? comment;
-  final int score;
-  final int maxScore;
   final AppStatus status;
   final DateTime? createdAt;
 
@@ -339,14 +335,10 @@ class EvaluationItem {
           ? nullableString(graduate, 'full_name')
           : null,
       comment: nullableString(row, 'comment'),
-      score: intOr(row, 'total_score'),
-      maxScore: intOr(row, 'max_score'),
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
     );
   }
-
-  double get ratio => maxScore == 0 ? 0 : (score / maxScore).clamp(0, 1);
 
   String get dateLabel => UrduDates.label(createdAt);
 }

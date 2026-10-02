@@ -97,7 +97,6 @@ class AppQuickActions {
         ManagementArea(title: AppStrings.recognitions, subtitle: 'اعزازات اور حوصلہ افزائی۔', icon: Icons.workspace_premium_outlined, route: AppRoutes.adminRecognition),
         ManagementArea(title: AppStrings.importantLinks, subtitle: 'ویڈیوز، فارم، ویب سائٹس اور رہنما مواد۔', icon: Icons.link_outlined, route: AppRoutes.adminLinks),
         ManagementArea(title: AppStrings.systemSettings, subtitle: 'کارگزاری کا وقفہ اور اعزازات کے اصول۔', icon: Icons.tune_outlined, route: AppRoutes.adminSettings),
-        ManagementArea(title: AppStrings.standards, subtitle: 'جائزے کے معیارات اور ان کا وزن۔', icon: Icons.rule_outlined, route: AppRoutes.adminStandards),
       ],
     ),
     (
