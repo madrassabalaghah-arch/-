@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/routing/app_navigation.dart';
@@ -141,7 +142,21 @@ class _CommunityBoardScreenState extends ConsumerState<CommunityBoardScreen> {
                 Padding(
                   padding:
                       const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
-                  child: _FeedTile(item: item),
+                  child: _FeedTile(
+                    item: item,
+                    // Pushed from here rather than through goToRoute,
+                    // because the board has to know when an منتظم hides a
+                    // post while it is open.
+                    onTap: () async {
+                      final bool? hidden = await context.push<bool>(
+                        AppRoutes.communityItem,
+                        extra: item,
+                      );
+                      if (hidden ?? false) {
+                        await _load(reset: true);
+                      }
+                    },
+                  ),
                 ),
               if (!_reachedEnd && _filter == _Filter.all)
                 SecondaryButton(
@@ -190,9 +205,10 @@ class _FilterBar extends StatelessWidget {
 /// One row of the board. The author is named, as they are on the screen it
 /// opens.
 class _FeedTile extends StatelessWidget {
-  const _FeedTile({required this.item});
+  const _FeedTile({required this.item, required this.onTap});
 
   final CommunityItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +230,7 @@ class _FeedTile extends StatelessWidget {
       icon: item.icon,
       accentColor:
           item.isKarguzari ? AppColors.primaryGreen : AppColors.earthBrown,
-      onTap: () => context.goToRoute(AppRoutes.communityItem, extra: item),
+      onTap: onTap,
     );
   }
 }

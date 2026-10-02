@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
@@ -74,6 +75,50 @@ class _CommunityItemScreenState extends ConsumerState<CommunityItemScreen> {
     }
   }
 
+  /// Takes a board post off the board.
+  ///
+  /// Only offered to an منتظم, and only for a post: a کارگزاری reaches the
+  /// board because its owner shared it, and it is theirs to unshare.
+  Future<void> _hidePost() async {
+    final String? postId = _target.postId;
+    if (postId == null) {
+      return;
+    }
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text(AppStrings.hideFromBoard),
+            content: const Text(AppStrings.hidePostConfirm),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(AppStrings.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(AppStrings.hideFromBoard),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await ref.read(communityRepositoryProvider).hidePost(postId);
+      if (!mounted) {
+        return;
+      }
+      _toast(AppStrings.hiddenFromBoard);
+      // true tells the board to load again, so the hidden post goes with it.
+      context.pop(true);
+    } catch (error) {
+      _toast('${AppStrings.somethingWentWrong} — $error');
+    }
+  }
+
   Future<void> _hide(CommunityComment comment) async {
     try {
       await ref.read(communityRepositoryProvider).hideComment(comment.id);
@@ -94,6 +139,14 @@ class _CommunityItemScreenState extends ConsumerState<CommunityItemScreen> {
 
     return AppScaffold(
       title: AppStrings.communityBoard,
+      actions: <Widget>[
+        if (isAdmin && !item.isKarguzari)
+          IconButton(
+            tooltip: AppStrings.hideFromBoard,
+            icon: const Icon(Icons.visibility_off_outlined),
+            onPressed: _busy ? null : _hidePost,
+          ),
+      ],
       body: ListView(
         padding: const EdgeInsetsDirectional.only(
           bottom: AppSpacing.bottomSafeArea,

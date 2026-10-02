@@ -308,6 +308,8 @@ class AppStrings {
   static const String postBody = 'تفصیل';
   static const String postPublished = 'پوسٹ شائع ہو گئی ہے۔';
   static const String hideFromBoard = 'بورڈ سے چھپائیں';
+  static const String hidePostConfirm =
+      'یہ پوسٹ کمیونٹی بورڈ سے ہٹا دی جائے گی۔ کیا آپ متفق ہیں؟';
   static const String hiddenFromBoard = 'بورڈ سے چھپا دیا گیا ہے۔';
 
   // کارگزاری کو کمیونٹی بورڈ پر شیئر کرنا
