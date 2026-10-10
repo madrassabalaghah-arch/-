@@ -73,4 +73,4 @@ custom sender under **Project Settings → Authentication → SMTP Settings**.
 
 Everything else — tables, policies, functions, the twelve کارگزاری معیار, the
 کمیونٹی بورڈ — is in `supabase/migrations/`, applied in filename order. The
-latest is `20261001000008_community_board_and_categories.sql`.
+latest is `20261010000009_separate_name_and_father_name.sql`.

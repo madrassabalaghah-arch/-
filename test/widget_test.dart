@@ -18,6 +18,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:madrassa_graduate_app/app.dart';
 import 'package:madrassa_graduate_app/core/config/app_config.dart';
+import 'package:madrassa_graduate_app/core/utils/urdu_numbers.dart';
 import 'package:madrassa_graduate_app/features/admin/presentation/workshop/participant_file.dart';
 import 'package:madrassa_graduate_app/features/auth/data/course_repository.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
@@ -452,7 +453,7 @@ void main() {
     // The organisation's file, saved by Excel as "CSV UTF-8": a leading BOM,
     // CRLF endings, Urdu headings, and a quoted name containing a comma.
     const String csv = '\ufeff'
-        'رقمِ تسجیل,نام مع ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
+        'رقم التسجیل,نام مع ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
         'MD-2026/001,محمد عثمان بن عبداللہ,مارچ 2024,جون 2024\r\n'
         'MD-2026/002,عائشہ صدیقہ بنت کریم,مارچ 2024,جون 2024\r\n'
         'MD-2026/001,دوبارہ وہی نمبر,مارچ 2024,جون 2024\r\n'
@@ -479,10 +480,75 @@ void main() {
 
     // A repeat of a number already seen in the file is refused, not imported.
     expect(parsed.rows[2].problem, CandidateProblem.duplicateInFile);
-    // A row with no رقمِ تسجیل is refused.
+    // A row with no رقم التسجیل is refused.
     expect(parsed.rows[3].problem, CandidateProblem.missingNumber);
     // A quoted field keeps its comma instead of splitting into two columns.
     expect(good.last.fullName, 'خان, محمد');
+  });
+
+  test('a file may keep ولدیت in its own column, or not have one', () {
+    // The column is optional. A file that has it is read into father_name;
+    // the file in the test above has none and still imports, which is what
+    // keeps every list the organisation already holds usable.
+    const String csv = 'رقم التسجیل,نام,ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
+        'MD-2026/010,محمد عثمان,عبداللہ,مارچ 2024,جون 2024\r\n'
+        'MD-2026/011,عائشہ صدیقہ,,مارچ 2024,جون 2024\r\n';
+
+    final ({List<CandidateRow> rows, bool missingColumns}) parsed =
+        ParticipantFile.toCandidates(
+      ParticipantFile.read(Uint8List.fromList(utf8.encode(csv)), 'list.csv'),
+    );
+
+    expect(parsed.missingColumns, isFalse);
+    expect(parsed.rows.first.fullName, 'محمد عثمان');
+    expect(parsed.rows.first.fatherName, 'عبداللہ',
+        reason: 'ولدیت belongs in its own field, not appended to the name');
+    expect(parsed.rows.first.toInsert()['father_name'], 'عبداللہ');
+
+    // An empty cell stays null rather than becoming ''. Nothing is guessed.
+    expect(parsed.rows.last.fatherName, isNull);
+    expect(parsed.rows.last.isValid, isTrue,
+        reason: 'a missing ولدیت must not make the row unimportable');
+  });
+
+  test('numbers are shown in English digits', () {
+    // One utility decides this, and every count, date, ratio and file size
+    // in the application goes through it.
+    expect(UrduNumbers.fromInt(2026), '2026');
+    expect(UrduNumbers.ratio(3, 10), '3 / 10');
+    expect(UrduNumbers.percent(75), '75%');
+
+    // Folding, not passing through: an Urdu digit stored in the database is
+    // shown in the same form as one the application produced itself.
+    expect(UrduNumbers.convert('۱۲۳'), '123', reason: 'extended Arabic-Indic');
+    expect(UrduNumbers.convert('٤٥'), '45', reason: 'Arabic-Indic');
+    expect(UrduNumbers.convert('مارچ ۲۰۲۴'), 'مارچ 2024',
+        reason: 'the Urdu words stay, only the digits change');
+
+    // The Urdu month name is kept; only its digits are Latin.
+    final String date = UrduDates.label(DateTime(2026, 1, 3));
+    expect(date, contains('جنوری'));
+    expect(date, contains('2026'));
+    expect(RegExp('[۰-۹٠-٩]').hasMatch(date), isFalse);
+  });
+
+  test('no Urdu digit, and no رقمِ تسجیل, survives in the Urdu strings', () {
+    // Read rather than reflected over: Dart has no reflection in a test, and
+    // every user-facing string in the application lives in this one file.
+    final String source =
+        File('lib/core/constants/app_strings.dart').readAsStringSync();
+
+    expect(RegExp('[۰-۹٠-٩]').hasMatch(source), isFalse,
+        reason: 'a hardcoded Urdu numeral would bypass UrduNumbers entirely');
+    expect(source.contains('رقمِ تسجیل'), isFalse,
+        reason: 'the term is رقم التسجیل');
+    expect(AppStrings.registrationNumber, 'رقم التسجیل');
+
+    // نام and ولدیت are asked for separately, so neither label may ask for
+    // both at once — that single combined field is what refused people.
+    expect(AppStrings.participantName, 'نام');
+    expect(AppStrings.participantFatherName, 'ولدیت');
+    expect(AppStrings.labelFatherName, 'ولدیت');
   });
 
   testWidgets('an invited mentor or administrator signs up with a code',

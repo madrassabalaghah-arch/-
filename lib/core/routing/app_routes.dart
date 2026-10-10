@@ -17,7 +17,7 @@ class AppRoutes {
   static const String signUpName = 'signUp';
 
   /// Sign-up for an invited مربی or منتظم, with an invitation code in place
-  /// of a رقمِ تسجیل.
+  /// of a رقم التسجیل.
   static const String staffSignUp = '/staff-sign-up';
   static const String staffSignUpName = 'staffSignUp';
 

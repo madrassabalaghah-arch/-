@@ -15,7 +15,7 @@ import 'auth_scaffold.dart';
 
 /// Registration for someone who completed the three-month course.
 ///
-/// One form, verified in one step. The رقمِ تسجیل and the name are checked
+/// One form, verified in one step. The رقم التسجیل and the name are checked
 /// against the imported register; the category, وفاق and institution are the
 /// participant's own answers and are stored on their profile. There is no
 /// approval queue — a valid, unused number with a matching name creates the
@@ -31,6 +31,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final GlobalKey<FormState> _form = GlobalKey<FormState>();
   final TextEditingController _number = TextEditingController();
   final TextEditingController _name = TextEditingController();
+
+  /// ولدیت, kept apart from the name. The register's own column has held
+  /// the two together, and requiring them typed as one string is what refused
+  /// people who entered their father's name as the form asked them to.
+  final TextEditingController _father = TextEditingController();
   final TextEditingController _period = TextEditingController();
 
   /// The matched record. Until it exists only the three identifying fields are
@@ -51,6 +56,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   void dispose() {
     _number.dispose();
     _name.dispose();
+    _father.dispose();
     _period.dispose();
     _institute.dispose();
     _email.dispose();
@@ -91,7 +97,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     try {
       final CourseVerification result = await ref
           .read(courseRepositoryProvider)
-          .verify(_number.text, fullName: _name.text, coursePeriod: _period.text);
+          .verify(
+            _number.text,
+            fullName: _name.text,
+            fatherName: _father.text,
+            coursePeriod: _period.text,
+          );
       setState(() {
         _busy = false;
         if (result.valid) {
@@ -127,6 +138,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             email: _email.text,
             password: _password.text,
             fullName: _name.text,
+            fatherName: _father.text,
             registrationNumber: _number.text,
             gender: _gender,
             wifaqId: _wifaqId,
@@ -225,6 +237,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               enabled: !_busy && _verified == null,
               prefixIcon: Icons.person_outline,
               validator: AppFormField.requiredValidator,
+            ),
+            AppSpacing.gapLg,
+            // Optional: the register may hold no ولدیت at all, and someone
+            // whose row holds only their own name must still get through.
+            AppFormField(
+              label: AppStrings.participantFatherName,
+              hintText: AppStrings.hintFatherNameOptional,
+              controller: _father,
+              enabled: !_busy && _verified == null,
+              prefixIcon: Icons.person_outline,
             ),
             AppSpacing.gapLg,
             AppFormField(

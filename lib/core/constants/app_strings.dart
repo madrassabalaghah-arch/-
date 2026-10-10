@@ -191,7 +191,7 @@ class AppStrings {
   static const String addByForm = 'فارم سے شامل کریں';
   static const String saveAndAddAnother = 'محفوظ کریں اور اگلا شامل کریں';
   static const String participantAlreadyExists =
-      'یہ رقمِ تسجیل پہلے سے ریکارڈ میں موجود ہے۔';
+      'یہ رقم التسجیل پہلے سے ریکارڈ میں موجود ہے۔';
   static const String periodNeedsYear =
       'دورانیہ میں کورس کا سال لکھیں، مثلاً: مارچ تا جون 2024';
   static const String optionalMonths = 'داخلہ اور فراغت کے مہینے (اختیاری)';
@@ -444,8 +444,8 @@ class AppStrings {
   // ---------------------------------------------------------------------
   static const String courseGateTitle = 'کورس کی تصدیق';
   static const String courseGateSubtitle =
-      'اکاؤنٹ بنانے کے لیے تین ماہی کورس کی رقمِ تسجیل درج کریں۔';
-  static const String registrationNumber = 'رقمِ تسجیل';
+      'اکاؤنٹ بنانے کے لیے تین ماہی کورس کی رقم التسجیل درج کریں۔';
+  static const String registrationNumber = 'رقم التسجیل';
   static const String hintRegistrationNumber = 'مثلاً: MD-2026/001';
   static const String verifyNumber = 'تصدیق کریں';
   static const String verifying = 'آپ کی معلومات کی تصدیق کی جا رہی ہے...';
@@ -454,14 +454,14 @@ class AppStrings {
       'آپ کی معلومات کی کامیابی سے تصدیق ہو گئی ہے۔ آپ کا پروفائل فعال کر دیا گیا ہے۔';
   static const String changeNumber = 'نمبر تبدیل کریں';
   static const String regNotFound =
-      'یہ رقمِ تسجیل ہمارے ریکارڈ میں موجود نہیں ہے۔';
+      'یہ رقم التسجیل ہمارے ریکارڈ میں موجود نہیں ہے۔';
   static const String regNameMismatch =
       'درج کردہ نام ہمارے ریکارڈ سے مطابقت نہیں رکھتا۔';
   static const String regNotEligible =
-      'یہ رقمِ تسجیل اکاؤنٹ بنانے کے لیے اہل نہیں ہے۔ منتظم سے رابطہ کریں۔';
+      'یہ رقم التسجیل اکاؤنٹ بنانے کے لیے اہل نہیں ہے۔ منتظم سے رابطہ کریں۔';
   static const String regAlreadyUsed =
-      'اس رقمِ تسجیل کے ساتھ پہلے سے ایک اکاؤنٹ موجود ہے۔';
-  static const String regRequired = 'رقمِ تسجیل درج کرنا ضروری ہے۔';
+      'اس رقم التسجیل کے ساتھ پہلے سے ایک اکاؤنٹ موجود ہے۔';
+  static const String regRequired = 'رقم التسجیل درج کرنا ضروری ہے۔';
   static const String publicSignupClosed =
       'عام رجسٹریشن دستیاب نہیں۔ صرف کورس کے شرکاء اکاؤنٹ بنا سکتے ہیں۔';
   static const String selectCategory = 'اپنی حیثیت منتخب کریں';
@@ -472,7 +472,13 @@ class AppStrings {
   static const String manageParticipants = 'کورس کے شرکاء کا انتظام';
   static const String addParticipant = 'نیا شریک شامل کریں';
   static const String importParticipants = 'کورس کے شرکاء کی فائل درآمد کریں';
-  static const String participantName = 'نام مع ولدیت';
+  /// The person's own name. Kept apart from [labelFatherName], because the
+  /// register's own column once held both and an account could not be created
+  /// unless the two were typed exactly as that one column happened to hold
+  /// them.
+  static const String participantName = 'نام';
+  static const String participantFatherName = 'ولدیت';
+  static const String hintFatherNameOptional = 'اختیاری';
   static const String courseStartMonth = 'داخلہ ماہ';
   static const String courseCompletionMonth = 'فراغت ماہ';
   static const String eligibleForApp = 'اکاؤنٹ کے لیے اہل';
@@ -482,9 +488,9 @@ class AppStrings {
   static const String participantUpdated = 'ریکارڈ تبدیل کر دیا گیا ہے۔';
   static const String noParticipantsYet = 'ابھی کوئی شریک درج نہیں';
   static const String fileFormatHint =
-      'فائل کے کالم: رقمِ تسجیل، نام مع ولدیت، داخلہ ماہ، فراغت ماہ';
+      'فائل کے کالم: رقم التسجیل، نام، ولدیت، داخلہ ماہ، فراغت ماہ';
   static const String missingColumnsError =
-      'فائل میں ضروری کالم موجود نہیں۔ رقمِ تسجیل اور نام مع ولدیت لازمی ہیں۔';
+      'فائل میں ضروری کالم موجود نہیں۔ رقم التسجیل اور نام لازمی ہیں۔';
   static const String importPreviewTitle = 'درآمد کا جائزہ';
   static const String totalRecords = 'کل ریکارڈ';
   static const String validRecords = 'درست ریکارڈ';
@@ -668,7 +674,7 @@ class AppStrings {
   // Form labels
   // ---------------------------------------------------------------------
   static const String labelName = 'اپنا نام درج کریں';
-  static const String labelFatherName = 'والد کا نام';
+  static const String labelFatherName = 'ولدیت';
   static const String labelCity = 'شہر کا نام';
   static const String labelInstitute = 'ادارے کا نام';
   static const String labelPhone = 'رابطہ نمبر';
@@ -688,7 +694,7 @@ class AppStrings {
   // ---------------------------------------------------------------------
   static const String hintName = 'اپنا پورا نام';
   static const String hintCity = 'مثلاً: لاہور';
-  static const String hintPhone = 'مثلاً: ۰۳۰۰۱۲۳۴۵۶۷';
+  static const String hintPhone = 'مثلاً: 03001234567';
   static const String hintEmail = 'مثلاً: name@example.com';
   static const String hintReportDetail =
       'اپنی عملی سرگرمی کی مکمل تفصیل یہاں تحریر کریں۔';

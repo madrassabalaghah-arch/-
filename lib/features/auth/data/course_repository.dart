@@ -17,6 +17,7 @@ class CandidateRow {
   const CandidateRow({
     required this.registrationNumber,
     required this.fullName,
+    this.fatherName,
     this.courseStartDate,
     this.courseCompletionDate,
     this.coursePeriod,
@@ -25,7 +26,15 @@ class CandidateRow {
   });
 
   final String registrationNumber;
+
+  /// The person's own name.
   final String fullName;
+
+  /// ولدیت, when the file carries it in a column of its own. Null when
+  /// the file has no such column, or holds the two names together in the name
+  /// column — which is how every file imported so far was written.
+  final String? fatherName;
+
   final String? courseStartDate;
   final String? courseCompletionDate;
 
@@ -44,6 +53,7 @@ class CandidateRow {
   CandidateRow withProblem(CandidateProblem? problem) => CandidateRow(
         registrationNumber: registrationNumber,
         fullName: fullName,
+        fatherName: fatherName,
         courseStartDate: courseStartDate,
         courseCompletionDate: courseCompletionDate,
         coursePeriod: coursePeriod,
@@ -54,6 +64,7 @@ class CandidateRow {
   Map<String, dynamic> toInsert() => <String, dynamic>{
         'registration_number': registrationNumber,
         'full_name': fullName,
+        'father_name': fatherName,
         'course_start_date': courseStartDate,
         'course_completion_date': courseCompletionDate,
         'course_period': coursePeriod,
@@ -99,14 +110,20 @@ class CourseRepository {
 
   final SupabaseClient _client;
 
-  /// Checks a رقمِ تسجیل, and the name when one is supplied.
+  /// Checks a رقم التسجیل, and the name when one is supplied.
   ///
   /// Goes through an RPC rather than reading the table, because the caller is
   /// anonymous at this point and must not be able to browse the register. The
   /// function answers only about the one number given.
+  ///
+  /// [fatherName] is sent separately and may be null. The register's own
+  /// column has held both names together, so the database decides what counts
+  /// as a match rather than this caller joining them into one string and
+  /// hoping it was written the same way.
   Future<CourseVerification> verify(
     String registrationNumber, {
     String? fullName,
+    String? fatherName,
     String? coursePeriod,
   }) async {
     final List<dynamic> rows = await _client.rpc<List<dynamic>>(
@@ -114,6 +131,7 @@ class CourseRepository {
       params: <String, dynamic>{
         'p_registration_number': registrationNumber,
         'p_full_name': fullName,
+        'p_father_name': fatherName,
         'p_course_period': coursePeriod,
       },
     );
@@ -142,6 +160,7 @@ class CourseRepository {
   Future<void> addParticipant({
     required String registrationNumber,
     required String fullName,
+    String? fatherName,
     String? courseStartDate,
     String? courseCompletionDate,
     String? coursePeriod,
@@ -150,6 +169,7 @@ class CourseRepository {
     await _client.from('course_participants').insert(<String, dynamic>{
       'registration_number': registrationNumber.trim(),
       'full_name': fullName.trim(),
+      'father_name': _clean(fatherName),
       'course_start_date': _clean(courseStartDate),
       'course_completion_date': _clean(courseCompletionDate),
       'course_period': _clean(coursePeriod),
@@ -167,7 +187,7 @@ class CourseRepository {
         .eq('id', id);
   }
 
-  /// True when this رقمِ تسجیل is already on the register.
+  /// True when this رقم التسجیل is already on the register.
   ///
   /// Compared on the same normalised key the database's unique index uses, so
   /// "MD-2026/001" and "md 2026 001" are recognised as one number and the

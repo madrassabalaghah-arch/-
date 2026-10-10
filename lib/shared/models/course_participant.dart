@@ -36,7 +36,8 @@ enum CourseVerdict {
   }
 }
 
-/// The outcome of checking a رقمِ تسجیل, and optionally a name, before signup.
+/// The outcome of checking a رقم التسجیل, and optionally a name, before
+/// signup.
 class CourseVerification {
   const CourseVerification({
     required this.valid,
@@ -77,6 +78,7 @@ class CourseParticipant {
     required this.id,
     required this.registrationNumber,
     required this.fullName,
+    this.fatherName,
     this.courseStartDate,
     this.courseCompletionDate,
     this.coursePeriodText,
@@ -88,11 +90,17 @@ class CourseParticipant {
 
   final String id;
 
-  /// رقمِ تسجیل — the unique identity of a participant.
+  /// رقم التسجیل — the unique identity of a participant.
   final String registrationNumber;
 
-  /// نام مع ولدیت — the name as the organisation recorded it.
+  /// The name as the organisation recorded it. Rows written before ولدیت had
+  /// a column of its own may hold both names here, which is why registration
+  /// accepts a name given either way rather than demanding one shape.
   final String fullName;
+
+  /// ولدیت, for rows recorded since it had its own column. Null otherwise,
+  /// and never arrived at by splitting [fullName].
+  final String? fatherName;
 
   /// داخلہ ماہ, kept as written rather than forced into a calendar date.
   final String? courseStartDate;
@@ -132,6 +140,7 @@ class CourseParticipant {
       id: row['id'] as String,
       registrationNumber: (row['registration_number'] as String?) ?? '',
       fullName: (row['full_name'] as String?) ?? '',
+      fatherName: nullableString(row, 'father_name'),
       courseStartDate: nullableString(row, 'course_start_date'),
       courseCompletionDate: nullableString(row, 'course_completion_date'),
       coursePeriodText: nullableString(row, 'course_period'),

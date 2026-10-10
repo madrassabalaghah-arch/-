@@ -33,6 +33,17 @@ class ParticipantFile {
       'full name',
       'name',
     ],
+    // Optional, and matched on its own heading. A file whose name column says
+    // «نام مع ولدیت» still imports into full_name exactly as before:
+    // mapColumns compares whole headings, so the two cannot collide.
+    'father_name': <String>[
+      'ولدیت',
+      'والد کا نام',
+      'ولد',
+      'father_name',
+      'father name',
+      'father',
+    ],
     'course_start_date': <String>[
       'داخلہ ماہ',
       'داخلہ',
@@ -260,6 +271,7 @@ class ParticipantFile {
     for (final List<String> line in table.skip(1)) {
       final String number = cell(line, 'registration_number');
       final String name = cell(line, 'full_name');
+      final String father = cell(line, 'father_name');
       final String start = cell(line, 'course_start_date');
       final String end = cell(line, 'course_completion_date');
       final String period = cell(line, 'course_period');
@@ -284,6 +296,9 @@ class ParticipantFile {
       out.add(CandidateRow(
         registrationNumber: number,
         fullName: name,
+        // Optional, like جنس below: a file without the column imports as it
+        // always did, and those rows simply have no ولدیت recorded.
+        fatherName: father.isEmpty ? null : father,
         courseStartDate: start.isEmpty ? null : start,
         courseCompletionDate: end.isEmpty ? null : end,
         coursePeriod: period.isEmpty ? null : period,

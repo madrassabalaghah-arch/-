@@ -8,7 +8,7 @@ import 'work_items.dart';
 ///
 /// Everything here comes from `community_feed()`, which returns only what
 /// the board is allowed to show. There is no field for a phone number, a
-/// رقمِ تسجیل or a نجی جائزہ, because the function never selects them.
+/// رقم التسجیل or a نجی جائزہ, because the function never selects them.
 class CommunityItem {
   const CommunityItem({
     required this.kind,

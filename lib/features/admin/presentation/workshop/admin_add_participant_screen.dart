@@ -13,7 +13,7 @@ import 'participant_file.dart';
 /// Adds participants to the course register one at a time — the in-app
 /// alternative to importing a file.
 ///
-/// It applies the same rules as the importer: the رقمِ تسجیل and name are
+/// It applies the same rules as the importer: the رقم التسجیل and name are
 /// required, a period must carry its year so registration can check it, and a
 /// number already on the register is refused with a clear message rather than
 /// a database error. "Save and add another" keeps the form open for entering
@@ -31,6 +31,10 @@ class _AdminAddParticipantScreenState
   final GlobalKey<FormState> _form = GlobalKey<FormState>();
   final TextEditingController _number = TextEditingController();
   final TextEditingController _name = TextEditingController();
+
+  /// ولدیت in its own column, so a record added now does not repeat the
+  /// combined name that registration then had to guess the shape of.
+  final TextEditingController _father = TextEditingController();
   final TextEditingController _period = TextEditingController();
   final TextEditingController _start = TextEditingController();
   final TextEditingController _end = TextEditingController();
@@ -44,7 +48,7 @@ class _AdminAddParticipantScreenState
   @override
   void dispose() {
     for (final TextEditingController c in <TextEditingController>[
-      _number, _name, _period, _start, _end,
+      _number, _name, _father, _period, _start, _end,
     ]) {
       c.dispose();
     }
@@ -77,6 +81,7 @@ class _AdminAddParticipantScreenState
       await ref.read(courseRepositoryProvider).addParticipant(
             registrationNumber: _number.text,
             fullName: _name.text,
+            fatherName: _father.text,
             coursePeriod: _period.text,
             courseStartDate: _start.text,
             courseCompletionDate: _end.text,
@@ -96,7 +101,7 @@ class _AdminAddParticipantScreenState
 
       if (addAnother) {
         for (final TextEditingController c in <TextEditingController>[
-          _number, _name, _period, _start, _end,
+          _number, _name, _father, _period, _start, _end,
         ]) {
           c.clear();
         }
