@@ -19,11 +19,12 @@ class AdminReportsScreen extends ConsumerWidget {
       items: ref.watch(adminReportsProvider),
       onRefresh: () => ref.refresh(adminReportsProvider.future),
       searchHint: AppStrings.hintSearchReport,
-      searchText: (ReportItem item) => '${item.title} ${item.graduateName}',
+      searchText: (ReportItem item) =>
+          '${item.title} ${item.graduateName ?? ''}',
       emptyIcon: Icons.description_outlined,
       itemBuilder: (BuildContext context, ReportItem item) => AppListTile(
         title: item.title,
-        subtitle: '${AppStrings.graduateName}: ${item.graduateName}',
+        subtitle: '${AppStrings.graduateName}: ${item.graduateLine}',
         detail: '${item.activityType} • ${item.dateLabel}',
         icon: Icons.description_outlined,
         status: item.status,

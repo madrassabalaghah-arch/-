@@ -48,7 +48,7 @@ class AdminReportDetailScreen extends ConsumerWidget {
                 ),
                 AppSpacing.gapMd,
                 Text(
-                  '${AppStrings.graduateName}: ${report.graduateName}',
+                  '${AppStrings.graduateName}: ${report.graduateLine}',
                   style: theme.textTheme.labelLarge,
                 ),
                 if (report.activityType != null) ...<Widget>[

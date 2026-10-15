@@ -184,8 +184,17 @@ class _Figures extends StatelessWidget {
             ),
           ],
           // The register is where these were counted, so that is where
-          // tapping one goes.
-          onTap: (int _) => context.goToRoute(AppRoutes.adminWorkshop),
+          // tapping one goes — narrowed to the same جنس the card counted, so
+          // the figure and the rows behind it can never disagree. The third
+          // card counts everyone, so it narrows to nothing.
+          onTap: (int index) => context.goToRoute(
+            AppRoutes.adminWorkshop,
+            extra: switch (index) {
+              0 => (gender: 'male', title: AppStrings.registerMale),
+              1 => (gender: 'female', title: AppStrings.registerFemale),
+              _ => (gender: null, title: AppStrings.manageParticipants),
+            },
+          ),
         ),
         // Shown only when there is something to reconcile, so the figures
         // never quietly disagree with each other.

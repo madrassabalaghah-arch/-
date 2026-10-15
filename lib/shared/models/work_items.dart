@@ -1,7 +1,8 @@
-import 'follow_up_status.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_strings.dart';
 import 'app_status.dart';
+import 'follow_up_status.dart';
 import 'urdu_dates.dart';
 
 /// Reads a nullable, non-empty string from a Supabase row.
@@ -97,6 +98,8 @@ class ReportItem {
     required this.graduateId,
     this.summary,
     this.graduateName,
+    this.graduateFatherName,
+    this.graduateGender,
     this.activityType,
     this.status = AppStatus.draft,
     this.submittedAt,
@@ -123,14 +126,49 @@ class ReportItem {
   /// Null means it is private, which is how every کارگزاری starts.
   final DateTime? sharedAt;
   final String? graduateName;
+
+  /// ولدیت and جنس of the owner, embedded beside the name so a list can read
+  /// «فاضل محمد اکرم» rather than guessing which it is.
+  final String? graduateFatherName;
+  final String? graduateGender;
+
   final String? activityType;
   final AppStatus status;
   final DateTime? submittedAt;
   final DateTime? dueAt;
   final DateTime? createdAt;
 
+  /// فاضل or فاضلہ, from the owner's جنس, or the neutral word when جنس is
+  /// not recorded — which it is not for most of the register.
+  String get graduateLabel {
+    switch (graduateGender) {
+      case 'male':
+        return AppStrings.maleLabel;
+      case 'female':
+        return AppStrings.femaleLabel;
+      default:
+        return AppStrings.graduateLabel;
+    }
+  }
+
+  /// The owner, named. Built from the parts that exist, so a کارگزاری whose
+  /// owner could not be embedded reads as «نام ریکارڈ میں نہیں» instead of
+  /// printing the literal text "null".
+  String get graduateLine {
+    final String name = (graduateName ?? '').trim();
+    if (name.isEmpty) {
+      return AppStrings.nameNotRecorded;
+    }
+    final String father = (graduateFatherName ?? '').trim();
+    return father.isEmpty ? name : '$name $father';
+  }
+
+  /// Both halves of defect 1.3 live here. The query must embed the owner's
+  /// profile under the `graduate` alias, and nothing may interpolate
+  /// [graduateName] straight into a sentence — a realtime stream cannot
+  /// carry an embedded row, so it is null there by construction.
   factory ReportItem.fromMap(Map<String, dynamic> row) {
-    final Object? profile = row['profiles'];
+    final Object? profile = row['graduate'] ?? row['profiles'];
     final Object? activity = row['activities'];
 
     return ReportItem(
@@ -140,6 +178,12 @@ class ReportItem {
       summary: nullableString(row, 'summary'),
       graduateName: profile is Map<String, dynamic>
           ? nullableString(profile, 'full_name')
+          : null,
+      graduateFatherName: profile is Map<String, dynamic>
+          ? nullableString(profile, 'father_name')
+          : null,
+      graduateGender: profile is Map<String, dynamic>
+          ? nullableString(profile, 'gender')
           : null,
       activityType: activity is Map<String, dynamic>
           ? nullableString(activity, 'title')

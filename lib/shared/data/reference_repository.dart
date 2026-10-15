@@ -38,20 +38,34 @@ class ReferenceRepository {
   /// a second group. The name is stored exactly as the user wrote it; only the
   /// matching is normalised. A concurrent insert loses the race against that
   /// index, so the duplicate error is caught and the winning row returned.
+  /// Goes through `find_or_create_institute()`, which matches on the same
+  /// `(wifaq_id, name_key)` unique index the database enforces and returns
+  /// the existing row's id when the institution is already registered.
+  ///
+  /// A database function rather than a direct insert, for two reasons: the
+  /// matching happens where the index is, so no client can create a
+  /// near-duplicate by racing another; and a مربی may call it. A direct
+  /// insert from a مربی was refused by policy, which is why their institute
+  /// was never saved.
   Future<InstituteItem> createInstitute({
     required String name,
     required String wifaqId,
     String? city,
   }) async {
     try {
+      final String id = await _client.rpc<String>(
+        'find_or_create_institute',
+        params: <String, dynamic>{
+          'p_wifaq_id': wifaqId,
+          'p_name': name,
+          'p_city': city,
+        },
+      );
+
       final Map<String, dynamic> row = await _client
           .from('institutes')
-          .insert(<String, dynamic>{
-            'name': name.trim(),
-            'wifaq_id': wifaqId,
-            'city': city?.trim().isEmpty ?? true ? null : city!.trim(),
-          })
           .select()
+          .eq('id', id)
           .single();
       return InstituteItem.fromMap(row);
     } on PostgrestException catch (error) {

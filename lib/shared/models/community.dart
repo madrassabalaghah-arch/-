@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_strings.dart';
 import 'urdu_dates.dart';
 import 'work_items.dart';
 
@@ -90,29 +91,67 @@ class CommunityItem {
 class CommunityComment {
   const CommunityComment({
     required this.id,
-    required this.authorId,
     required this.body,
     this.authorName,
+    this.authorRole,
     this.createdAt,
   });
 
   final String id;
-  final String authorId;
+
+  /// The author's name as `community_comments_for()` returned it, or null
+  /// when there is no profile behind the row at all.
   final String? authorName;
+
+  /// 'graduate', 'mentor' or 'admin'. The board names the author's standing
+  /// beside their name, as the feed does.
+  final String? authorRole;
+
   final String body;
   final DateTime? createdAt;
 
   String get dateLabel => UrduDates.label(createdAt);
 
+  String? get authorRoleLabel {
+    switch (authorRole) {
+      case 'admin':
+        return AppStrings.adminLabel;
+      case 'mentor':
+        return AppStrings.mentorLabel;
+      case 'graduate':
+        return AppStrings.graduateLabel;
+      default:
+        return null;
+    }
+  }
+
+  /// The author, named, or a plain statement that the name is not recorded.
+  /// Never the literal text "null": a تبصرہ whose author cannot be named is
+  /// still a تبصرہ somebody wrote.
+  String get authorLine {
+    final String name = (authorName ?? '').trim();
+    if (name.isEmpty) {
+      return AppStrings.nameNotRecorded;
+    }
+    final String? role = authorRoleLabel;
+    return role == null ? name : '$name — $role';
+  }
+
+  /// Built from `community_comments_for()`, which returns the author's name
+  /// as a plain column. It is NOT read from an embedded profile: row level
+  /// security on `profiles` rightly refuses one فاضل another's row, so an
+  /// embed here came back null and printed as "null" on the board.
   factory CommunityComment.fromMap(Map<String, dynamic> row) {
+    // An embedded profile is still accepted, for an منتظم's own screens
+    // where the policy does permit the join.
     final Object? author = row['author'] ?? row['profiles'];
 
     return CommunityComment(
       id: row['id'] as String,
-      authorId: row['author_id'] as String,
       authorName: author is Map<String, dynamic>
           ? nullableString(author, 'full_name')
-          : null,
+          : nullableString(row, 'author_name'),
+      authorRole: nullableString(row, 'author_role'),
       body: (row['body'] as String?) ?? '',
       createdAt: dateOf(row, 'created_at'),
     );

@@ -21,11 +21,12 @@ class MentorReviewsScreen extends ConsumerWidget {
       items: ref.watch(mentorReportsProvider),
       onRefresh: () => ref.refresh(mentorReportsProvider.future),
       searchHint: AppStrings.hintSearchReport,
-      searchText: (ReportItem item) => '${item.title} ${item.graduateName}',
+      searchText: (ReportItem item) =>
+          '${item.title} ${item.graduateName ?? ''}',
       emptyIcon: Icons.rate_review_outlined,
       itemBuilder: (BuildContext context, ReportItem item) => AppListTile(
         title: item.title,
-        subtitle: '${AppStrings.graduateName}: ${item.graduateName}',
+        subtitle: '${AppStrings.graduateName}: ${item.graduateLine}',
         detail: '${item.activityType} • ${item.dateLabel}',
         icon: Icons.description_outlined,
         status: item.status,

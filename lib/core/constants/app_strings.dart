@@ -275,6 +275,18 @@ class AppStrings {
   static const String submittedBy = 'جمع کروانے والے';
   static const String submittedOn = 'جمع کروانے کی تاریخ';
   static const String mentorLabel = 'مربی';
+  static const String adminLabel = 'منتظم';
+  static const String graduateLabel = 'فاضل / فاضلہ';
+
+  /// Shown where a name should be but none could be read. Never leave a
+  /// nullable name to be interpolated: it prints the literal word "null".
+  static const String nameNotRecorded = 'نام ریکارڈ میں نہیں';
+
+  /// Headings for the register narrowed to one جنس by the dashboard figure
+  /// that was tapped — so the number on the card and the rows behind it are
+  /// the same filter, counted and listed the same way.
+  static const String registerMale = 'رجسٹر: فضلاء';
+  static const String registerFemale = 'رجسٹر: فاضلات';
   static const String mentorNotRecorded = 'مربی درج نہیں';
   static const String feedbackAndGuidance = 'مربی کی رائے اور رہنمائی';
   static const String noFeedbackYet = 'ابھی کوئی رائے درج نہیں';

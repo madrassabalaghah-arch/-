@@ -511,6 +511,61 @@ void main() {
         reason: 'a missing ولدیت must not make the row unimportable');
   });
 
+  test('a کارگزاری names its owner, or says the name is not recorded', () {
+    // Defect 1.3 had two halves and this covers both. The query must embed
+    // the owner under the `graduate` alias, and nothing may interpolate the
+    // nullable name — a realtime stream carries no embedded row, so it is
+    // null there by construction and printed as the word "null".
+    final ReportItem named = ReportItem.fromMap(<String, dynamic>{
+      'id': 'r1',
+      'graduate_id': 'g1',
+      'title': 'تدریس میں بہتری',
+      'graduate': <String, dynamic>{
+        'full_name': 'محمد اکرم',
+        'father_name': 'عبداللہ',
+        'gender': 'male',
+      },
+    });
+    expect(named.graduateName, 'محمد اکرم');
+    expect(named.graduateLine, 'محمد اکرم عبداللہ');
+    expect(named.graduateLabel, AppStrings.maleLabel);
+
+    // A row straight off the stream, with no profile embedded at all.
+    final ReportItem bare = ReportItem.fromMap(<String, dynamic>{
+      'id': 'r2',
+      'graduate_id': 'g2',
+      'title': 'افراد سازی',
+    });
+    expect(bare.graduateName, isNull);
+    expect(bare.graduateLine, AppStrings.nameNotRecorded);
+    expect(bare.graduateLine.toLowerCase(), isNot(contains('null')),
+        reason: 'this is the literal text the defect put on screen');
+    expect(bare.graduateLabel, AppStrings.graduateLabel,
+        reason: 'جنس unrecorded is neither فاضل nor فاضلہ');
+  });
+
+  test('a عوامی تبصرہ carries its author name from the function', () {
+    // community_comments_for() returns the name as a plain column. Reading
+    // the table and embedding profiles returned null, because RLS on
+    // profiles correctly refuses one فاضل another's row.
+    final CommunityComment c = CommunityComment.fromMap(<String, dynamic>{
+      'id': 'c1',
+      'body': 'ماشاءاللہ، بہت عمدہ کام۔',
+      'author_name': 'محمد عثمان',
+      'author_role': 'mentor',
+    });
+    expect(c.authorName, 'محمد عثمان');
+    expect(c.authorLine, 'محمد عثمان — ${AppStrings.mentorLabel}');
+
+    // No name at all still reads as a sentence, never as "null".
+    final CommunityComment anon = CommunityComment.fromMap(<String, dynamic>{
+      'id': 'c2',
+      'body': 'جزاک اللہ',
+    });
+    expect(anon.authorLine, AppStrings.nameNotRecorded);
+    expect(anon.authorLine.toLowerCase(), isNot(contains('null')));
+  });
+
   test('numbers are shown in English digits', () {
     // One utility decides this, and every count, date, ratio and file size
     // in the application goes through it.

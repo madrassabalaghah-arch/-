@@ -598,8 +598,15 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
   GoRoute(
     path: AppRoutes.adminWorkshop,
     name: AppRoutes.adminWorkshopName,
-    builder: (BuildContext context, GoRouterState state) =>
-        const AdminParticipantsScreen(),
+    builder: (BuildContext context, GoRouterState state) {
+      // Carries the جنس the tapped dashboard figure counted, so the list
+      // shows exactly those rows. Opened from anywhere else it is the whole
+      // register, as before.
+      final Object? extra = state.extra;
+      return extra is ({String? gender, String title})
+          ? AdminParticipantsScreen(gender: extra.gender, title: extra.title)
+          : const AdminParticipantsScreen();
+    },
   ),
   GoRoute(
     path: AppRoutes.adminActivities,

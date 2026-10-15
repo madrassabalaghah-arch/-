@@ -163,11 +163,25 @@ final FutureProvider<List<GraduateSummary>> mentorGraduatesProvider =
   return ref.watch(mentorRepositoryProvider).assignedGraduates();
 });
 
-/// Live: a graduate submitting a report reaches the mentor without a refresh.
-final StreamProvider<List<ReportItem>> mentorReportsProvider =
+/// Emits when a report belonging to one of this mentor's graduates changes.
+///
+/// Used only as a signal. A Supabase realtime stream carries raw table rows
+/// and cannot carry an embedded profile, so its own rows have no owner name —
+/// which is what printed "null" on the review screens. The list below is
+/// re-queried on each emission instead, with the profile embedded.
+final StreamProvider<List<ReportItem>> _mentorReportChanges =
     StreamProvider<List<ReportItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(mentorRepositoryProvider).watchIncomingReports();
+});
+
+/// Live: a graduate submitting a کارگزاری reaches the مربی without a
+/// refresh, and each row carries the name of the فاضل or فاضلہ it belongs to.
+final FutureProvider<List<ReportItem>> mentorReportsProvider =
+    FutureProvider<List<ReportItem>>((Ref ref) {
+  _dependOnSession(ref);
+  ref.watch(_mentorReportChanges);
+  return ref.watch(mentorRepositoryProvider).incomingReports();
 });
 
 final FutureProvider<List<EvidenceItem>> mentorEvidenceProvider =
@@ -289,11 +303,21 @@ final FutureProvider<List<TaskItem>> adminAssignmentsProvider =
   return ref.watch(adminRepositoryProvider).assignments();
 });
 
-/// Live: the administrator's report list reflects submissions as they land.
-final StreamProvider<List<ReportItem>> adminReportsProvider =
+/// The signal behind [adminReportsProvider]; see [_mentorReportChanges] for
+/// why the rows themselves are not taken from the stream.
+final StreamProvider<List<ReportItem>> _adminReportChanges =
     StreamProvider<List<ReportItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).watchReports();
+});
+
+/// Live: the منتظم's کارگزاری list reflects submissions as they land, each
+/// with the name of the فاضل or فاضلہ it belongs to.
+final FutureProvider<List<ReportItem>> adminReportsProvider =
+    FutureProvider<List<ReportItem>>((Ref ref) {
+  _dependOnSession(ref);
+  ref.watch(_adminReportChanges);
+  return ref.watch(adminRepositoryProvider).reports();
 });
 
 final FutureProvider<List<RecognitionItem>> adminRecognitionsProvider =

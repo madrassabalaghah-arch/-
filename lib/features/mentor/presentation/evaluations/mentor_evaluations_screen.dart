@@ -26,7 +26,8 @@ class MentorEvaluationsScreen extends ConsumerWidget {
         // Which فاضل / فاضلہ this review was written for.
         detail: item.graduateName == null
             ? item.dateLabel
-            : '${item.graduateName} • ${item.dateLabel}',
+            : '${item.graduateName ?? AppStrings.nameNotRecorded} • '
+                '${item.dateLabel}',
         icon: Icons.fact_check_outlined,
         status: item.status,
         accentColor: AppColors.gold,

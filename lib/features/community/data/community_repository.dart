@@ -34,21 +34,30 @@ class CommunityRepository {
         .map((dynamic row) => CommunityItem.fromMap(row as Map<String, dynamic>))
         .toList();
   }
+  /// The عوامی تبصرے on one shared کارگزاری or board post.
+  ///
+  /// Goes through `community_comments_for()` rather than reading the table.
+  /// Reading the table and embedding `profiles` is what showed no author
+  /// name: row level security on `profiles` refuses one فاضل another's row,
+  /// so the embed came back null — the policy working exactly as intended.
+  /// The function returns the name as a plain column instead, and returns
+  /// nothing else about the author.
   Future<List<CommunityComment>> comments({
     String? reportId,
     String? postId,
   }) async {
-    final PostgrestFilterBuilder<List<Map<String, dynamic>>> query = _client
-        .from('community_comments')
-        .select(
-            '*, author:profiles!community_comments_author_id_fkey(full_name)');
+    final List<dynamic> rows = await _client.rpc<List<dynamic>>(
+      'community_comments_for',
+      params: <String, dynamic>{
+        'p_report_id': reportId,
+        'p_post_id': postId,
+      },
+    );
 
-    final List<Map<String, dynamic>> rows = await (reportId != null
-            ? query.eq('report_id', reportId)
-            : query.eq('post_id', postId!))
-        .order('created_at');
-
-    return rows.map(CommunityComment.fromMap).toList();
+    return rows
+        .map((dynamic row) =>
+            CommunityComment.fromMap(row as Map<String, dynamic>))
+        .toList();
   }
 
   /// Writes a عوامی تبصرہ as the signed-in user. The author is never taken

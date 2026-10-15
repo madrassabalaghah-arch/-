@@ -170,7 +170,7 @@ class _MentorReportReviewScreenState
                   ),
                   if (report.graduateName != null) ...<Widget>[
                     AppSpacing.gapXs,
-                    Text('${AppStrings.graduateName}: ${report.graduateName}',
+                    Text('${AppStrings.graduateName}: ${report.graduateLine}',
                         style: theme.textTheme.labelLarge),
                   ],
                   AppSpacing.gapXxs,

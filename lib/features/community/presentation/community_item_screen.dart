@@ -201,7 +201,7 @@ class _CommunityItemScreenState extends ConsumerState<CommunityItemScreen> {
                     padding:
                         const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
                     child: AppListTile(
-                      title: c.authorName ?? '',
+                      title: c.authorLine,
                       subtitle: c.body,
                       detail: c.dateLabel,
                       icon: Icons.chat_bubble_outline,

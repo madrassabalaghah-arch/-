@@ -104,7 +104,9 @@ class MentorRepository {
     }
     final List<Map<String, dynamic>> rows = await _client
         .from('reports')
-        .select('*, activities(title), profiles!reports_graduate_id_fkey(full_name)')
+        .select('*, activities(title), '
+            'graduate:profiles!reports_graduate_id_fkey('
+            'full_name, father_name, gender)')
         .inFilter('graduate_id', ids)
         .order('created_at', ascending: false);
     return rows.map(ReportItem.fromMap).toList();

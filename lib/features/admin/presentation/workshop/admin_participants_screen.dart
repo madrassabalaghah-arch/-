@@ -23,7 +23,15 @@ import 'participant_file.dart';
 /// the administrator is shown exactly what would happen; nothing is written
 /// until they confirm.
 class AdminParticipantsScreen extends ConsumerWidget {
-  const AdminParticipantsScreen({super.key});
+  const AdminParticipantsScreen({super.key, this.gender, this.title});
+
+  /// 'male', 'female', or null for the whole register. Set when the screen is
+  /// opened from a dashboard figure, so the list shows exactly the rows that
+  /// figure counted.
+  final String? gender;
+
+  /// Heading when narrowed; the full register keeps its usual title.
+  final String? title;
 
   static Future<void> _import(BuildContext context, WidgetRef ref) async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
@@ -246,9 +254,23 @@ class AdminParticipantsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<List<CourseParticipant>> all =
+        ref.watch(courseParticipantsProvider);
+
+    // Narrowed here rather than in the query: the dashboard counted from the
+    // same rows, and filtering the loaded list is what guarantees the two
+    // agree. A جنس that is not recorded is neither فاضل nor فاضلہ, so it
+    // falls outside both narrowed lists — which is exactly why the dashboard
+    // shows the «درج نہیں» figure beside them.
+    final AsyncValue<List<CourseParticipant>> items = gender == null
+        ? all
+        : all.whenData((List<CourseParticipant> rows) => rows
+            .where((CourseParticipant p) => p.gender == gender)
+            .toList());
+
     return SearchableListScreen<CourseParticipant>(
-      title: AppStrings.manageParticipants,
-      items: ref.watch(courseParticipantsProvider),
+      title: title ?? AppStrings.manageParticipants,
+      items: items,
       onRefresh: () => ref.refresh(courseParticipantsProvider.future),
       searchHint: AppStrings.registrationNumber,
       searchText: (CourseParticipant p) =>
