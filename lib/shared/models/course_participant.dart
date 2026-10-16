@@ -79,6 +79,7 @@ class CourseParticipant {
     required this.registrationNumber,
     required this.fullName,
     this.fatherName,
+    this.effectiveGender,
     this.courseStartDate,
     this.courseCompletionDate,
     this.coursePeriodText,
@@ -118,10 +119,16 @@ class CourseParticipant {
   final bool accountCreated;
   final String? linkedUserId;
 
-  /// 'male' or 'female' as the organisation recorded it, or as the person
-  /// chose at signup. Null means nobody has said, and it is counted as
-  /// such rather than assumed.
+  /// 'male' or 'female' as the organisation recorded it on the register
+  /// row. Null means nobody has written it there, and it is shown as such
+  /// rather than assumed. This is the column an منتظم edits.
   final String? gender;
+
+  /// جنس as the dashboard counts it: [gender] when the register has one,
+  /// otherwise the فاضل / فاضلہ the person chose for themselves at signup.
+  /// Computed by `register_master`, so a figure and the rows behind it are
+  /// one expression and cannot drift apart.
+  final String? effectiveGender;
 
   /// فاضل, فاضلہ, or a plain statement that it is not recorded.
   String get genderLabel {
@@ -141,6 +148,10 @@ class CourseParticipant {
       registrationNumber: (row['registration_number'] as String?) ?? '',
       fullName: (row['full_name'] as String?) ?? '',
       fatherName: nullableString(row, 'father_name'),
+      // Absent when the row came from the table rather than the view; the
+      // register's own column is then the best that is known.
+      effectiveGender: nullableString(row, 'effective_gender') ??
+          nullableString(row, 'gender'),
       courseStartDate: nullableString(row, 'course_start_date'),
       courseCompletionDate: nullableString(row, 'course_completion_date'),
       coursePeriodText: nullableString(row, 'course_period'),

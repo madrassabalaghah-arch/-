@@ -257,15 +257,18 @@ class AdminParticipantsScreen extends ConsumerWidget {
     final AsyncValue<List<CourseParticipant>> all =
         ref.watch(courseParticipantsProvider);
 
-    // Narrowed here rather than in the query: the dashboard counted from the
-    // same rows, and filtering the loaded list is what guarantees the two
-    // agree. A جنس that is not recorded is neither فاضل nor فاضلہ, so it
-    // falls outside both narrowed lists — which is exactly why the dashboard
-    // shows the «درج نہیں» figure beside them.
+    // Selected on effectiveGender, which `register_master` computed — the
+    // same value the dashboard figure counted, so the number on the card and
+    // the rows here are one expression rather than two copies of a rule.
+    //
+    // A row may appear under فضلاء while its own جنس badge still reads
+    // «درج نہیں»: the register column is empty and the جنس came from the
+    // person's profile. That is worth seeing rather than hiding — those are
+    // exactly the rows an منتظم still has to write جنس onto.
     final AsyncValue<List<CourseParticipant>> items = gender == null
         ? all
         : all.whenData((List<CourseParticipant> rows) => rows
-            .where((CourseParticipant p) => p.gender == gender)
+            .where((CourseParticipant p) => p.effectiveGender == gender)
             .toList());
 
     return SearchableListScreen<CourseParticipant>(

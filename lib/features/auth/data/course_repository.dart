@@ -149,9 +149,15 @@ class CourseRepository {
   // Administration
   // -------------------------------------------------------------------
 
+  /// The register as the dashboard reckons it, through `register_master`.
+  ///
+  /// Not the table: the view resolves جنس the way every figure counts it —
+  /// the register's own column, else the linked profile's — and drops the
+  /// ineligible rows the figures also drop. Reading the table instead is
+  /// what made a card read 9 while the list behind it showed 4.
   Future<List<CourseParticipant>> participants() async {
     final List<Map<String, dynamic>> rows = await _client
-        .from('course_participants')
+        .from('register_master')
         .select()
         .order('created_at', ascending: false);
     return rows.map(CourseParticipant.fromMap).toList();
