@@ -1,5 +1,10 @@
 -- =====================================================================
--- Phase 1 — the two defects that are database faults  (NOT YET APPLIED)
+-- Phase 1 — the two defects that are database faults        (APPLIED)
+--
+-- NOTE: the two `revoke all ... from public` lines below are not enough on
+-- their own. Default privileges also grant EXECUTE to anon, which survives
+-- that revoke, so both functions were briefly anon-callable. Closed by
+-- 20261016000012, which must be applied with this file.
 --
 -- Defects 1.1 (dashboard card opens the wrong list) and 1.3 (Null instead
 -- of a name on a کارگزاری) are faults in the Flutter app, not in the

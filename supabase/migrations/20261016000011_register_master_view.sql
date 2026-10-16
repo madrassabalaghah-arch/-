@@ -1,5 +1,5 @@
 -- =====================================================================
--- One expression behind the figure and the list      (NOT YET APPLIED)
+-- One expression behind the figure and the list            (APPLIED)
 --
 -- Defect 1.1, properly this time.
 --
