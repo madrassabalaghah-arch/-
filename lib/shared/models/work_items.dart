@@ -343,6 +343,8 @@ class EvaluationItem {
     this.mentorName,
     this.graduateName,
     this.comment,
+    this.commendable,
+    this.guidance,
     this.status = AppStatus.underReview,
     this.createdAt,
   });
@@ -359,9 +361,33 @@ class EvaluationItem {
   /// tells nobody anything, so every screen that shows one asks for them.
   final String? mentorName;
   final String? graduateName;
+  /// The جائزہ, in three parts, all of them words. تبصرہ is what the مربی
+  /// made of the work, قابلِ تحسین what was worth commending in it, and
+  /// رہنمائی what to do next. There is no fourth part holding a number.
   final String? comment;
+  final String? commendable;
+  final String? guidance;
+
   final AppStatus status;
   final DateTime? createdAt;
+
+  /// The parts that were actually written, each under its own heading, so a
+  /// screen can show the جائزہ without printing empty labels.
+  List<({String label, String text})> get parts {
+    final List<({String label, String text})> out =
+        <({String label, String text})>[];
+    void add(String label, String? value) {
+      final String text = (value ?? '').trim();
+      if (text.isNotEmpty) {
+        out.add((label: label, text: text));
+      }
+    }
+
+    add(AppStrings.reviewStepComment, comment);
+    add(AppStrings.reviewStepCommendable, commendable);
+    add(AppStrings.reviewStepGuidance, guidance);
+    return out;
+  }
 
   factory EvaluationItem.fromMap(Map<String, dynamic> row) {
     final Object? report = row['report'] ?? row['reports'];
@@ -385,6 +411,8 @@ class EvaluationItem {
           ? nullableString(graduate, 'full_name')
           : null,
       comment: nullableString(row, 'comment'),
+      commendable: nullableString(row, 'commendable'),
+      guidance: nullableString(row, 'guidance'),
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
     );

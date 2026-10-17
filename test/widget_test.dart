@@ -566,6 +566,41 @@ void main() {
     expect(anon.authorLine.toLowerCase(), isNot(contains('null')));
   });
 
+  test('a جائزہ shows the parts that were written, and no number', () {
+    final EvaluationItem full = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'e1', 'report_id': 'r1', 'graduate_id': 'g1', 'mentor_id': 'm1',
+      'comment': 'محنت نمایاں ہے۔',
+      'commendable': 'تدریس میں تسلسل۔',
+      'guidance': 'والدین سے رابطہ بڑھائیں۔',
+      'status': 'completed',
+    });
+
+    // In the order the مربی is asked for them, each under its own heading.
+    expect(full.parts.map((({String label, String text}) p) => p.label),
+        <String>[
+          AppStrings.reviewStepComment,
+          AppStrings.reviewStepCommendable,
+          AppStrings.reviewStepGuidance,
+        ]);
+    expect(full.parts.last.text, 'والدین سے رابطہ بڑھائیں۔');
+
+    // An empty or absent part prints no heading rather than a blank one.
+    final EvaluationItem sparse = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'e2', 'report_id': 'r2', 'graduate_id': 'g1', 'mentor_id': 'm1',
+      'comment': '  ', 'commendable': null,
+      'guidance': 'اگلی بار وقت پر جمع کریں۔',
+      'status': 'completed',
+    });
+    expect(sparse.parts, hasLength(1));
+    expect(sparse.parts.single.label, AppStrings.reviewStepGuidance);
+
+    // Nothing numeric reaches a reader. A جائزہ is words.
+    for (final ({String label, String text}) part in full.parts) {
+      expect(RegExp(r'[0-9۰-۹٠-٩]').hasMatch(part.label), isFalse,
+          reason: 'a heading must not carry a mark or a count');
+    }
+  });
+
   test('numbers are shown in English digits', () {
     // One utility decides this, and every count, date, ratio and file size
     // in the application goes through it.

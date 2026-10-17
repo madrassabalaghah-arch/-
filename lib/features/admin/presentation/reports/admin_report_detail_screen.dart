@@ -9,10 +9,12 @@ import '../../../../shared/presentation/evidence_viewer.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
 
-/// One کارگزاری in full, with the evidence attached to it.
+/// One کارگزاری in full: the record, its evidence, and the مربی's جائزہ.
 ///
-/// Read-only: reviewing is the mentor's job, so an administrator sees the
-/// record and its files without a review action that would bypass them.
+/// Read-only: reviewing is the مربی's job, so an منتظم sees all three
+/// without a review action that would bypass them. The جائزہ is read from
+/// the same adminEvaluationsProvider the overview uses, narrowed to this
+/// کارگزاری, rather than through a query of its own.
 class AdminReportDetailScreen extends ConsumerWidget {
   const AdminReportDetailScreen({required this.report, super.key});
 
@@ -23,6 +25,12 @@ class AdminReportDetailScreen extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final AsyncValue<List<EvidenceItem>> evidence =
         ref.watch(reportEvidenceProvider(report.id));
+    final AsyncValue<List<EvaluationItem>> jaiza =
+        ref.watch(adminEvaluationsProvider).whenData(
+              (List<EvaluationItem> all) => all
+                  .where((EvaluationItem e) => e.reportId == report.id)
+                  .toList(),
+            );
 
     return AppScaffold(
       title: AppStrings.reportDetails,
@@ -89,6 +97,29 @@ class AdminReportDetailScreen extends ConsumerWidget {
                       accentColor: AppColors.tealGreen,
                       onTap: () => openEvidence(context, ref, item),
                     ),
+                  ),
+              ],
+            ),
+          ),
+          AppSpacing.gapXl,
+          const SectionHeader(title: AppStrings.reviewAndFeedback),
+          AsyncSection<List<EvaluationItem>>(
+            value: jaiza,
+            isEmpty: (List<EvaluationItem> e) => e.isEmpty,
+            emptyTitle: AppStrings.noReviewYet,
+            emptyIcon: Icons.fact_check_outlined,
+            onRetry: () => ref.invalidate(adminEvaluationsProvider),
+            builder: (BuildContext context, List<EvaluationItem> items) =>
+                Column(
+              children: <Widget>[
+                for (final EvaluationItem item in items)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      bottom: AppSpacing.md,
+                    ),
+                    // Names the مربی who wrote it and the فاضل it is about,
+                    // which is what the منتظم is here to see.
+                    child: JaizaCard(item: item, showGraduate: true),
                   ),
               ],
             ),

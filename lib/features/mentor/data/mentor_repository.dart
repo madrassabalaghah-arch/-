@@ -148,21 +148,35 @@ class MentorRepository {
     return rows.map(NotificationItem.fromMap).toList();
   }
 
-  /// Records the written جائزہ against a کارگزاری.
+  /// Records the written جائزہ against a کارگزاری, in all three of its
+  /// parts: تبصرہ, قابلِ تحسین and رہنمائی.
   ///
-  /// No score is written. The score columns and the `evaluation_scores`
-  /// rows that older reviews left behind are untouched; nothing adds to
-  /// them any more.
+  /// No score is written. total_score and max_score still exist on the table
+  /// and both default to 0; nothing has written them since scoring was
+  /// removed, and nothing here starts.
+  ///
+  /// The فاضل is not notified from here. A trigger on `evaluations` does it,
+  /// so a جائزہ written by an منتظم — or by any future caller that forgets —
+  /// still reaches the person it is about.
   Future<void> submitEvaluation({
     required String reportId,
     required String graduateId,
     String? comment,
+    String? commendable,
+    String? guidance,
   }) async {
+    String? clean(String? value) {
+      final String text = (value ?? '').trim();
+      return text.isEmpty ? null : text;
+    }
+
     await _client.from('evaluations').upsert(<String, dynamic>{
       'report_id': reportId,
       'mentor_id': _uid,
       'graduate_id': graduateId,
-      'comment': comment,
+      'comment': clean(comment),
+      'commendable': clean(commendable),
+      'guidance': clean(guidance),
       'status': 'completed',
     }, onConflict: 'report_id,mentor_id');
 
@@ -196,6 +210,7 @@ class MentorRepository {
     required String reportId,
     required String graduateId,
     required String comment,
+    String? guidance,
   }) async {
     await _client.from('reports').update(<String, dynamic>{
       'status': 'revision_required',
@@ -205,7 +220,12 @@ class MentorRepository {
       'mentor_id': _uid,
       'graduate_id': graduateId,
       'subject': 'اصلاح درکار',
-      'message': comment.trim(),
+      // رہنمائی travels in the same message rather than a second row, so
+      // handing one کارگزاری back produces one notification, not two.
+      'message': <String>[
+        comment.trim(),
+        ?(guidance ?? '').trim().isEmpty ? null : guidance!.trim(),
+      ].join('\n\n'),
       // The کارگزاری being handed back, so the graduate is told what this
       // is about rather than receiving a loose remark.
       'report_id': reportId,

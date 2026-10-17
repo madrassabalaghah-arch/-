@@ -31,12 +31,14 @@ class _MentorReportReviewScreenState
     extends ConsumerState<MentorReportReviewScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _comment = TextEditingController();
+  final TextEditingController _commendable = TextEditingController();
   final TextEditingController _guidance = TextEditingController();
   bool _busy = false;
 
   @override
   void dispose() {
     _comment.dispose();
+    _commendable.dispose();
     _guidance.dispose();
     super.dispose();
   }
@@ -46,24 +48,6 @@ class _MentorReportReviewScreenState
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
-
-  /// Guidance is kept as mentor feedback, which is what the graduate's
-  /// dashboard shows under مربی کی رہنمائی.
-  Future<void> _sendGuidance() async {
-    final String text = _guidance.text.trim();
-    if (text.isEmpty) {
-      return;
-    }
-    await ref.read(mentorRepositoryProvider).sendFeedback(
-          graduateId: widget.report.graduateId,
-          subject: AppStrings.reviewStepGuidance,
-          message: text,
-          // The کارگزاری under review, so the graduate and the administrator
-          // can both see what the guidance was about.
-          reportId: widget.report.id,
-        );
-  }
-
   /// Completes the review: the written جائزہ, any guidance, and the
   /// report's new status. Row level security refuses it unless the graduate
   /// is assigned to this mentor.
@@ -80,8 +64,11 @@ class _MentorReportReviewScreenState
             reportId: widget.report.id,
             graduateId: widget.report.graduateId,
             comment: _comment.text.trim(),
+            commendable: _commendable.text,
+            guidance: _guidance.text,
           );
-      await _sendGuidance();
+      // رہنمائی is part of the جائزہ now, so it is no longer sent again as a
+      // separate message. The trigger on evaluations notifies the فاضل.
       ref.invalidate(mentorReportsProvider);
       ref.invalidate(mentorEvaluationsProvider);
       if (!mounted) {
@@ -110,8 +97,8 @@ class _MentorReportReviewScreenState
             reportId: widget.report.id,
             graduateId: widget.report.graduateId,
             comment: _comment.text,
+            guidance: _guidance.text,
           );
-      await _sendGuidance();
       ref.invalidate(mentorReportsProvider);
       if (!mounted) {
         return;
@@ -266,8 +253,19 @@ class _MentorReportReviewScreenState
             ),
             AppSpacing.gapXl,
 
-            // 4. Guidance for what comes next.
-            const _Step(number: 4, title: AppStrings.reviewStepGuidance),
+            // 4. What was worth commending. Words, not a mark.
+            const _Step(number: 4, title: AppStrings.reviewStepCommendable),
+            AppFormField(
+              label: AppStrings.reviewStepCommendable,
+              hintText: AppStrings.hintCommendable,
+              controller: _commendable,
+              maxLines: 3,
+              enabled: !_busy,
+            ),
+            AppSpacing.gapXl,
+
+            // 5. Guidance for what comes next.
+            const _Step(number: 5, title: AppStrings.reviewStepGuidance),
             AppFormField(
               label: AppStrings.reviewStepGuidance,
               hintText: AppStrings.hintGuidance,

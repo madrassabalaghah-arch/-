@@ -276,6 +276,11 @@ class AppStrings {
   static const String submittedOn = 'جمع کروانے کی تاریخ';
   static const String mentorLabel = 'مربی';
   static const String adminLabel = 'منتظم';
+
+  /// The three parts of a جائزہ. None of them is a number.
+  static const String reviewStepCommendable = 'قابلِ تحسین';
+  static const String hintCommendable =
+      'اس کارگزاری میں کیا بات خاص طور پر قابلِ تحسین رہی؟';
   static const String graduateLabel = 'فاضل / فاضلہ';
 
   /// Shown where a name should be but none could be read. Never leave a
