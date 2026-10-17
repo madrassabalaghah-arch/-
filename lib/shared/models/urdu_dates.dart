@@ -2,8 +2,9 @@ import '../../core/utils/urdu_numbers.dart';
 
 /// Formats timestamps as Urdu date and relative-time labels.
 ///
-/// The interface is Urdu-first, so dates use Urdu digits and Urdu month
-/// names rather than a Latin locale format.
+/// The month names and the words are Urdu; the digits are Latin, which is what
+/// the organisation reads them in. Every number here goes through
+/// [UrduNumbers], so the numeral form is decided in one place.
 class UrduDates {
   const UrduDates._();
 
@@ -12,7 +13,7 @@ class UrduDates {
     'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر',
   ];
 
-  /// A full date, for example ۳ جنوری ۲۰۲۶.
+  /// A full date, for example 3 جنوری 2026.
   static String label(DateTime? value) {
     if (value == null) {
       return '—';
@@ -48,7 +49,7 @@ class UrduDates {
     return label(value);
   }
 
-  /// A deadline label such as "۵ دن باقی" or "تاخیر: ۳ دن".
+  /// A deadline label such as "5 دن باقی" or "تاخیر: 3 دن".
   static String due(DateTime? value) {
     if (value == null) {
       return '—';

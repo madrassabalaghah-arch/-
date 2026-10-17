@@ -35,6 +35,13 @@ enum AppStatus {
     background: AppColors.goldTint,
     icon: Icons.rate_review_outlined,
   ),
+  revisionRequired(
+    dbValue: 'revision_required',
+    urduLabel: 'اصلاح درکار',
+    foreground: AppColors.warning,
+    background: AppColors.goldTint,
+    icon: Icons.edit_outlined,
+  ),
   completed(
     dbValue: 'completed',
     urduLabel: 'مکمل',

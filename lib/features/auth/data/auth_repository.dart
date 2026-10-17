@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../shared/models/app_role.dart';
 import '../../../shared/models/people.dart';
+import '../../../shared/models/staff_invite.dart';
 
 /// All Supabase Auth and identity reads live here.
 ///
@@ -40,18 +42,107 @@ class AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String registrationNumber,
+    String? fatherName,
+    String? gender,
+    String? wifaqId,
+    String? instituteName,
+    String? coursePeriod,
   }) {
     return _auth.signUp(
       email: email.trim(),
       password: password,
-      data: <String, dynamic>{'full_name': fullName.trim()},
+      // Brings the reader back into the application once the address is
+      // confirmed, instead of to a web page that does not exist.
+      emailRedirectTo: AppConfig.authRedirectUrl,
+      // The registration number is re-verified by the signup trigger. The
+      // check the app performs first is a courtesy; this is what the database
+      // actually enforces, so calling the API directly cannot bypass it.
+      // The trigger re-verifies the number AND the name, and reads the
+      // category, wifaq and institution from here. None of it is trusted for
+      // authorisation: the role is decided by the database, never sent.
+      //
+      // The name and the ولدیت go separately. The trigger compares them
+      // against the register, whose own column has held the two together, so
+      // joining them here would reintroduce the mismatch that separating them
+      // exists to fix.
+      data: <String, dynamic>{
+        'full_name': fullName.trim(),
+        'father_name': fatherName?.trim(),
+        'registration_number': registrationNumber.trim(),
+        'gender': gender,
+        'wifaq_id': wifaqId,
+        'institute_name': instituteName?.trim(),
+        'course_period': coursePeriod?.trim(),
+      },
+    );
+  }
+
+  /// Checks an invitation before a mentor or administrator signs up.
+  ///
+  /// Goes through an RPC because the caller has no account yet and must not
+  /// be able to read the invitations. The function answers only about the
+  /// email and code given, and names the invitation only when both match.
+  Future<StaffInviteCheck> verifyStaffInvite({
+    required String email,
+    required String code,
+  }) async {
+    final List<dynamic> rows = await _client.rpc<List<dynamic>>(
+      'verify_staff_invite',
+      params: <String, dynamic>{'p_email': email.trim(), 'p_code': code},
+    );
+    if (rows.isEmpty) {
+      return const StaffInviteCheck(
+        valid: false,
+        verdict: StaffInviteVerdict.unknown,
+      );
+    }
+    return StaffInviteCheck.fromMap(rows.first as Map<String, dynamic>);
+  }
+
+  /// Creates the account of an invited mentor or administrator.
+  ///
+  /// Only the code is sent. The signup trigger looks the invitation up by
+  /// this email and code, refuses the signup unless they match an open one,
+  /// and takes the role and the name from the invitation — so nothing the
+  /// client sends can choose a role.
+  Future<AuthResponse> signUpWithInvite({
+    required String email,
+    required String password,
+    required String inviteCode,
+  }) {
+    return _auth.signUp(
+      email: email.trim(),
+      password: password,
+      emailRedirectTo: AppConfig.authRedirectUrl,
+      data: <String, dynamic>{'invite_code': inviteCode.trim()},
     );
   }
 
   Future<void> signOut() => _auth.signOut();
 
   Future<void> sendPasswordReset(String email) =>
-      _auth.resetPasswordForEmail(email.trim());
+      _auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: AppConfig.authRedirectUrl,
+      );
+
+  /// Sends the confirmation message again.
+  ///
+  /// Supabase refuses this for an address that is already confirmed, which is
+  /// why the caller offers it only after a sign in failed for that reason.
+  Future<void> resendConfirmation(String email) => _auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: AppConfig.authRedirectUrl,
+      );
+
+  /// Stores a new password for the account that is already signed in.
+  ///
+  /// Used at the end of a recovery link, where Supabase has signed the
+  /// account in for exactly this purpose.
+  Future<void> updatePassword(String password) =>
+      _auth.updateUser(UserAttributes(password: password));
 
   /// Loads the signed-in user's profile, with institute and wifaq names.
   ///

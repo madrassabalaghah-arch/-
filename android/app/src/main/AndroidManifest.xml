@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for the release build to reach Supabase. Flutter's template
+         declares this only in the debug and profile manifests, so without it
+         a release APK has no network access at all and every request fails. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-        android:label="madrassa_graduate_app"
+        android:label="مدرسہ تربیت ایپ"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -23,6 +28,21 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Confirmation and password links come back to the
+                 application through this scheme. Without it Android hands the
+                 link to the browser, which has no such site to open, and the
+                 reader is told the site cannot be reached even though the
+                 address was in fact confirmed. The same string is
+                 AppConfig.authRedirectUrl and must be listed in Supabase
+                 under Authentication -> URL Configuration -> Redirect URLs. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="pk.madrassa.tarbiat"
+                    android:host="auth-callback"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

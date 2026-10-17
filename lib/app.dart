@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/routing/app_router.dart';
+import 'core/routing/app_routes.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/application/auth_providers.dart';
 
 /// The root widget.
 ///
@@ -25,6 +28,18 @@ class MadrassaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final GoRouter router = ref.watch(routerProvider);
+
+    // A پاس ورڈ بھول گئے؟ link comes back into the application as an auth
+    // event, not as a route, so it is caught here and turned into one. Every
+    // other event is left to the session notifier.
+    ref.listen<AsyncValue<AuthState>>(
+      authStateChangesProvider,
+      (AsyncValue<AuthState>? previous, AsyncValue<AuthState> next) {
+        if (next.value?.event == AuthChangeEvent.passwordRecovery) {
+          router.push(AppRoutes.newPassword);
+        }
+      },
+    );
 
     return MaterialApp.router(
       title: AppConfig.appName,

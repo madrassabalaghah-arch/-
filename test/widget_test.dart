@@ -7,6 +7,9 @@
 // No mock data exists in the application any more, so there is nothing to
 // stub — an unauthenticated client simply has no rows it may read.
 
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,12 +17,65 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:madrassa_graduate_app/app.dart';
+import 'package:madrassa_graduate_app/core/config/app_config.dart';
+import 'package:madrassa_graduate_app/core/utils/urdu_numbers.dart';
+import 'package:madrassa_graduate_app/features/admin/presentation/workshop/participant_file.dart';
+import 'package:madrassa_graduate_app/features/auth/data/course_repository.dart';
 import 'package:madrassa_graduate_app/core/config/supabase_config.dart';
 import 'package:madrassa_graduate_app/core/constants/app_strings.dart';
+import 'package:madrassa_graduate_app/core/routing/app_nav_items.dart';
 import 'package:madrassa_graduate_app/core/routing/app_router.dart';
 import 'package:madrassa_graduate_app/core/routing/app_routes.dart';
 import 'package:madrassa_graduate_app/core/theme/app_colors.dart';
-import 'package:madrassa_graduate_app/shared/models/app_role.dart';
+import 'package:madrassa_graduate_app/features/auth/application/auth_providers.dart';
+import 'package:madrassa_graduate_app/features/auth/data/auth_repository.dart';
+import 'package:madrassa_graduate_app/shared/widgets/widgets.dart';
+import 'package:madrassa_graduate_app/shared/models/models.dart';
+import 'package:madrassa_graduate_app/shared/providers/data_providers.dart';
+
+
+/// An authenticated account whose profile and role reads fail, which is what
+/// losing connectivity looks like from inside the app: the Supabase SDK still
+/// holds the persisted session, but every query throws.
+class _OfflineAuthRepository extends AuthRepository {
+  _OfflineAuthRepository(super.client);
+
+  /// Flipped on once the first load has succeeded, so a test can go offline
+  /// after a good session exists.
+  bool offline = false;
+
+  static const User _user = User(
+    id: '11111111-1111-1111-1111-111111111111',
+    appMetadata: <String, dynamic>{},
+    userMetadata: <String, dynamic>{},
+    aud: 'authenticated',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    email: 'someone@example.org',
+  );
+
+  @override
+  User? get currentUser => _user;
+
+  @override
+  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
+
+  @override
+  Future<AppUser?> loadProfile(String userId) async {
+    if (offline) {
+      throw const SocketException('offline');
+    }
+    return const AppUser(id: '11111111-1111-1111-1111-111111111111',
+        fullName: 'محمد عثمان');
+  }
+
+  @override
+  Future<List<AppRole>> loadRoles(String userId) async {
+    if (offline) {
+      throw const SocketException('offline');
+    }
+    return const <AppRole>[AppRole.graduate];
+  }
+}
 
 Future<void> _pumpApp(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1200, 3000);
@@ -109,7 +165,7 @@ void main() {
     }
   });
 
-  testWidgets('sign up is reachable and validates in Urdu',
+  testWidgets('registration asks for the course record and the profile facts',
       (WidgetTester tester) async {
     await _pumpApp(tester);
 
@@ -119,11 +175,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.signUpTitle), findsOneWidget);
+    expect(find.text(AppStrings.publicSignupClosed), findsOneWidget);
 
-    // Submitting an empty form surfaces the Urdu required-field message.
-    await tester.tap(find.text(AppStrings.signUp).first);
+    // Step one is the three identifying fields and nothing else: the profile
+    // questions are not asked until the register has matched the record.
+    expect(find.text(AppStrings.registrationNumber), findsOneWidget);
+    expect(find.text(AppStrings.participantName), findsOneWidget);
+    expect(find.text(AppStrings.coursePeriod), findsOneWidget);
+    expect(find.text(AppStrings.selectCategory), findsNothing,
+        reason: 'category must wait until the record has matched');
+    expect(find.text(AppStrings.labelPassword), findsNothing,
+        reason: 'a password must not be asked for before verification');
+
+    // An empty form is refused rather than sent to the server.
+    final Finder submit =
+        find.widgetWithText(PrimaryButton, AppStrings.verifyNumber);
+    await tester.ensureVisible(submit);
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.validationRequired), findsWidgets);
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.regRequired), findsWidgets);
   });
 
   testWidgets('protected routes are unreachable without a session',
@@ -139,6 +210,8 @@ void main() {
       AppRoutes.adminDashboard,
       AppRoutes.adminGraduates,
       AppRoutes.adminReports,
+      AppRoutes.adminStaff,
+      AppRoutes.adminAddStaff,
     ];
 
     for (final String route in protected) {
@@ -183,5 +256,658 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.signInTitle), findsOneWidget);
+  });
+
+  test('every role shares the same four navigation destinations', () {
+    const List<String> expected = <String>[
+      AppStrings.navHome,
+      AppStrings.navNotifications,
+      AppStrings.navMyProfile,
+      AppStrings.navLinks,
+    ];
+
+    for (final MapEntry<String, List<AppNavItem>> role
+        in <String, List<AppNavItem>>{
+      'graduate': AppNavItems.graduate,
+      'mentor': AppNavItems.mentor,
+      'admin': AppNavItems.admin,
+    }.entries) {
+      expect(
+        role.value.map((AppNavItem item) => item.label).toList(),
+        expected,
+        reason:
+            '${role.key} must show ہوم / نوٹیفکیشن / میری پروفائل / اہم لنکس',
+      );
+    }
+  });
+
+  test('screens taken out of the bottom bar still open with a back button', () {
+    // Each of these used to be a navigation branch. A branch is switched with
+    // `go` and leaves nothing to go back to, so once they are reached from the
+    // dashboard instead they have to be pushed.
+    for (final String path in <String>[
+      AppRoutes.graduateReports,
+      AppRoutes.graduateEvidence,
+      AppRoutes.mentorGraduates,
+      AppRoutes.mentorReviews,
+      AppRoutes.mentorEvidence,
+      AppRoutes.adminGraduates,
+      AppRoutes.adminMentors,
+    ]) {
+      expect(AppRoutes.isFullScreen(path), isTrue,
+          reason: '$path is opened from a dashboard and needs a back button');
+    }
+
+    // The four destinations of the bar are the opposite case: they must stay
+    // branches, or the bar would stack on top of itself.
+    for (final String path in <String>[
+      AppRoutes.graduateDashboard,
+      AppRoutes.graduateNotifications,
+      AppRoutes.graduateProfile,
+      AppRoutes.graduateLinks,
+      AppRoutes.mentorDashboard,
+      AppRoutes.mentorNotifications,
+      AppRoutes.mentorProfile,
+      AppRoutes.mentorLinks,
+      AppRoutes.adminDashboard,
+      AppRoutes.adminNotifications,
+      AppRoutes.adminProfile,
+      AppRoutes.adminLinks,
+    ]) {
+      expect(AppRoutes.isFullScreen(path), isFalse,
+          reason: '$path is a bottom navigation destination');
+    }
+  });
+
+  test('the official name and tagline are exact', () {
+    expect(AppConfig.appNameUrdu, 'مدرسہ تربیت ایپ');
+    expect(AppConfig.appTaglineUrdu, 'علم سے عمل، عمل سے اثر تک');
+  });
+
+  test('the email link comes back to the application, not to localhost', () {
+    // A confirmation or recovery link is only useful if Supabase redirects to
+    // a scheme the phone hands back to this application. Three files have to
+    // agree on that scheme — if they drift, the reader is told the site
+    // cannot be reached and the account looks unconfirmed.
+    expect(AppConfig.authRedirectUrl,
+        '${AppConfig.authRedirectScheme}://${AppConfig.authRedirectHost}');
+    expect(AppConfig.authRedirectUrl.startsWith('http'), isFalse,
+        reason: 'an http redirect is what produced the localhost failure');
+
+    final String manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
+    expect(manifest, contains('android:scheme="${AppConfig.authRedirectScheme}"'));
+    expect(manifest, contains('android:host="${AppConfig.authRedirectHost}"'));
+    expect(manifest, contains('android.intent.category.BROWSABLE'),
+        reason: 'without BROWSABLE Android will not hand a link to the app');
+
+    final String plist = File('ios/Runner/Info.plist').readAsStringSync();
+    expect(plist, contains('<string>${AppConfig.authRedirectScheme}</string>'));
+
+    // The address is confirmed by opening the link, never by writing to the
+    // account, so nothing in the application may set these columns.
+    for (final String column in <String>['email_confirmed_at', 'confirmed_at']) {
+      for (final FileSystemEntity entity
+          in Directory('lib').listSync(recursive: true)) {
+        if (entity is File && entity.path.endsWith('.dart')) {
+          expect(entity.readAsStringSync(), isNot(contains(column)),
+              reason: '${entity.path} writes or reads $column');
+        }
+      }
+    }
+  });
+
+  test('فاضل is written before فاضلہ, and no greeting survives', () {
+    // Spec order: فاضل first, فاضلہ second, everywhere the two appear together.
+    for (final String text in <String>[
+      AppStrings.graduates,
+      AppStrings.totalGraduates,
+      AppStrings.activeGraduates,
+      AppStrings.myGraduates,
+      AppStrings.graduateManagement,
+      AppStrings.hintSearchGraduate,
+      AppRole.graduate.urduTitle,
+    ]) {
+      expect(text.contains('فاضلہ / فاضل'), isFalse,
+          reason: '"$text" still puts فاضلہ first');
+      expect(text.contains('فاضل'), isTrue);
+    }
+  });
+
+  testWidgets('the password can be revealed without losing what was typed',
+      (WidgetTester tester) async {
+    await _pumpApp(tester);
+    await tester.tap(find.text(AppStrings.continueAction));
+    await tester.pumpAndSettle();
+
+    // The greeting must be gone from every screen that used to carry it.
+    expect(find.textContaining('السلام'), findsNothing);
+
+    final Finder password = find.ancestor(
+      of: find.text(AppStrings.labelPassword),
+      matching: find.byType(Column),
+    );
+    expect(password, findsWidgets);
+
+    await tester.enterText(
+        find.byType(TextFormField).last, 'qwertyui123');
+    await tester.pump();
+
+    TextField field() => tester.widget<TextField>(
+        find.descendant(
+          of: find.byType(TextFormField).last,
+          matching: find.byType(TextField),
+        ));
+
+    expect(field().obscureText, isTrue,
+        reason: 'the password must start hidden');
+
+    await tester.tap(find.byIcon(Icons.visibility_outlined).last);
+    await tester.pumpAndSettle();
+
+    expect(field().obscureText, isFalse, reason: 'the eye must reveal it');
+    expect(find.text('qwertyui123'), findsOneWidget,
+        reason: 'revealing must not clear the entered password');
+
+    await tester.tap(find.byIcon(Icons.visibility_off_outlined).last);
+    await tester.pumpAndSettle();
+    expect(field().obscureText, isTrue, reason: 'tapping again must hide it');
+  });
+
+  test('losing the connection keeps the session instead of signing out', () async {
+    final _OfflineAuthRepository repository =
+        _OfflineAuthRepository(Supabase.instance.client);
+    final ProviderContainer container = ProviderContainer(
+      // The element type is inferred: riverpod's Override is not exported
+      // from flutter_riverpod, so it cannot be written out here.
+      overrides: [
+        authRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    // A good load first, so there is a session to lose.
+    final AppSession? online = await container.read(appSessionProvider.future);
+    expect(online, isNotNull);
+    expect(online!.roles, <AppRole>[AppRole.graduate]);
+    expect(online.isStale, isFalse);
+
+    // Now the network goes away and the session is refreshed.
+    repository.offline = true;
+    await container.read(appSessionProvider.notifier).refresh();
+
+    final AsyncValue<AppSession?> after = container.read(appSessionProvider);
+    expect(after.hasError, isFalse,
+        reason: 'a network failure must not become an authentication error');
+
+    final AppSession? offline = after.value;
+    expect(offline, isNotNull,
+        reason: 'the user must still be signed in while offline');
+    expect(offline!.isStale, isTrue,
+        reason: 'the values are the previous load, and must say so');
+    expect(offline.roles, <AppRole>[AppRole.graduate],
+        reason: 'the role must survive, or routing would send them to noRole');
+  });
+
+  test('the organisation own column headings are what the importer reads', () {
+    // The organisation's file, saved by Excel as "CSV UTF-8": a leading BOM,
+    // CRLF endings, Urdu headings, and a quoted name containing a comma.
+    const String csv = '\ufeff'
+        'رقم التسجیل,نام مع ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
+        'MD-2026/001,محمد عثمان بن عبداللہ,مارچ 2024,جون 2024\r\n'
+        'MD-2026/002,عائشہ صدیقہ بنت کریم,مارچ 2024,جون 2024\r\n'
+        'MD-2026/001,دوبارہ وہی نمبر,مارچ 2024,جون 2024\r\n'
+        ',بغیر نمبر,مارچ 2024,جون 2024\r\n'
+        'MD-2026/004,"خان, محمد",مارچ 2024,جون 2024\r\n';
+
+    final List<List<String>> table =
+        ParticipantFile.read(Uint8List.fromList(utf8.encode(csv)), 'list.csv');
+    final ({List<CandidateRow> rows, bool missingColumns}) parsed =
+        ParticipantFile.toCandidates(table);
+
+    expect(parsed.missingColumns, isFalse,
+        reason: 'the Urdu headings must be recognised, BOM and all');
+    expect(parsed.rows.length, 5);
+
+    final List<CandidateRow> good =
+        parsed.rows.where((CandidateRow r) => r.isValid).toList();
+    expect(good.length, 3);
+
+    expect(good.first.registrationNumber, 'MD-2026/001');
+    expect(good.first.fullName, 'محمد عثمان بن عبداللہ');
+    expect(good.first.courseStartDate, 'مارچ 2024');
+    expect(good.first.courseCompletionDate, 'جون 2024');
+
+    // A repeat of a number already seen in the file is refused, not imported.
+    expect(parsed.rows[2].problem, CandidateProblem.duplicateInFile);
+    // A row with no رقم التسجیل is refused.
+    expect(parsed.rows[3].problem, CandidateProblem.missingNumber);
+    // A quoted field keeps its comma instead of splitting into two columns.
+    expect(good.last.fullName, 'خان, محمد');
+  });
+
+  test('a file may keep ولدیت in its own column, or not have one', () {
+    // The column is optional. A file that has it is read into father_name;
+    // the file in the test above has none and still imports, which is what
+    // keeps every list the organisation already holds usable.
+    const String csv = 'رقم التسجیل,نام,ولدیت,داخلہ ماہ,فراغت ماہ\r\n'
+        'MD-2026/010,محمد عثمان,عبداللہ,مارچ 2024,جون 2024\r\n'
+        'MD-2026/011,عائشہ صدیقہ,,مارچ 2024,جون 2024\r\n';
+
+    final ({List<CandidateRow> rows, bool missingColumns}) parsed =
+        ParticipantFile.toCandidates(
+      ParticipantFile.read(Uint8List.fromList(utf8.encode(csv)), 'list.csv'),
+    );
+
+    expect(parsed.missingColumns, isFalse);
+    expect(parsed.rows.first.fullName, 'محمد عثمان');
+    expect(parsed.rows.first.fatherName, 'عبداللہ',
+        reason: 'ولدیت belongs in its own field, not appended to the name');
+    expect(parsed.rows.first.toInsert()['father_name'], 'عبداللہ');
+
+    // An empty cell stays null rather than becoming ''. Nothing is guessed.
+    expect(parsed.rows.last.fatherName, isNull);
+    expect(parsed.rows.last.isValid, isTrue,
+        reason: 'a missing ولدیت must not make the row unimportable');
+  });
+
+  test('a کارگزاری names its owner, or says the name is not recorded', () {
+    // Defect 1.3 had two halves and this covers both. The query must embed
+    // the owner under the `graduate` alias, and nothing may interpolate the
+    // nullable name — a realtime stream carries no embedded row, so it is
+    // null there by construction and printed as the word "null".
+    final ReportItem named = ReportItem.fromMap(<String, dynamic>{
+      'id': 'r1',
+      'graduate_id': 'g1',
+      'title': 'تدریس میں بہتری',
+      'graduate': <String, dynamic>{
+        'full_name': 'محمد اکرم',
+        'father_name': 'عبداللہ',
+        'gender': 'male',
+      },
+    });
+    expect(named.graduateName, 'محمد اکرم');
+    expect(named.graduateLine, 'محمد اکرم عبداللہ');
+    expect(named.graduateLabel, AppStrings.maleLabel);
+
+    // A row straight off the stream, with no profile embedded at all.
+    final ReportItem bare = ReportItem.fromMap(<String, dynamic>{
+      'id': 'r2',
+      'graduate_id': 'g2',
+      'title': 'افراد سازی',
+    });
+    expect(bare.graduateName, isNull);
+    expect(bare.graduateLine, AppStrings.nameNotRecorded);
+    expect(bare.graduateLine.toLowerCase(), isNot(contains('null')),
+        reason: 'this is the literal text the defect put on screen');
+    expect(bare.graduateLabel, AppStrings.graduateLabel,
+        reason: 'جنس unrecorded is neither فاضل nor فاضلہ');
+  });
+
+  test('a عوامی تبصرہ carries its author name from the function', () {
+    // community_comments_for() returns the name as a plain column. Reading
+    // the table and embedding profiles returned null, because RLS on
+    // profiles correctly refuses one فاضل another's row.
+    final CommunityComment c = CommunityComment.fromMap(<String, dynamic>{
+      'id': 'c1',
+      'body': 'ماشاءاللہ، بہت عمدہ کام۔',
+      'author_name': 'محمد عثمان',
+      'author_role': 'mentor',
+    });
+    expect(c.authorName, 'محمد عثمان');
+    expect(c.authorLine, 'محمد عثمان — ${AppStrings.mentorLabel}');
+
+    // No name at all still reads as a sentence, never as "null".
+    final CommunityComment anon = CommunityComment.fromMap(<String, dynamic>{
+      'id': 'c2',
+      'body': 'جزاک اللہ',
+    });
+    expect(anon.authorLine, AppStrings.nameNotRecorded);
+    expect(anon.authorLine.toLowerCase(), isNot(contains('null')));
+  });
+
+  test('a جائزہ shows the parts that were written, and no number', () {
+    final EvaluationItem full = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'e1', 'report_id': 'r1', 'graduate_id': 'g1', 'mentor_id': 'm1',
+      'comment': 'محنت نمایاں ہے۔',
+      'commendable': 'تدریس میں تسلسل۔',
+      'guidance': 'والدین سے رابطہ بڑھائیں۔',
+      'status': 'completed',
+    });
+
+    // In the order the مربی is asked for them, each under its own heading.
+    expect(full.parts.map((({String label, String text}) p) => p.label),
+        <String>[
+          AppStrings.reviewStepComment,
+          AppStrings.reviewStepCommendable,
+          AppStrings.reviewStepGuidance,
+        ]);
+    expect(full.parts.last.text, 'والدین سے رابطہ بڑھائیں۔');
+
+    // An empty or absent part prints no heading rather than a blank one.
+    final EvaluationItem sparse = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'e2', 'report_id': 'r2', 'graduate_id': 'g1', 'mentor_id': 'm1',
+      'comment': '  ', 'commendable': null,
+      'guidance': 'اگلی بار وقت پر جمع کریں۔',
+      'status': 'completed',
+    });
+    expect(sparse.parts, hasLength(1));
+    expect(sparse.parts.single.label, AppStrings.reviewStepGuidance);
+
+    // Nothing numeric reaches a reader. A جائزہ is words.
+    for (final ({String label, String text}) part in full.parts) {
+      expect(RegExp(r'[0-9۰-۹٠-٩]').hasMatch(part.label), isFalse,
+          reason: 'a heading must not carry a mark or a count');
+    }
+  });
+
+  test('numbers are shown in English digits', () {
+    // One utility decides this, and every count, date, ratio and file size
+    // in the application goes through it.
+    expect(UrduNumbers.fromInt(2026), '2026');
+    expect(UrduNumbers.ratio(3, 10), '3 / 10');
+    expect(UrduNumbers.percent(75), '75%');
+
+    // Folding, not passing through: an Urdu digit stored in the database is
+    // shown in the same form as one the application produced itself.
+    expect(UrduNumbers.convert('۱۲۳'), '123', reason: 'extended Arabic-Indic');
+    expect(UrduNumbers.convert('٤٥'), '45', reason: 'Arabic-Indic');
+    expect(UrduNumbers.convert('مارچ ۲۰۲۴'), 'مارچ 2024',
+        reason: 'the Urdu words stay, only the digits change');
+
+    // The Urdu month name is kept; only its digits are Latin.
+    final String date = UrduDates.label(DateTime(2026, 1, 3));
+    expect(date, contains('جنوری'));
+    expect(date, contains('2026'));
+    expect(RegExp('[۰-۹٠-٩]').hasMatch(date), isFalse);
+  });
+
+  test('no Urdu digit, and no رقمِ تسجیل, survives in the Urdu strings', () {
+    // Read rather than reflected over: Dart has no reflection in a test, and
+    // every user-facing string in the application lives in this one file.
+    final String source =
+        File('lib/core/constants/app_strings.dart').readAsStringSync();
+
+    expect(RegExp('[۰-۹٠-٩]').hasMatch(source), isFalse,
+        reason: 'a hardcoded Urdu numeral would bypass UrduNumbers entirely');
+    expect(source.contains('رقمِ تسجیل'), isFalse,
+        reason: 'the term is رقم التسجیل');
+    expect(AppStrings.registrationNumber, 'رقم التسجیل');
+
+    // نام and ولدیت are asked for separately, so neither label may ask for
+    // both at once — that single combined field is what refused people.
+    expect(AppStrings.participantName, 'نام');
+    expect(AppStrings.participantFatherName, 'ولدیت');
+    expect(AppStrings.labelFatherName, 'ولدیت');
+  });
+
+  testWidgets('an invited mentor or administrator signs up with a code',
+      (WidgetTester tester) async {
+    await _pumpApp(tester);
+    await tester.tap(find.text(AppStrings.continueAction));
+    await tester.pumpAndSettle();
+
+    final Finder link = find.text(AppStrings.staffSignUpLink);
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.staffSignUpTitle), findsOneWidget);
+    expect(find.text(AppStrings.labelEmail), findsOneWidget);
+    expect(find.text(AppStrings.inviteCode), findsOneWidget);
+    expect(find.text(AppStrings.registrationNumber), findsNothing,
+        reason: 'invited staff are not on the course register');
+    expect(find.text(AppStrings.labelPassword), findsNothing,
+        reason: 'a password must not be asked for before the invitation matches');
+
+    // The role is the invitation's, so there is nothing here to pick one.
+    for (final AppRole role in AppRole.values) {
+      expect(find.text(role.urduTitle), findsNothing);
+    }
+
+    // An empty form is refused rather than sent to the server.
+    final Finder verify =
+        find.widgetWithText(PrimaryButton, AppStrings.verifyInvite);
+    await tester.ensureVisible(verify);
+    await tester.pumpAndSettle();
+    await tester.tap(verify);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.validationRequired), findsWidgets);
+
+    // So is a code of the wrong length.
+    await tester.enterText(
+        find.byType(TextFormField).first, 'someone@example.org');
+    await tester.enterText(find.byType(TextFormField).last, 'ABC');
+    await tester.tap(verify);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.inviteCodeLength), findsOneWidget);
+  });
+
+  test('an invitation code matches however it is typed', () {
+    expect(StaffInvite.normaliseCode('abcd-2345'), 'ABCD2345');
+    expect(StaffInvite.normaliseCode(' ab cd 23 45 '), 'ABCD2345');
+    expect(StaffInvite.formatCode('abcd2345'), 'ABCD-2345');
+    // Anything other than eight characters is shown as typed, never padded
+    // out into something that looks valid.
+    expect(StaffInvite.formatCode('abc'), 'ABC');
+  });
+
+  test('an invitation check names the person only when it matched', () {
+    final StaffInviteCheck matched = StaffInviteCheck.fromMap(
+      <String, dynamic>{
+        'valid': true,
+        'reason': 'ok',
+        'invite_name': 'محمد عثمان',
+        'invite_role': 'admin',
+      },
+    );
+    expect(matched.valid, isTrue);
+    expect(matched.verdict, StaffInviteVerdict.ok);
+    expect(matched.name, 'محمد عثمان');
+    expect(matched.role, AppRole.admin);
+
+    final StaffInviteCheck taken = StaffInviteCheck.fromMap(
+      <String, dynamic>{
+        'valid': false,
+        'reason': 'email_registered',
+        'invite_name': null,
+        'invite_role': null,
+      },
+    );
+    expect(taken.valid, isFalse);
+    expect(taken.verdict, StaffInviteVerdict.emailRegistered);
+    expect(taken.name, isNull);
+    expect(taken.role, isNull);
+
+    // A role this build does not know is not guessed at.
+    expect(StaffInvite.fromMap(<String, dynamic>{
+      'id': 'i1',
+      'full_name': 'محمد عثمان',
+      'email': 'someone@example.org',
+      'role': 'superuser',
+      'code': 'ABCD2345',
+    }).role, isNull);
+  });
+
+  test('staff screens open with a back button; invited sign-up needs none', () {
+    expect(AppRoutes.isFullScreen(AppRoutes.adminStaff), isTrue);
+    expect(AppRoutes.isFullScreen(AppRoutes.adminAddStaff), isTrue);
+    expect(AppRoutes.publicRoutes, contains(AppRoutes.staffSignUp),
+        reason: 'the person signing up has no session yet');
+  });
+
+  test('only three roles exist, and nothing points at a guest area', () {
+    expect(AppRole.values, <AppRole>[
+      AppRole.graduate,
+      AppRole.mentor,
+      AppRole.admin,
+    ]);
+
+    // No route, public or otherwise, leads anywhere called guest.
+    for (final String route in <String>[
+      ...AppRoutes.publicRoutes,
+      ...AppRoutes.fullScreenRoutes,
+    ]) {
+      expect(route.contains('guest'), isFalse,
+          reason: '$route still points at the removed guest area');
+    }
+  });
+
+  test('each role lands on its own dashboard', () {
+    // The router sends an account to homeFor(role); a mentor reaching the
+    // graduate area or the no-role screen would start here.
+    expect(homeFor(AppRole.mentor), AppRoutes.mentorDashboard);
+    expect(homeFor(AppRole.graduate), AppRoutes.graduateDashboard);
+    expect(homeFor(AppRole.admin), AppRoutes.adminDashboard);
+
+    // An account holding both lands on the stronger one.
+    expect(
+      AppRole.highest(const <AppRole>[AppRole.graduate, AppRole.mentor]),
+      AppRole.mentor,
+    );
+  });
+
+  test('کل and فعال are separate figures, counted from different things', () {
+    // The row the database function returns.
+    final AdminStatistics s = AdminStatistics.fromMap(<String, dynamic>{
+      'total_male': 40,
+      'total_female': 60,
+      'total_unrecorded_gender': 0,
+      'total_graduates': 100,
+      'active_male': 25,
+      'active_female': 35,
+      'active_unrecorded': 0,
+      'active_graduates': 60,
+      'accounts_without_record': 2,
+      'mentors': 3,
+      'admins': 1,
+      'guests': 0,
+      'active_assignments': 1,
+      'pending_reports': 4,
+      'under_review': 2,
+      'late_reports': 1,
+    });
+
+    // کل is the register: 40 + 60, whether or not those people signed up.
+    expect(s.totalMale, 40);
+    expect(s.totalFemale, 60);
+    expect(s.totalGraduates, 100);
+
+    // فعال is the accounts, and it does not disturb the totals.
+    expect(s.activeMale, 25);
+    expect(s.activeFemale, 35);
+    expect(s.activeGraduates, 60);
+    expect(s.totalGraduates, 100);
+
+    // A mentor counts by role. The figure used to come from
+    // mentor_assignments, so a mentor with nobody assigned went missing.
+    expect(s.mentors, 3);
+    expect(s.accountsWithoutRecord, 2);
+  });
+
+  test('the register reads جنس only when the file says it plainly', () {
+    expect(ParticipantFile.genderFrom('مرد'), 'male');
+    expect(ParticipantFile.genderFrom('فاضل'), 'male');
+    expect(ParticipantFile.genderFrom('Female'), 'female');
+    expect(ParticipantFile.genderFrom('فاضلہ'), 'female');
+
+    // Anything unclear is left unrecorded rather than guessed, because a
+    // guess would be counted as a fact in کل فاضل / کل فاضلہ.
+    expect(ParticipantFile.genderFrom(''), isNull);
+    expect(ParticipantFile.genderFrom('نامعلوم'), isNull);
+    expect(ParticipantFile.genderFrom('1'), isNull);
+  });
+
+  test('evidence and reviews name the people they belong to', () {
+    final EvidenceItem evidence = EvidenceItem.fromMap(<String, dynamic>{
+      'id': 'e1',
+      'title': 'تصویر',
+      'graduate_id': 'g1',
+      'storage_path': 'g1/x.jpg',
+      'kind': 'image',
+      'graduate': <String, dynamic>{
+        'full_name': 'صبیحہ پرویز',
+        'gender': 'female',
+      },
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+    });
+    expect(evidence.graduateName, 'صبیحہ پرویز');
+    expect(evidence.graduateLabel, 'فاضلہ');
+    expect(evidence.reportTitle, 'اصلاحی حلقہ');
+
+    // Without the embed the file is still readable, and simply says nothing
+    // it does not know.
+    final EvidenceItem bare = EvidenceItem.fromMap(<String, dynamic>{
+      'id': 'e2',
+      'title': 'دستاویز',
+      'graduate_id': 'g2',
+      'storage_path': 'g2/y.pdf',
+    });
+    expect(bare.graduateName, isNull);
+    expect(bare.graduateLabel, 'فاضل / فاضلہ');
+
+    final EvaluationItem review = EvaluationItem.fromMap(<String, dynamic>{
+      'id': 'v1',
+      'report_id': 'r1',
+      'graduate_id': 'g1',
+      'mentor_id': 'm1',
+      'comment': 'بہت خوب',
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+      'mentor': <String, dynamic>{'full_name': 'محمد اسلم'},
+      'graduate': <String, dynamic>{'full_name': 'صبیحہ پرویز'},
+    });
+    expect(review.mentorName, 'محمد اسلم');
+    expect(review.graduateName, 'صبیحہ پرویز');
+    expect(review.title, 'اصلاحی حلقہ');
+
+    final MentorFeedback feedback = MentorFeedback.fromMap(<String, dynamic>{
+      'id': 'f1',
+      'subject': 'حوصلہ افزائی',
+      'message': 'بہت خوب',
+      'report_id': 'r1',
+      'mentor': <String, dynamic>{'full_name': 'محمد اسلم'},
+      'graduate': <String, dynamic>{'full_name': 'صبیحہ پرویز'},
+      'report': <String, dynamic>{'title': 'اصلاحی حلقہ'},
+    });
+    expect(feedback.mentorName, 'محمد اسلم');
+    expect(feedback.graduateName, 'صبیحہ پرویز');
+    expect(feedback.reportTitle, 'اصلاحی حلقہ');
+    expect(feedback.reportId, 'r1');
+  });
+
+  test('a summary card counts exactly the rows its list will show', () {
+    const ReportCategory teaching = ReportCategory(
+      id: 'c1', key: 'teaching', groupKey: 'institutional',
+      groupTitle: 'ادارتی خدمات', title: 'تدریس');
+    const ReportCategory counselling = ReportCategory(
+      id: 'c2', key: 'counselling', groupKey: ReportCategory.socialGroup,
+      groupTitle: 'معاشرتی و دینی خدمات', title: 'کونسلنگ');
+    const List<ReportCategory> categories = <ReportCategory>[teaching, counselling];
+
+    ReportItem report(String id, AppStatus status, String? category) =>
+        ReportItem(id: id, title: id, graduateId: 'g', status: status,
+            categoryId: category);
+
+    final List<ReportItem> reports = <ReportItem>[
+      report('draft-teaching', AppStatus.draft, 'c1'),
+      report('done-counselling', AppStatus.completed, 'c2'),
+      report('open-counselling', AppStatus.submitted, 'c2'),
+      report('done-uncategorised', AppStatus.completed, null),
+    ];
+
+    List<String> ids(List<ReportItem> r) => r.map((ReportItem x) => x.id).toList();
+
+    expect(ids(filterKarGuzari(reports, categories)), hasLength(4),
+        reason: 'مجموعی کارگزاریاں counts every کارگزاری');
+    expect(ids(filterKarGuzari(reports, categories, filter: KarGuzariFilter.social)),
+        <String>['done-counselling', 'open-counselling'],
+        reason: 'only the social group counts as معاشرتی و اصلاحی');
+    expect(ids(filterKarGuzari(reports, categories, filter: KarGuzariFilter.completed)),
+        <String>['done-counselling', 'done-uncategorised'],
+        reason: 'مکمل شدہ پروجیکٹس is decided by review status, not category');
+    expect(ids(filterKarGuzari(reports, categories, categoryKey: 'teaching')),
+        <String>['draft-teaching'],
+        reason: 'a quick access category narrows to that category alone');
   });
 }

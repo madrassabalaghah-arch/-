@@ -30,7 +30,8 @@ class MentorGraduatesScreen extends ConsumerWidget {
         avatarText: item.avatarLabel,
         status: item.status,
         progress: item.progress,
-        onTap: () => context.goToRoute(AppRoutes.mentorGraduateDetails),
+        onTap: () =>
+            context.goToRoute(AppRoutes.mentorGraduateDetails, extra: item),
       ),
     );
   }

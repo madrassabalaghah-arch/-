@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_strings.dart';
 import 'app_status.dart';
+import 'follow_up_status.dart';
 import 'urdu_dates.dart';
 
 /// Reads a nullable, non-empty string from a Supabase row.
@@ -96,26 +98,77 @@ class ReportItem {
     required this.graduateId,
     this.summary,
     this.graduateName,
+    this.graduateFatherName,
+    this.graduateGender,
     this.activityType,
     this.status = AppStatus.draft,
     this.submittedAt,
     this.dueAt,
     this.createdAt,
+    this.categoryId,
+    this.sharedAt,
+    this.details = const KarGuzariDetails(),
   });
+
+  /// The fuller record — impact, results, beneficiaries and so on — so a
+  /// reviewer reads what was actually done, not only the title.
+  final KarGuzariDetails details;
 
   final String id;
   final String title;
   final String graduateId;
+
+  /// The `report_categories` row this کارگزاری was filed under, if any.
+  final String? categoryId;
   final String? summary;
+
+  /// When the graduate chose to show this کارگزاری on the کمیونٹی بورڈ.
+  /// Null means it is private, which is how every کارگزاری starts.
+  final DateTime? sharedAt;
   final String? graduateName;
+
+  /// ولدیت and جنس of the owner, embedded beside the name so a list can read
+  /// «فاضل محمد اکرم» rather than guessing which it is.
+  final String? graduateFatherName;
+  final String? graduateGender;
+
   final String? activityType;
   final AppStatus status;
   final DateTime? submittedAt;
   final DateTime? dueAt;
   final DateTime? createdAt;
 
+  /// فاضل or فاضلہ, from the owner's جنس, or the neutral word when جنس is
+  /// not recorded — which it is not for most of the register.
+  String get graduateLabel {
+    switch (graduateGender) {
+      case 'male':
+        return AppStrings.maleLabel;
+      case 'female':
+        return AppStrings.femaleLabel;
+      default:
+        return AppStrings.graduateLabel;
+    }
+  }
+
+  /// The owner, named. Built from the parts that exist, so a کارگزاری whose
+  /// owner could not be embedded reads as «نام ریکارڈ میں نہیں» instead of
+  /// printing the literal text "null".
+  String get graduateLine {
+    final String name = (graduateName ?? '').trim();
+    if (name.isEmpty) {
+      return AppStrings.nameNotRecorded;
+    }
+    final String father = (graduateFatherName ?? '').trim();
+    return father.isEmpty ? name : '$name $father';
+  }
+
+  /// Both halves of defect 1.3 live here. The query must embed the owner's
+  /// profile under the `graduate` alias, and nothing may interpolate
+  /// [graduateName] straight into a sentence — a realtime stream cannot
+  /// carry an embedded row, so it is null there by construction.
   factory ReportItem.fromMap(Map<String, dynamic> row) {
-    final Object? profile = row['profiles'];
+    final Object? profile = row['graduate'] ?? row['profiles'];
     final Object? activity = row['activities'];
 
     return ReportItem(
@@ -126,6 +179,12 @@ class ReportItem {
       graduateName: profile is Map<String, dynamic>
           ? nullableString(profile, 'full_name')
           : null,
+      graduateFatherName: profile is Map<String, dynamic>
+          ? nullableString(profile, 'father_name')
+          : null,
+      graduateGender: profile is Map<String, dynamic>
+          ? nullableString(profile, 'gender')
+          : null,
       activityType: activity is Map<String, dynamic>
           ? nullableString(activity, 'title')
           : null,
@@ -133,6 +192,9 @@ class ReportItem {
       submittedAt: dateOf(row, 'submitted_at'),
       dueAt: dateOf(row, 'due_at'),
       createdAt: dateOf(row, 'created_at'),
+      categoryId: nullableString(row, 'category_id'),
+      sharedAt: dateOf(row, 'shared_at'),
+      details: KarGuzariDetails.fromMap(row),
     );
   }
 
@@ -153,11 +215,29 @@ class EvidenceItem {
     this.sizeBytes,
     this.status = AppStatus.submitted,
     this.createdAt,
+    this.reviewNote,
+    this.graduateName,
+    this.graduateGender,
+    this.reportTitle,
   });
+
+  /// What the reviewer said, shown to the graduate beside the verdict.
+  final String? reviewNote;
 
   final String id;
   final String title;
   final String graduateId;
+
+  /// Who submitted it, and the کارگزاری it belongs to. Filled in for the
+  /// mentor and administrator lists, where a file without its owner is not
+  /// evidence of anything. Null on a graduate's own list, which is all
+  /// theirs already.
+  final String? graduateName;
+
+  /// 'male' or 'female' from the owner's profile, so the label reads فاضل
+  /// or فاضلہ rather than guessing one of them.
+  final String? graduateGender;
+  final String? reportTitle;
 
   /// Object path inside the private evidence bucket.
   final String storagePath;
@@ -171,6 +251,11 @@ class EvidenceItem {
   final DateTime? createdAt;
 
   factory EvidenceItem.fromMap(Map<String, dynamic> row) {
+    // Present only when the query embedded them; the graduate's own list
+    // does not, because every row there is theirs.
+    final Object? graduate = row['graduate'] ?? row['profiles'];
+    final Object? report = row['report'] ?? row['reports'];
+
     return EvidenceItem(
       id: row['id'] as String,
       title: (row['title'] as String?) ?? '',
@@ -182,7 +267,41 @@ class EvidenceItem {
       sizeBytes: row['size_bytes'] == null ? null : intOr(row, 'size_bytes'),
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
+      reviewNote: nullableString(row, 'review_note'),
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
+          : null,
+      graduateGender: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'gender')
+          : null,
+      reportTitle:
+          report is Map<String, dynamic> ? nullableString(report, 'title') : null,
     );
+  }
+
+  /// فاضل or فاضلہ for the owner, or the pair when the profile does not say.
+  String get graduateLabel {
+    switch (graduateGender) {
+      case 'male':
+        return 'فاضل';
+      case 'female':
+        return 'فاضلہ';
+      default:
+        return 'فاضل / فاضلہ';
+    }
+  }
+
+  /// The verdict in the words the brief uses for evidence, which differ from
+  /// those used for a کارگزاری: a file is approved, not "completed".
+  String get reviewLabel {
+    switch (status) {
+      case AppStatus.completed:
+        return 'منظور شدہ';
+      case AppStatus.revisionRequired:
+        return 'مزید معلومات درکار ہیں';
+      default:
+        return 'زیرِ جائزہ';
+    }
   }
 
   /// Urdu name of the file kind.
@@ -221,10 +340,11 @@ class EvaluationItem {
     required this.graduateId,
     required this.mentorId,
     this.title,
-    this.reviewerName,
+    this.mentorName,
+    this.graduateName,
     this.comment,
-    this.score = 0,
-    this.maxScore = 0,
+    this.commendable,
+    this.guidance,
     this.status = AppStatus.underReview,
     this.createdAt,
   });
@@ -233,17 +353,48 @@ class EvaluationItem {
   final String reportId;
   final String graduateId;
   final String mentorId;
+
+  /// The کارگزاری this review is about.
   final String? title;
-  final String? reviewerName;
+
+  /// Who wrote the review, and about whom. A review that cannot name both
+  /// tells nobody anything, so every screen that shows one asks for them.
+  final String? mentorName;
+  final String? graduateName;
+  /// The جائزہ, in three parts, all of them words. تبصرہ is what the مربی
+  /// made of the work, قابلِ تحسین what was worth commending in it, and
+  /// رہنمائی what to do next. There is no fourth part holding a number.
   final String? comment;
-  final int score;
-  final int maxScore;
+  final String? commendable;
+  final String? guidance;
+
   final AppStatus status;
   final DateTime? createdAt;
 
+  /// The parts that were actually written, each under its own heading, so a
+  /// screen can show the جائزہ without printing empty labels.
+  List<({String label, String text})> get parts {
+    final List<({String label, String text})> out =
+        <({String label, String text})>[];
+    void add(String label, String? value) {
+      final String text = (value ?? '').trim();
+      if (text.isNotEmpty) {
+        out.add((label: label, text: text));
+      }
+    }
+
+    add(AppStrings.reviewStepComment, comment);
+    add(AppStrings.reviewStepCommendable, commendable);
+    add(AppStrings.reviewStepGuidance, guidance);
+    return out;
+  }
+
   factory EvaluationItem.fromMap(Map<String, dynamic> row) {
-    final Object? report = row['reports'];
-    final Object? mentor = row['profiles'];
+    final Object? report = row['report'] ?? row['reports'];
+    // Two profiles are embedded under names of their own, because a row
+    // that simply said "profiles" could not say which side it meant.
+    final Object? mentor = row['mentor'] ?? row['profiles'];
+    final Object? graduate = row['graduate'];
 
     return EvaluationItem(
       id: row['id'] as String,
@@ -253,18 +404,19 @@ class EvaluationItem {
       title: report is Map<String, dynamic>
           ? nullableString(report, 'title')
           : null,
-      reviewerName: mentor is Map<String, dynamic>
+      mentorName: mentor is Map<String, dynamic>
           ? nullableString(mentor, 'full_name')
           : null,
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
+          : null,
       comment: nullableString(row, 'comment'),
-      score: intOr(row, 'total_score'),
-      maxScore: intOr(row, 'max_score'),
+      commendable: nullableString(row, 'commendable'),
+      guidance: nullableString(row, 'guidance'),
       status: AppStatusX.fromDb(nullableString(row, 'status')),
       createdAt: dateOf(row, 'created_at'),
     );
   }
-
-  double get ratio => maxScore == 0 ? 0 : (score / maxScore).clamp(0, 1);
 
   String get dateLabel => UrduDates.label(createdAt);
 }
@@ -349,17 +501,30 @@ class MentorFeedback {
     required this.subject,
     required this.message,
     this.mentorName,
+    this.graduateName,
+    this.reportId,
+    this.reportTitle,
     this.createdAt,
   });
 
   final String id;
   final String subject;
   final String message;
+
+  /// The mentor who wrote it. The graduate is told who is speaking to them.
   final String? mentorName;
+
+  /// Who it was written for, and the کارگزاری it followed, when it followed
+  /// one. Both are filled in for the administrator's view.
+  final String? graduateName;
+  final String? reportId;
+  final String? reportTitle;
   final DateTime? createdAt;
 
   factory MentorFeedback.fromMap(Map<String, dynamic> row) {
-    final Object? mentor = row['profiles'];
+    final Object? mentor = row['mentor'] ?? row['profiles'];
+    final Object? graduate = row['graduate'];
+    final Object? report = row['report'] ?? row['reports'];
 
     return MentorFeedback(
       id: row['id'] as String,
@@ -368,6 +533,12 @@ class MentorFeedback {
       mentorName: mentor is Map<String, dynamic>
           ? nullableString(mentor, 'full_name')
           : null,
+      graduateName: graduate is Map<String, dynamic>
+          ? nullableString(graduate, 'full_name')
+          : null,
+      reportId: nullableString(row, 'report_id'),
+      reportTitle:
+          report is Map<String, dynamic> ? nullableString(report, 'title') : null,
       createdAt: dateOf(row, 'created_at'),
     );
   }

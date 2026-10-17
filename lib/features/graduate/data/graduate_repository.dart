@@ -36,10 +36,13 @@ class GraduateRepository {
     return rows.map(EvidenceItem.fromMap).toList();
   }
 
+  /// Reviews written about this graduate, each naming the mentor who wrote
+  /// it. A review whose author is unknown tells the graduate nothing.
   Future<List<EvaluationItem>> evaluations() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evaluations')
-        .select('*, reports(title)')
+        .select('*, report:reports(title), '
+            'mentor:profiles!evaluations_mentor_id_fkey(full_name)')
         .eq('graduate_id', _uid)
         .order('created_at', ascending: false);
     return rows.map(EvaluationItem.fromMap).toList();
@@ -84,7 +87,8 @@ class GraduateRepository {
   Future<MentorFeedback?> latestFeedback() async {
     final Map<String, dynamic>? row = await _client
         .from('mentor_feedback')
-        .select()
+        .select('*, report:reports(title), '
+            'mentor:profiles!mentor_feedback_mentor_id_fkey(full_name)')
         .eq('graduate_id', _uid)
         .order('created_at', ascending: false)
         .limit(1)
@@ -149,6 +153,8 @@ class GraduateRepository {
     required String title,
     String? summary,
     String? activityId,
+    String? categoryId,
+    KarGuzariDetails? details,
     bool submit = false,
   }) async {
     final Map<String, dynamic> row = await _client
@@ -158,8 +164,10 @@ class GraduateRepository {
           'title': title,
           'summary': summary,
           'activity_id': activityId,
+          'category_id': categoryId,
           'status': submit ? 'submitted' : 'draft',
           if (submit) 'submitted_at': DateTime.now().toUtc().toIso8601String(),
+          ...?details?.toColumns(),
         })
         .select('*, activities(title)')
         .single();
@@ -170,16 +178,43 @@ class GraduateRepository {
     required String id,
     String? title,
     String? summary,
+    String? categoryId,
+    KarGuzariDetails? details,
     bool submit = false,
   }) async {
     await _client.from('reports').update(<String, dynamic>{
       'title': ?title,
       'summary': ?summary,
+      'category_id': ?categoryId,
+      ...?details?.toColumns(),
       if (submit) ...<String, dynamic>{
         'status': 'submitted',
         'submitted_at': DateTime.now().toUtc().toIso8601String(),
       },
     }).eq('id', id);
+  }
+
+  /// Where this graduate stands in the configured follow-up cycle.
+  ///
+  /// The interval is a stored setting, so the organisation can move between a
+  /// monthly, two monthly or three monthly cycle without a new release.
+  Future<FollowUpStatus?> followUpStatus() async {
+    final List<dynamic> rows =
+        await _client.rpc<List<dynamic>>('follow_up_status');
+    if (rows.isEmpty) {
+      return null;
+    }
+    return FollowUpStatus.fromMap(rows.first as Map<String, dynamic>);
+  }
+
+  /// Writes this cycle's reminder if one is due and none was sent yet.
+  ///
+  /// Returns how many were written, which is zero on every call after the
+  /// first in a cycle: the same message is never repeated.
+  Future<int> ensureFollowUpReminder() async {
+    final Object? written =
+        await _client.rpc<Object?>('ensure_follow_up_reminder');
+    return written is int ? written : 0;
   }
 
   /// Deletes a draft. Row level security refuses anything already submitted.
@@ -230,6 +265,33 @@ class GraduateRepository {
     await _client
         .from('notifications')
         .update(<String, dynamic>{'is_read': true}).eq('id', id);
+  }
+
+  /// This graduate's own کارگزاری filed against one activity.
+  ///
+  /// Scoped to `_uid` so the activity screen shows the reader their own work;
+  /// the `reports select permitted` policy would refuse anyone else's anyway.
+  Future<List<ReportItem>> reportsForActivity(String activityId) async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('reports')
+        .select('*, activities(title)')
+        .eq('graduate_id', _uid)
+        .eq('activity_id', activityId)
+        .order('created_at', ascending: false);
+    return rows.map(ReportItem.fromMap).toList();
+  }
+
+  /// The evidence attached to the given کارگزاری.
+  Future<List<EvidenceItem>> evidenceForReports(List<String> reportIds) async {
+    if (reportIds.isEmpty) {
+      return const <EvidenceItem>[];
+    }
+    final List<Map<String, dynamic>> rows = await _client
+        .from('evidence')
+        .select()
+        .inFilter('report_id', reportIds)
+        .order('created_at', ascending: false);
+    return rows.map(EvidenceItem.fromMap).toList();
   }
 
   /// A time-limited URL for a private evidence object.

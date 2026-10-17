@@ -6,19 +6,29 @@ import '../../features/admin/presentation/activities/admin_activities_screen.dar
 import '../../features/admin/presentation/assignments/admin_assignments_screen.dart';
 import '../../features/admin/presentation/courses/admin_courses_screen.dart';
 import '../../features/admin/presentation/dashboard/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/evidence/admin_evidence_screen.dart';
 import '../../features/admin/presentation/graduates/admin_graduates_screen.dart';
 import '../../features/admin/presentation/mentors/admin_mentors_screen.dart';
 import '../../features/admin/presentation/notifications/admin_notifications_screen.dart';
+import '../../features/admin/presentation/overview/admin_overview_screens.dart';
 import '../../features/admin/presentation/recognition/admin_recognition_screen.dart';
+import '../../features/admin/presentation/reports/admin_report_detail_screen.dart';
 import '../../features/admin/presentation/reports/admin_reports_screen.dart';
-import '../../features/admin/presentation/standards/admin_standards_screen.dart';
+import '../../features/admin/presentation/settings/admin_settings_screen.dart';
+import '../../features/admin/presentation/staff/admin_add_staff_screen.dart';
+import '../../features/admin/presentation/staff/admin_staff_screen.dart';
 import '../../features/admin/presentation/users/admin_user_screen.dart';
+import '../../features/admin/presentation/wifaqs/admin_wifaq_graduates_screen.dart';
+import '../../features/admin/presentation/wifaqs/admin_wifaq_institutes_screen.dart';
 import '../../features/admin/presentation/wifaqs/admin_wifaqs_screen.dart';
+import '../../features/admin/presentation/workshop/admin_add_participant_screen.dart';
+import '../../features/admin/presentation/workshop/admin_participants_screen.dart';
 import '../../features/graduate/presentation/dashboard/graduate_dashboard_screen.dart';
 import '../../features/graduate/presentation/evaluations/graduate_evaluations_screen.dart';
 import '../../features/graduate/presentation/evidence/graduate_evidence_screen.dart';
 import '../../features/graduate/presentation/notifications/graduate_notifications_screen.dart';
 import '../../features/graduate/presentation/performance_reports/graduate_reports_screen.dart';
+import '../../features/graduate/presentation/practical_activities/activity_detail_screen.dart';
 import '../../features/graduate/presentation/practical_activities/practical_activities_screen.dart';
 import '../../features/graduate/presentation/profile/graduate_profile_screen.dart';
 import '../../features/graduate/presentation/recognition/graduate_recognition_screen.dart';
@@ -33,12 +43,21 @@ import '../../features/mentor/presentation/reviews/mentor_report_review_screen.d
 import '../../features/mentor/presentation/reviews/mentor_reviews_screen.dart';
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/no_role_screen.dart';
+import '../../features/auth/presentation/new_password_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/community/presentation/community_board_screen.dart';
+import '../../features/community/presentation/community_item_screen.dart';
+import '../../features/community/presentation/community_new_post_screen.dart';
+import '../../features/auth/presentation/staff_sign_up_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../shared/models/app_role.dart';
+import '../../shared/models/community.dart';
+import '../../shared/presentation/important_links_screen.dart';
+import '../../shared/models/directory_entries.dart';
 import '../../shared/models/people.dart';
 import '../../shared/models/work_items.dart';
+import '../../shared/providers/data_providers.dart';
 import '../constants/app_strings.dart';
 import '../../shared/widgets/error_state.dart';
 import 'app_nav_items.dart';
@@ -72,6 +91,15 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         return null;
       }
 
+      // A failed load is not a sign-out. When Supabase still holds the
+      // persisted session the account is signed in and merely offline, so
+      // hold position and let the screen show its own error state rather
+      // than bouncing the user to sign in and losing their place.
+      if (session.hasError &&
+          ref.read(authRepositoryProvider).currentUser != null) {
+        return null;
+      }
+
       final AppSession? current = session.value;
       final String location = state.matchedLocation;
       final bool isPublic = AppRoutes.publicRoutes.contains(location);
@@ -88,6 +116,17 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
       }
 
       final String home = homeFor(role);
+
+      // A recovery link signs the account in, so without this the redirect
+      // would send it straight to a dashboard and the password it came to
+      // change would never be asked for.
+      if (location == AppRoutes.newPassword) {
+        return null;
+      }
+
+      if (location == home) {
+        return null;
+      }
 
       // Signed in with a role: the public routes and the no-role holding
       // screen are no longer meaningful, so send them home.
@@ -135,6 +174,37 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         name: AppRoutes.signUpName,
         builder: (BuildContext context, GoRouterState state) =>
             const SignUpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.staffSignUp,
+        name: AppRoutes.staffSignUpName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const StaffSignUpScreen(),
+      ),
+      // Shared by every role, so these sit outside the role shells.
+      GoRoute(
+        path: AppRoutes.newPassword,
+        name: AppRoutes.newPasswordName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const NewPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communityBoard,
+        name: AppRoutes.communityBoardName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const CommunityBoardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communityItem,
+        name: AppRoutes.communityItemName,
+        builder: (BuildContext context, GoRouterState state) =>
+            CommunityItemScreen(item: state.extra! as CommunityItem),
+      ),
+      GoRoute(
+        path: AppRoutes.communityNewPost,
+        name: AppRoutes.communityNewPostName,
+        builder: (BuildContext context, GoRouterState state) =>
+            const CommunityNewPostScreen(),
       ),
       GoRoute(
         path: AppRoutes.noRole,
@@ -211,26 +281,6 @@ final StatefulShellRoute _graduateShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.graduateReports,
-          name: AppRoutes.graduateReportsName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const GraduateReportsScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
-          path: AppRoutes.graduateEvidence,
-          name: AppRoutes.graduateEvidenceName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const GraduateEvidenceScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
           path: AppRoutes.graduateNotifications,
           name: AppRoutes.graduateNotificationsName,
           builder: (BuildContext context, GoRouterState state) =>
@@ -248,11 +298,56 @@ final StatefulShellRoute _graduateShell = StatefulShellRoute.indexedStack(
         ),
       ],
     ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.graduateLinks,
+          name: AppRoutes.graduateLinksName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ImportantLinksScreen(),
+        ),
+      ],
+    ),
   ],
 );
 
 /// Graduate screens that cover the bottom navigation.
 final List<RouteBase> _graduateFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.graduateReports,
+    name: AppRoutes.graduateReportsName,
+    builder: (BuildContext context, GoRouterState state) {
+      final Object? extra = state.extra;
+      if (extra is ({
+        KarGuzariFilter filter,
+        String? categoryKey,
+        String title
+      })) {
+        return GraduateReportsScreen(
+          filter: extra.filter,
+          categoryKey: extra.categoryKey,
+          title: extra.title,
+        );
+      }
+      return const GraduateReportsScreen();
+    },
+  ),
+  GoRoute(
+    path: AppRoutes.graduateEvidence,
+    name: AppRoutes.graduateEvidenceName,
+    builder: (BuildContext context, GoRouterState state) {
+      final Object? extra = state.extra;
+      return extra is ({String kind, String title})
+          ? GraduateEvidenceScreen(kind: extra.kind, title: extra.title)
+          : const GraduateEvidenceScreen();
+    },
+  ),
+  GoRoute(
+    path: AppRoutes.graduateActivityDetail,
+    name: AppRoutes.graduateActivityDetailName,
+    builder: (BuildContext context, GoRouterState state) =>
+        ActivityDetailScreen(activity: state.extra! as ActivityItem),
+  ),
   GoRoute(
     path: AppRoutes.graduateReportEditor,
     name: AppRoutes.graduateReportEditorName,
@@ -305,30 +400,35 @@ final StatefulShellRoute _mentorShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorGraduates,
-          name: AppRoutes.mentorGraduatesName,
+          path: AppRoutes.mentorNotifications,
+          name: AppRoutes.mentorNotificationsName,
+          // Renders the signed-in account's own notifications. The provider
+          // behind it filters on the current user id, so it is correct for a
+          // mentor even though the class carries the graduate name.
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorGraduatesScreen(),
+              const GraduateNotificationsScreen(),
         ),
       ],
     ),
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorReviews,
-          name: AppRoutes.mentorReviewsName,
+          path: AppRoutes.mentorProfile,
+          name: AppRoutes.mentorProfileName,
+          // Edits the caller's own `profiles` row, which every role has and
+          // row level security restricts to that row.
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorReviewsScreen(),
+              const GraduateProfileScreen(),
         ),
       ],
     ),
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.mentorEvidence,
-          name: AppRoutes.mentorEvidenceName,
+          path: AppRoutes.mentorLinks,
+          name: AppRoutes.mentorLinksName,
           builder: (BuildContext context, GoRouterState state) =>
-              const MentorEvidenceScreen(),
+              const ImportantLinksScreen(),
         ),
       ],
     ),
@@ -338,22 +438,40 @@ final StatefulShellRoute _mentorShell = StatefulShellRoute.indexedStack(
 /// Mentor screens that cover the bottom navigation.
 final List<RouteBase> _mentorFullScreenRoutes = <RouteBase>[
   GoRoute(
+    path: AppRoutes.mentorGraduates,
+    name: AppRoutes.mentorGraduatesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorGraduatesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.mentorReviews,
+    name: AppRoutes.mentorReviewsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorReviewsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.mentorEvidence,
+    name: AppRoutes.mentorEvidenceName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const MentorEvidenceScreen(),
+  ),
+  GoRoute(
     path: AppRoutes.mentorGraduateDetails,
     name: AppRoutes.mentorGraduateDetailsName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorGraduateDetailsScreen(),
+        MentorGraduateDetailsScreen(graduate: state.extra! as GraduateSummary),
   ),
   GoRoute(
     path: AppRoutes.mentorReportDetails,
     name: AppRoutes.mentorReportDetailsName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorReportDetailsScreen(),
+        MentorReportDetailsScreen(report: state.extra! as ReportItem),
   ),
   GoRoute(
     path: AppRoutes.mentorReportReview,
     name: AppRoutes.mentorReportReviewName,
     builder: (BuildContext context, GoRouterState state) =>
-        const MentorReportReviewScreen(),
+        MentorReportReviewScreen(report: state.extra! as ReportItem),
   ),
   GoRoute(
     path: AppRoutes.mentorEvaluations,
@@ -389,30 +507,32 @@ final StatefulShellRoute _adminShell = StatefulShellRoute.indexedStack(
     StatefulShellBranch(
       routes: <RouteBase>[
         GoRoute(
-          path: AppRoutes.adminGraduates,
-          name: AppRoutes.adminGraduatesName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const AdminGraduatesScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
-          path: AppRoutes.adminMentors,
-          name: AppRoutes.adminMentorsName,
-          builder: (BuildContext context, GoRouterState state) =>
-              const AdminMentorsScreen(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: <RouteBase>[
-        GoRoute(
           path: AppRoutes.adminNotifications,
           name: AppRoutes.adminNotificationsName,
           builder: (BuildContext context, GoRouterState state) =>
               const AdminNotificationsScreen(),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.adminProfile,
+          name: AppRoutes.adminProfileName,
+          // Edits the caller's own `profiles` row, which every role has and
+          // row level security restricts to that row.
+          builder: (BuildContext context, GoRouterState state) =>
+              const GraduateProfileScreen(),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.adminLinks,
+          name: AppRoutes.adminLinksName,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ImportantLinksScreen(),
         ),
       ],
     ),
@@ -421,6 +541,73 @@ final StatefulShellRoute _adminShell = StatefulShellRoute.indexedStack(
 
 /// Administration screens that cover the bottom navigation.
 final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
+  GoRoute(
+    path: AppRoutes.adminGraduates,
+    name: AppRoutes.adminGraduatesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminGraduatesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminMentors,
+    name: AppRoutes.adminMentorsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminMentorsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminReportDetail,
+    name: AppRoutes.adminReportDetailName,
+    builder: (BuildContext context, GoRouterState state) =>
+        AdminReportDetailScreen(report: state.extra! as ReportItem),
+  ),
+  GoRoute(
+    path: AppRoutes.adminInstitutes,
+    name: AppRoutes.adminInstitutesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminInstitutesScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminEvaluations,
+    name: AppRoutes.adminEvaluationsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminEvaluationsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminStatistics,
+    name: AppRoutes.adminStatisticsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminStatisticsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminSettings,
+    name: AppRoutes.adminSettingsName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminSettingsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminEvidence,
+    name: AppRoutes.adminEvidenceName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminEvidenceScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminAddParticipant,
+    name: AppRoutes.adminAddParticipantName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminAddParticipantScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminWorkshop,
+    name: AppRoutes.adminWorkshopName,
+    builder: (BuildContext context, GoRouterState state) {
+      // Carries the جنس the tapped dashboard figure counted, so the list
+      // shows exactly those rows. Opened from anywhere else it is the whole
+      // register, as before.
+      final Object? extra = state.extra;
+      return extra is ({String? gender, String title})
+          ? AdminParticipantsScreen(gender: extra.gender, title: extra.title)
+          : const AdminParticipantsScreen();
+    },
+  ),
   GoRoute(
     path: AppRoutes.adminActivities,
     name: AppRoutes.adminActivitiesName,
@@ -434,10 +621,44 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
         AdminUserScreen(user: state.extra! as GraduateSummary),
   ),
   GoRoute(
+    path: AppRoutes.adminStaff,
+    name: AppRoutes.adminStaffName,
+    builder: (BuildContext context, GoRouterState state) =>
+        const AdminStaffScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminAddStaff,
+    name: AppRoutes.adminAddStaffName,
+    // The mentors list opens this with the mentor role already chosen.
+    builder: (BuildContext context, GoRouterState state) => AdminAddStaffScreen(
+      initialRole:
+          state.extra is AppRole ? state.extra! as AppRole : AppRole.mentor,
+    ),
+  ),
+  GoRoute(
     path: AppRoutes.adminWifaqs,
     name: AppRoutes.adminWifaqsName,
     builder: (BuildContext context, GoRouterState state) =>
         const AdminWifaqsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutes.adminWifaqInstitutes,
+    name: AppRoutes.adminWifaqInstitutesName,
+    builder: (BuildContext context, GoRouterState state) =>
+        AdminWifaqInstitutesScreen(wifaq: state.extra! as WifaqDirectoryEntry),
+  ),
+  GoRoute(
+    path: AppRoutes.adminWifaqGraduates,
+    name: AppRoutes.adminWifaqGraduatesName,
+    builder: (BuildContext context, GoRouterState state) {
+      final ({String title, String? instituteId, String? wifaqId}) target =
+          state.extra! as ({String title, String? instituteId, String? wifaqId});
+      return AdminWifaqGraduatesScreen(
+        title: target.title,
+        instituteId: target.instituteId,
+        wifaqId: target.wifaqId,
+      );
+    },
   ),
   GoRoute(
     path: AppRoutes.adminCourses,
@@ -456,12 +677,6 @@ final List<RouteBase> _adminFullScreenRoutes = <RouteBase>[
     name: AppRoutes.adminReportsName,
     builder: (BuildContext context, GoRouterState state) =>
         const AdminReportsScreen(),
-  ),
-  GoRoute(
-    path: AppRoutes.adminStandards,
-    name: AppRoutes.adminStandardsName,
-    builder: (BuildContext context, GoRouterState state) =>
-        const AdminStandardsScreen(),
   ),
   GoRoute(
     path: AppRoutes.adminRecognition,

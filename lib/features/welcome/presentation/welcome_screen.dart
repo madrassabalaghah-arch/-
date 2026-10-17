@@ -7,7 +7,6 @@ import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_theme.dart';
 import '../../../core/utils/responsive.dart';
@@ -41,7 +40,7 @@ class WelcomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const _BrandMark(),
+                  const BrandMark(size: 132),
                   AppSpacing.gapXxl,
                   Text(
                     AppConfig.appNameUrdu,
@@ -87,33 +86,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The circular brand mark: a green gradient disc with a gold ring.
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        height: 128,
-        width: 128,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          gradient: AppGradients.green,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.gold, width: 3),
-          boxShadow: AppShadows.tinted(AppColors.primaryGreen),
-        ),
-        child: const Icon(
-          Icons.menu_book_rounded,
-          size: 56,
-          color: AppColors.white,
         ),
       ),
     );

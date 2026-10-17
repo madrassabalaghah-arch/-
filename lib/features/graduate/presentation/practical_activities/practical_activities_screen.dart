@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
@@ -29,7 +31,10 @@ class PracticalActivitiesScreen extends ConsumerWidget {
         status: item.status,
         progress: item.progress,
         accentColor: AppColors.oliveGreen,
-        onTap: () {},
+        onTap: () => context.push(
+          AppRoutes.graduateActivityDetail,
+          extra: item,
+        ),
       ),
     );
   }

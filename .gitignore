@@ -33,6 +33,10 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Built APKs staged for handing out. Binaries, and rebuildable — the commit
+# they came from is what is worth keeping, not the file.
+/release/
+
 # Symbolication related
 app.*.symbols
 

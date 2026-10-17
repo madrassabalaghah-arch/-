@@ -6,13 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/application/auth_providers.dart';
 import '../../../../shared/models/models.dart';
+import '../../../../shared/presentation/evidence_viewer.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
 
 /// Evidence the graduate has attached, with real uploads to Supabase Storage.
 class GraduateEvidenceScreen extends ConsumerStatefulWidget {
-  const GraduateEvidenceScreen({super.key});
+  const GraduateEvidenceScreen({super.key, this.kind, this.title});
+
+  /// When set, only files of this `evidence.kind` are listed — how the
+  /// dashboard's تصاویر / دستاویزات / دیگر متعلقہ فائلیں open this screen.
+  final String? kind;
+  final String? title;
 
   @override
   ConsumerState<GraduateEvidenceScreen> createState() =>
@@ -123,9 +131,32 @@ class _GraduateEvidenceScreenState
   @override
   Widget build(BuildContext context) {
     return SearchableListScreen<EvidenceItem>(
-      title: AppStrings.evidence,
-      items: ref.watch(graduateEvidenceProvider),
+      title: widget.title ?? AppStrings.evidence,
+      items: widget.kind == null
+          ? ref.watch(graduateEvidenceProvider)
+          : ref.watch(graduateEvidenceProvider).whenData(
+                (List<EvidenceItem> all) => all
+                    .where((EvidenceItem e) => e.kind == widget.kind)
+                    .toList(),
+              ),
       searchText: (EvidenceItem item) => '${item.title} ${item.typeLabel}',
+      // What a فاضلہ uploads should be her work, not herself. The note
+      // stands above the list so it is read before the upload button is
+      // reached, not after.
+      header: ref.watch(currentProfileProvider)?.isFemale ?? false
+          ? const DashboardCard(
+              variant: DashboardCardVariant.info,
+              accentColor: AppColors.tealGreen,
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.info_outline, size: 18,
+                      color: AppColors.tealGreen),
+                  AppSpacing.hGapSm,
+                  Expanded(child: Text(AppStrings.uploadWorkPhotosNote)),
+                ],
+              ),
+            )
+          : null,
       emptyIcon: Icons.folder_open_outlined,
       emptyTitle: AppStrings.noEvidenceYet,
       actions: <Widget>[
@@ -146,11 +177,14 @@ class _GraduateEvidenceScreenState
       ],
       itemBuilder: (BuildContext context, EvidenceItem item) => AppListTile(
         title: item.title,
-        subtitle: '${item.typeLabel} • ${item.sizeLabel}',
-        detail: item.dateLabel,
+        subtitle: '${item.typeLabel} • ${item.sizeLabel} • ${item.reviewLabel}',
+        detail: item.reviewNote == null
+            ? item.dateLabel
+            : '${item.dateLabel} — ${item.reviewNote}',
         icon: item.icon,
         status: item.status,
         accentColor: AppColors.tealGreen,
+        onTap: () => openEvidence(context, ref, item),
         trailing: IconButton(
           tooltip: AppStrings.delete,
           icon: const Icon(Icons.delete_outline, color: AppColors.gray),

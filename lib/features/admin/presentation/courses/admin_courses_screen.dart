@@ -26,7 +26,6 @@ class AdminCoursesScreen extends ConsumerWidget {
         icon: Icons.menu_book_outlined,
         status: item.status,
         accentColor: AppColors.tealGreen,
-        onTap: () {},
       ),
     );
   }

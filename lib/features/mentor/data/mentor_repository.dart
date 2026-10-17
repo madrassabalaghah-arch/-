@@ -104,7 +104,9 @@ class MentorRepository {
     }
     final List<Map<String, dynamic>> rows = await _client
         .from('reports')
-        .select('*, activities(title), profiles!reports_graduate_id_fkey(full_name)')
+        .select('*, activities(title), '
+            'graduate:profiles!reports_graduate_id_fkey('
+            'full_name, father_name, gender)')
         .inFilter('graduate_id', ids)
         .order('created_at', ascending: false);
     return rows.map(ReportItem.fromMap).toList();
@@ -117,16 +119,21 @@ class MentorRepository {
     }
     final List<Map<String, dynamic>> rows = await _client
         .from('evidence')
-        .select()
+        .select(
+            '*, graduate:profiles!evidence_graduate_id_fkey(full_name, gender), '
+            'report:reports!evidence_report_id_fkey(title)')
         .inFilter('graduate_id', ids)
         .order('created_at', ascending: false);
     return rows.map(EvidenceItem.fromMap).toList();
   }
 
+  /// This mentor's own reviews, each naming the فاضل / فاضلہ it was written
+  /// for and the کارگزاری it was written about.
   Future<List<EvaluationItem>> completedEvaluations() async {
     final List<Map<String, dynamic>> rows = await _client
         .from('evaluations')
-        .select('*, reports(title)')
+        .select('*, report:reports(title), '
+            'graduate:profiles!evaluations_graduate_id_fkey(full_name)')
         .eq('mentor_id', _uid)
         .order('created_at', ascending: false);
     return rows.map(EvaluationItem.fromMap).toList();
@@ -141,44 +148,37 @@ class MentorRepository {
     return rows.map(NotificationItem.fromMap).toList();
   }
 
-  /// Records an evaluation against a report, with its per-standard scores.
+  /// Records the written جائزہ against a کارگزاری, in all three of its
+  /// parts: تبصرہ, قابلِ تحسین and رہنمائی.
+  ///
+  /// No score is written. total_score and max_score still exist on the table
+  /// and both default to 0; nothing has written them since scoring was
+  /// removed, and nothing here starts.
+  ///
+  /// The فاضل is not notified from here. A trigger on `evaluations` does it,
+  /// so a جائزہ written by an منتظم — or by any future caller that forgets —
+  /// still reaches the person it is about.
   Future<void> submitEvaluation({
     required String reportId,
     required String graduateId,
-    required Map<String, int> scoresByStandard,
-    required int maxScore,
     String? comment,
+    String? commendable,
+    String? guidance,
   }) async {
-    final int total = scoresByStandard.values.fold<int>(0, (int a, int b) => a + b);
-
-    final Map<String, dynamic> evaluation = await _client
-        .from('evaluations')
-        .upsert(<String, dynamic>{
-          'report_id': reportId,
-          'mentor_id': _uid,
-          'graduate_id': graduateId,
-          'comment': comment,
-          'total_score': total,
-          'max_score': maxScore,
-          'status': 'completed',
-        }, onConflict: 'report_id,mentor_id')
-        .select()
-        .single();
-
-    final String evaluationId = evaluation['id'] as String;
-
-    if (scoresByStandard.isNotEmpty) {
-      await _client.from('evaluation_scores').upsert(
-            scoresByStandard.entries
-                .map((MapEntry<String, int> e) => <String, dynamic>{
-                      'evaluation_id': evaluationId,
-                      'standard_id': e.key,
-                      'score': e.value,
-                    })
-                .toList(),
-            onConflict: 'evaluation_id,standard_id',
-          );
+    String? clean(String? value) {
+      final String text = (value ?? '').trim();
+      return text.isEmpty ? null : text;
     }
+
+    await _client.from('evaluations').upsert(<String, dynamic>{
+      'report_id': reportId,
+      'mentor_id': _uid,
+      'graduate_id': graduateId,
+      'comment': clean(comment),
+      'commendable': clean(commendable),
+      'guidance': clean(guidance),
+      'status': 'completed',
+    }, onConflict: 'report_id,mentor_id');
 
     // Move the report out of the review queue.
     await _client
@@ -186,17 +186,69 @@ class MentorRepository {
         .update(<String, dynamic>{'status': 'completed'}).eq('id', reportId);
   }
 
+  /// Records a verdict on an uploaded file.
+  ///
+  /// Only the verdict and the note are sent: who reviewed it and when are
+  /// stamped by the database trigger, so neither can be forged by the caller.
+  Future<void> reviewEvidence({
+    required String evidenceId,
+    required AppStatus verdict,
+    String? note,
+  }) async {
+    await _client.from('evidence').update(<String, dynamic>{
+      'status': verdict.dbValue,
+      'review_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+    }).eq('id', evidenceId);
+  }
+
+  /// Hands a کارگزاری back for correction instead of completing it.
+  ///
+  /// The comment is written as feedback so the graduate can see what to fix,
+  /// and the report moves to the revision state rather than leaving the queue,
+  /// so it comes back once the work has been amended.
+  Future<void> requestRevision({
+    required String reportId,
+    required String graduateId,
+    required String comment,
+    String? guidance,
+  }) async {
+    await _client.from('reports').update(<String, dynamic>{
+      'status': 'revision_required',
+    }).eq('id', reportId);
+
+    await _client.from('mentor_feedback').insert(<String, dynamic>{
+      'mentor_id': _uid,
+      'graduate_id': graduateId,
+      'subject': 'اصلاح درکار',
+      // رہنمائی travels in the same message rather than a second row, so
+      // handing one کارگزاری back produces one notification, not two.
+      'message': <String>[
+        comment.trim(),
+        ?(guidance ?? '').trim().isEmpty ? null : guidance!.trim(),
+      ].join('\n\n'),
+      // The کارگزاری being handed back, so the graduate is told what this
+      // is about rather than receiving a loose remark.
+      'report_id': reportId,
+    });
+  }
+
   /// Writes guidance for an assigned graduate.
+  ///
+  /// [reportId] names the کارگزاری the guidance followed, when it followed
+  /// one. The mentor is never taken from the client: the row is written as
+  /// the signed-in mentor, and the policy refuses any other.
   Future<void> sendFeedback({
     required String graduateId,
     required String subject,
     required String message,
+    String? reportId,
   }) async {
     await _client.from('mentor_feedback').insert(<String, dynamic>{
       'mentor_id': _uid,
       'graduate_id': graduateId,
       'subject': subject,
       'message': message,
+      'report_id': reportId,
     });
   }
 

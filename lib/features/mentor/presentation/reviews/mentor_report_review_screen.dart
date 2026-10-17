@@ -6,15 +6,21 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/urdu_numbers.dart';
 import '../../../../shared/models/models.dart';
+import '../../../../shared/presentation/evidence_viewer.dart';
 import '../../../../shared/providers/data_providers.dart';
 import '../../../../shared/widgets/widgets.dart';
 
-/// The review form a mentor fills in against a report.
+/// A mentor's review of one کارگزاری, in the order the work is actually done:
+/// read the کارگزاری, look at its evidence, assess it against the standards,
+/// write a comment, and give guidance for what comes next.
 ///
-/// The evaluation standards come from the centralised administrator data, so
-/// the same standards drive the mentor form and the administrator screens.
+/// [report] is the one that was tapped. This screen used to read the first
+/// report in the mentor's queue whatever had been opened, so every review was
+/// written against the same report.
 class MentorReportReviewScreen extends ConsumerStatefulWidget {
-  const MentorReportReviewScreen({super.key});
+  const MentorReportReviewScreen({required this.report, super.key});
+
+  final ReportItem report;
 
   @override
   ConsumerState<MentorReportReviewScreen> createState() =>
@@ -24,129 +30,268 @@ class MentorReportReviewScreen extends ConsumerStatefulWidget {
 class _MentorReportReviewScreenState
     extends ConsumerState<MentorReportReviewScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final Map<String, double> _scores = <String, double>{};
   final TextEditingController _comment = TextEditingController();
+  final TextEditingController _commendable = TextEditingController();
+  final TextEditingController _guidance = TextEditingController();
   bool _busy = false;
 
   @override
   void dispose() {
     _comment.dispose();
+    _commendable.dispose();
+    _guidance.dispose();
     super.dispose();
   }
 
-  /// Writes the evaluation, its per-standard scores and the report's new
-  /// status in one repository call. Row level security rejects this if the
-  /// graduate is not assigned to the signed-in mentor.
-  Future<void> _submit(ReportItem report, List<StandardItem> standards) async {
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+  /// Completes the review: the written جائزہ, any guidance, and the
+  /// report's new status. Row level security refuses it unless the graduate
+  /// is assigned to this mentor.
+  ///
+  /// There is no mark, score or grade here. A جائزہ is appreciation and
+  /// guidance in words.
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
     setState(() => _busy = true);
     try {
       await ref.read(mentorRepositoryProvider).submitEvaluation(
-            reportId: report.id,
-            graduateId: report.graduateId,
+            reportId: widget.report.id,
+            graduateId: widget.report.graduateId,
             comment: _comment.text.trim(),
-            maxScore: standards.fold<int>(
-                0, (int sum, StandardItem s) => sum + s.weight),
-            scoresByStandard: <String, int>{
-              for (final StandardItem s in standards)
-                s.id: (_scores[s.id] ?? 0).round(),
-            },
+            commendable: _commendable.text,
+            guidance: _guidance.text,
           );
+      // رہنمائی is part of the جائزہ now, so it is no longer sent again as a
+      // separate message. The trigger on evaluations notifies the فاضل.
       ref.invalidate(mentorReportsProvider);
       ref.invalidate(mentorEvaluationsProvider);
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-            const SnackBar(content: Text(AppStrings.submitSuccess)));
+      _toast(AppStrings.submitSuccess);
+      Navigator.of(context).maybePop();
     } catch (error) {
+      if (mounted) {
+        setState(() => _busy = false);
+        _toast('${AppStrings.somethingWentWrong} — $error');
+      }
+    }
+  }
+
+  /// Hands the work back. The comment is required, because returning work
+  /// without saying why helps nobody.
+  Future<void> _requestRevision() async {
+    if (_comment.text.trim().isEmpty) {
+      _toast(AppStrings.validationRequired);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await ref.read(mentorRepositoryProvider).requestRevision(
+            reportId: widget.report.id,
+            graduateId: widget.report.graduateId,
+            comment: _comment.text,
+            guidance: _guidance.text,
+          );
+      ref.invalidate(mentorReportsProvider);
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(SnackBar(
-            content: Text('${AppStrings.somethingWentWrong} — $error')));
-    } finally {
+      _toast(AppStrings.revisionRequested);
+      Navigator.of(context).maybePop();
+    } catch (error) {
       if (mounted) {
         setState(() => _busy = false);
+        _toast('${AppStrings.somethingWentWrong} — $error');
       }
+    }
+  }
+
+  Future<void> _judgeEvidence(EvidenceItem item, AppStatus verdict) async {
+    try {
+      await ref
+          .read(mentorRepositoryProvider)
+          .reviewEvidence(evidenceId: item.id, verdict: verdict);
+      ref.invalidate(reportEvidenceProvider(widget.report.id));
+      _toast(AppStrings.evidenceReviewed);
+    } catch (error) {
+      _toast('${AppStrings.somethingWentWrong} — $error');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final List<StandardItem> standards =
-        ref.watch(adminStandardsProvider).value ?? const <StandardItem>[];
-    final List<ReportItem> reports =
-        ref.watch(mentorReportsProvider).value ?? const <ReportItem>[];
+    final ReportItem report = widget.report;
+    final KarGuzariDetails d = report.details;
 
     return AppScaffold(
       title: AppStrings.reportReview,
       body: Form(
         key: _formKey,
         child: ListView(
+          padding: const EdgeInsetsDirectional.only(
+            bottom: AppSpacing.bottomSafeArea,
+          ),
           children: <Widget>[
-            if (reports.isNotEmpty)
-              DashboardCard(
-                variant: DashboardCardVariant.info,
-                accentColor: AppColors.tealGreen,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      reports.first.title,
-                      style: theme.textTheme.titleSmall,
-                    ),
-                    AppSpacing.gapXxs,
-                    Text(
-                      '${AppStrings.graduateName}: '
-                      '${reports.first.graduateName}',
-                      style: theme.textTheme.bodySmall,
-                    ),
+            // 1. Read the کارگزاری.
+            const _Step(number: 1, title: AppStrings.reviewStepReport),
+            DashboardCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(report.title,
+                            style: theme.textTheme.titleMedium),
+                      ),
+                      StatusBadge(status: report.status, compact: true),
+                    ],
+                  ),
+                  if (report.graduateName != null) ...<Widget>[
+                    AppSpacing.gapXs,
+                    Text('${AppStrings.graduateName}: ${report.graduateLine}',
+                        style: theme.textTheme.labelLarge),
                   ],
-                ),
+                  AppSpacing.gapXxs,
+                  Text(report.dateLabel, style: theme.textTheme.labelSmall),
+                  if (report.summary != null &&
+                      report.summary!.trim().isNotEmpty) ...<Widget>[
+                    AppSpacing.gapMd,
+                    Text(report.summary!, style: theme.textTheme.bodyMedium),
+                  ],
+                  // Only the parts the graduate filled in.
+                  for (final (String, String?) line in <(String, String?)>[
+                    (AppStrings.activityTypeLabel, d.activityType),
+                    (AppStrings.locationLabel, d.location),
+                    (AppStrings.organisationLabel, d.organisation),
+                    (
+                      AppStrings.beneficiariesLabel,
+                      d.beneficiaries == null
+                          ? null
+                          : UrduNumbers.fromInt(d.beneficiaries!)
+                    ),
+                    (AppStrings.learningAppliedLabel, d.learningApplied),
+                    (AppStrings.impactLabel, d.impact),
+                    (AppStrings.resultsLabel, d.results),
+                    (AppStrings.challengesLabel, d.challenges),
+                    (AppStrings.futurePlanLabel, d.futurePlan),
+                  ])
+                    if (line.$2 != null && line.$2!.trim().isNotEmpty) ...<Widget>[
+                      AppSpacing.gapSm,
+                      Text(line.$1, style: theme.textTheme.labelLarge),
+                      Text(line.$2!, style: theme.textTheme.bodyMedium),
+                    ],
+                ],
               ),
+            ),
             AppSpacing.gapXl,
-            const SectionHeader(title: AppStrings.standards),
-            for (final StandardItem standard in standards) ...<Widget>[
-              _StandardSlider(
-                standard: standard,
-                value: _scores[standard.id] ?? 0,
-                onChanged: (double value) =>
-                    setState(() => _scores[standard.id] = value),
+
+            // 2. Look at the evidence, and give each file a verdict.
+            const _Step(number: 2, title: AppStrings.reviewStepEvidence),
+            AsyncSection<List<EvidenceItem>>(
+              value: ref.watch(reportEvidenceProvider(report.id)),
+              isEmpty: (List<EvidenceItem> e) => e.isEmpty,
+              emptyTitle: AppStrings.noEvidenceForReport,
+              emptyIcon: Icons.folder_open_outlined,
+              onRetry: () => ref.invalidate(reportEvidenceProvider(report.id)),
+              builder: (BuildContext context, List<EvidenceItem> items) =>
+                  Column(
+                children: <Widget>[
+                  for (final EvidenceItem item in items)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        bottom: AppSpacing.md,
+                      ),
+                      child: AppListTile(
+                        title: item.title,
+                        subtitle: '${item.typeLabel} • ${item.reviewLabel}',
+                        detail: item.reviewNote ?? item.dateLabel,
+                        icon: item.icon,
+                        accentColor: AppColors.tealGreen,
+                        onTap: () => openEvidence(context, ref, item),
+                        trailing: PopupMenuButton<AppStatus>(
+                          tooltip: AppStrings.reviewEvidence,
+                          icon: const Icon(Icons.fact_check_outlined),
+                          onSelected: (AppStatus v) => _judgeEvidence(item, v),
+                          itemBuilder: (BuildContext context) =>
+                              const <PopupMenuEntry<AppStatus>>[
+                            PopupMenuItem<AppStatus>(
+                              value: AppStatus.completed,
+                              child: Text(AppStrings.evidenceApproved),
+                            ),
+                            PopupMenuItem<AppStatus>(
+                              value: AppStatus.revisionRequired,
+                              child: Text(AppStrings.evidenceNeedsInfo),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              AppSpacing.gapMd,
-            ],
-            AppSpacing.gapMd,
-            const SectionHeader(title: AppStrings.labelReviewNote),
+            ),
+            AppSpacing.gapXl,
+
+            // 3. The mentor's جائزہ, in words.
+            const _Step(number: 3, title: AppStrings.reviewStepComment),
             AppFormField(
-              label: AppStrings.labelReviewNote,
+              label: AppStrings.reviewStepComment,
               hintText: AppStrings.hintReportDetail,
               controller: _comment,
-              maxLines: 5,
+              maxLines: 4,
               isRequired: true,
               enabled: !_busy,
               validator: AppFormField.requiredValidator,
             ),
             AppSpacing.gapXl,
+
+            // 4. What was worth commending. Words, not a mark.
+            const _Step(number: 4, title: AppStrings.reviewStepCommendable),
+            AppFormField(
+              label: AppStrings.reviewStepCommendable,
+              hintText: AppStrings.hintCommendable,
+              controller: _commendable,
+              maxLines: 3,
+              enabled: !_busy,
+            ),
+            AppSpacing.gapXl,
+
+            // 5. Guidance for what comes next.
+            const _Step(number: 5, title: AppStrings.reviewStepGuidance),
+            AppFormField(
+              label: AppStrings.reviewStepGuidance,
+              hintText: AppStrings.hintGuidance,
+              controller: _guidance,
+              maxLines: 4,
+              enabled: !_busy,
+            ),
+            AppSpacing.gapXl,
+
             PrimaryButton(
-              label: AppStrings.submit,
+              label: AppStrings.save,
               icon: Icons.check_circle_outline,
               isLoading: _busy,
-              onPressed: reports.isEmpty
-                  ? null
-                  : () => _submit(reports.first, standards),
+              onPressed: _busy ? null : _submit,
+            ),
+            AppSpacing.gapMd,
+            SecondaryButton(
+              label: AppStrings.requestRevision,
+              icon: Icons.edit_outlined,
+              onPressed: _busy ? null : _requestRevision,
             ),
             AppSpacing.gapMd,
             SecondaryButton(
               label: AppStrings.cancel,
-              onPressed: _busy ? null : () => setState(_scores.clear),
+              // Leaves without saving, back to wherever the review was opened.
+              onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
             ),
           ],
         ),
@@ -155,55 +300,15 @@ class _MentorReportReviewScreenState
   }
 }
 
-/// A single evaluation standard with its score slider.
-class _StandardSlider extends StatelessWidget {
-  const _StandardSlider({
-    required this.standard,
-    required this.value,
-    required this.onChanged,
-  });
+/// A numbered heading for one step of the review.
+class _Step extends StatelessWidget {
+  const _Step({required this.number, required this.title});
 
-  final StandardItem standard;
-  final double value;
-  final ValueChanged<double> onChanged;
+  final int number;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  standard.title,
-                  style: theme.textTheme.titleSmall,
-                ),
-              ),
-              Text(
-                UrduNumbers.ratio(value.round(), standard.weight),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppColors.primaryGreen,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.gapXxs,
-          Text(standard.detail ?? '', style: theme.textTheme.bodySmall),
-          Slider(
-            value: value.clamp(0, standard.weight.toDouble()),
-            max: standard.weight.toDouble(),
-            divisions: standard.weight,
-            activeColor: AppColors.primaryGreen,
-            inactiveColor: AppColors.lightGray,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
+    return SectionHeader(title: '${UrduNumbers.fromInt(number)}۔ $title');
   }
 }

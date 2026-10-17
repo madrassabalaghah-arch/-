@@ -44,14 +44,87 @@ class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
       ref.invalidate(adminGraduatesProvider);
       ref.invalidate(adminMentorsProvider);
       ref.invalidate(mentorOfProvider(widget.user.id));
+      ref.invalidate(graduatesOfProvider(widget.user.id));
       _toast(success);
     } catch (error) {
-      _toast('${AppStrings.somethingWentWrong} — $error');
+      _toast(_describe(error));
     } finally {
       if (mounted) {
         setState(() => _busy = false);
       }
     }
+  }
+
+  /// The database refuses with a stable code; the administrator is told why
+  /// in Urdu rather than shown the code.
+  static String _describe(Object error) {
+    final String text = '$error';
+    if (text.contains('CANNOT_CHANGE_OWN_ROLE')) {
+      return AppStrings.cannotChangeOwnRole;
+    }
+    if (text.contains('ADMIN_ONLY')) {
+      return AppStrings.adminOnlyAction;
+    }
+    return '${AppStrings.somethingWentWrong} — $text';
+  }
+
+  /// Asks before changing a role, and says what else the change will do: the
+  /// database ends the assignments that depended on the old role.
+  Future<void> _changeRole(AppRole role, AppRole? current) async {
+    final bool endsMentoring = current == AppRole.mentor &&
+        (ref.read(graduatesOfProvider(widget.user.id)).value?.isNotEmpty ??
+            false);
+    final bool endsSupervision = current == AppRole.graduate &&
+        ref.read(mentorOfProvider(widget.user.id)).value != null;
+
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text(AppStrings.confirmRoleChange),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('${_displayName(widget.user)} — '
+                    '${AppStrings.newRole}: ${role.urduTitle}'),
+                if (role == AppRole.admin) ...<Widget>[
+                  AppSpacing.gapSm,
+                  const Text(AppStrings.adminRoleWarning),
+                ],
+                if (endsMentoring) ...<Widget>[
+                  AppSpacing.gapSm,
+                  const Text(AppStrings.roleChangeEndsMentoring),
+                ],
+                if (endsSupervision) ...<Widget>[
+                  AppSpacing.gapSm,
+                  const Text(AppStrings.roleChangeEndsSupervision),
+                ],
+                AppSpacing.gapSm,
+                const Text(AppStrings.roleChangeNote),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(AppStrings.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(AppStrings.confirm),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !mounted) {
+      return;
+    }
+    await _run(
+      () => ref
+          .read(adminRepositoryProvider)
+          .setRole(userId: widget.user.id, role: role),
+      AppStrings.roleChanged,
+    );
   }
 
   @override
@@ -62,13 +135,18 @@ class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
 
     final AsyncValue<List<AdminUserRow>> users =
         ref.watch(adminAllUsersProvider);
-    final AppRole currentRole = users.value
-            ?.firstWhere(
-              (AdminUserRow r) => r.profile.id == widget.user.id,
-              orElse: () => AdminUserRow(profile: widget.user),
-            )
-            .effectiveRole ??
-        AppRole.graduate;
+
+    // Null means the account genuinely holds no role, and is shown as such.
+    // Treating it as a graduate would mark that choice as current and make
+    // it impossible to grant.
+    AdminUserRow? row;
+    for (final AdminUserRow r in users.value ?? const <AdminUserRow>[]) {
+      if (r.profile.id == widget.user.id) {
+        row = r;
+        break;
+      }
+    }
+    final AppRole? currentRole = row?.role;
 
     return AppScaffold(
       title: AppStrings.manageUser,
@@ -77,7 +155,16 @@ class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
           _Identity(user: widget.user, role: currentRole),
           AppSpacing.gapXl,
           const SectionHeader(title: AppStrings.changeRole),
-          if (isSelf)
+          // Until the roles have loaded, offering choices would mean offering
+          // them against a role nobody has read yet.
+          if (!users.hasValue)
+            AsyncSection<List<AdminUserRow>>(
+              value: users,
+              onRetry: () => ref.invalidate(adminAllUsersProvider),
+              builder: (BuildContext context, List<AdminUserRow> _) =>
+                  const SizedBox.shrink(),
+            )
+          else if (isSelf)
             DashboardCard(
               variant: DashboardCardVariant.info,
               accentColor: AppColors.warning,
@@ -105,13 +192,7 @@ class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
                       selected: role == currentRole,
                       onTap: _busy || role == currentRole
                           ? null
-                          : () => _run(
-                                () => ref
-                                    .read(adminRepositoryProvider)
-                                    .setRole(
-                                        userId: widget.user.id, role: role),
-                                AppStrings.roleChanged,
-                              ),
+                          : () => _changeRole(role, currentRole),
                     ),
                   ),
                 AppSpacing.gapXs,
@@ -166,12 +247,23 @@ class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
   }
 }
 
+/// The name to show for an account. One created without a name is shown by
+/// its email, so it can still be told apart.
+String _displayName(GraduateSummary user) {
+  if (user.name.trim().isNotEmpty) {
+    return user.name;
+  }
+  return user.email ?? AppStrings.unnamedAccount;
+}
+
 /// Name, place and current role of the account being administered.
 class _Identity extends StatelessWidget {
   const _Identity({required this.user, required this.role});
 
   final GraduateSummary user;
-  final AppRole role;
+
+  /// Null when the account holds no role.
+  final AppRole? role;
 
   @override
   Widget build(BuildContext context) {
@@ -201,12 +293,13 @@ class _Identity extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(user.name,
+                Text(_displayName(user),
                     style: theme.textTheme.titleLarge
                         ?.copyWith(color: AppColors.white)),
                 AppSpacing.gapXxs,
                 Text(
-                  '${AppStrings.currentRole}: ${role.urduTitle}',
+                  '${AppStrings.currentRole}: '
+                  '${role?.urduTitle ?? AppStrings.noRoleYet}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.white.withValues(alpha: 0.9),
                   ),

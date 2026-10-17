@@ -29,25 +29,88 @@ class ReferenceRepository {
     return rows.map(InstituteItem.fromMap).toList();
   }
 
-  /// Adds an institute and returns the stored row.
+  /// Adds an institute, or returns the existing one when the same institution
+  /// has already been registered under this wifaq.
   ///
-  /// It is attached to the wifaq the user selected, so the list stays
-  /// organised rather than becoming one flat pile of names.
+  /// The database holds a normalised shadow of the name (`name_key`) with a
+  /// unique index per wifaq, so "جامعہ اشاعت الاسلام" typed with stray spaces
+  /// or a diacritic is recognised as the same institution rather than starting
+  /// a second group. The name is stored exactly as the user wrote it; only the
+  /// matching is normalised. A concurrent insert loses the race against that
+  /// index, so the duplicate error is caught and the winning row returned.
+  /// Goes through `find_or_create_institute()`, which matches on the same
+  /// `(wifaq_id, name_key)` unique index the database enforces and returns
+  /// the existing row's id when the institution is already registered.
+  ///
+  /// A database function rather than a direct insert, for two reasons: the
+  /// matching happens where the index is, so no client can create a
+  /// near-duplicate by racing another; and a مربی may call it. A direct
+  /// insert from a مربی was refused by policy, which is why their institute
+  /// was never saved.
   Future<InstituteItem> createInstitute({
     required String name,
     required String wifaqId,
     String? city,
   }) async {
-    final Map<String, dynamic> row = await _client
-        .from('institutes')
-        .insert(<String, dynamic>{
-          'name': name.trim(),
-          'wifaq_id': wifaqId,
-          'city': city?.trim().isEmpty ?? true ? null : city!.trim(),
-        })
-        .select()
-        .single();
-    return InstituteItem.fromMap(row);
+    try {
+      final String id = await _client.rpc<String>(
+        'find_or_create_institute',
+        params: <String, dynamic>{
+          'p_wifaq_id': wifaqId,
+          'p_name': name,
+          'p_city': city,
+        },
+      );
+
+      final Map<String, dynamic> row = await _client
+          .from('institutes')
+          .select()
+          .eq('id', id)
+          .single();
+      return InstituteItem.fromMap(row);
+    } on PostgrestException catch (error) {
+      // 23505 is unique_violation: this institution already exists here.
+      if (error.code != '23505') {
+        rethrow;
+      }
+      final Map<String, dynamic> existing = await _client
+          .from('institutes')
+          .select()
+          .eq('wifaq_id', wifaqId)
+          .eq('name_key', _instituteKey(name))
+          .single();
+      return InstituteItem.fromMap(existing);
+    }
+  }
+
+  /// Mirrors the `name_key` generated column so an existing institution can be
+  /// looked up by the same rule the database matched on.
+  static String _instituteKey(String name) {
+    const String diacritics = 'ً-ْٰ';
+    const String joiners = '​-‏';
+    final String stripped = name.replaceAll(
+      RegExp('[$diacritics$joiners]'),
+      '',
+    );
+
+    final StringBuffer folded = StringBuffer();
+    for (final int rune in stripped.runes) {
+      // Arabic-Indic (٠-٩) and extended Arabic-Indic (۰-۹) digits fold to
+      // Latin, so ۱۲ and 12 are the same institution.
+      if (rune >= 0x0660 && rune <= 0x0669) {
+        folded.write(rune - 0x0660);
+      } else if (rune >= 0x06F0 && rune <= 0x06F9) {
+        folded.write(rune - 0x06F0);
+      } else {
+        folded.writeCharCode(rune);
+      }
+    }
+
+    return folded
+        .toString()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .toLowerCase();
   }
 
   /// The shared catalogue of practical activities.
@@ -103,6 +166,69 @@ class ReferenceRepository {
   }) async {
     await _client
         .from('activities')
+        .update(<String, dynamic>{'status': active ? 'active' : 'inactive'})
+        .eq('id', id);
+  }
+
+  /// The categories a کارگزاری can be filed under, in display order.
+  Future<List<ReportCategory>> reportCategories() async {
+    final List<Map<String, dynamic>> rows = await _client
+        .from('report_categories')
+        .select()
+        .eq('is_active', true)
+        .order('sort_order');
+    return rows.map(ReportCategory.fromMap).toList();
+  }
+
+  /// The curated اہم لنکس list.
+  ///
+  /// Retired links are withheld from readers by default; the administration
+  /// view passes [includeInactive] so it can restore one.
+  Future<List<ImportantLink>> importantLinks({
+    bool includeInactive = false,
+  }) async {
+    final PostgrestFilterBuilder<List<Map<String, dynamic>>> query =
+        _client.from('important_links').select();
+    final List<Map<String, dynamic>> rows = includeInactive
+        ? await query.order('sort_order').order('title')
+        : await query
+            .eq('status', 'active')
+            .order('sort_order')
+            .order('title');
+    return rows.map(ImportantLink.fromMap).toList();
+  }
+
+  /// Adds a link. Administrators only; the `important_links` policies reject
+  /// anyone else.
+  Future<ImportantLink> createImportantLink({
+    required String title,
+    required String url,
+    String? detail,
+    String iconKey = 'link',
+    int sortOrder = 0,
+  }) async {
+    final Map<String, dynamic> row = await _client
+        .from('important_links')
+        .insert(<String, dynamic>{
+          'title': title.trim(),
+          'url': url.trim(),
+          'detail': detail?.trim().isEmpty ?? true ? null : detail!.trim(),
+          'icon_key': iconKey,
+          'sort_order': sortOrder,
+          'status': 'active',
+        })
+        .select()
+        .single();
+    return ImportantLink.fromMap(row);
+  }
+
+  /// Retires or restores a link.
+  Future<void> setImportantLinkStatus({
+    required String id,
+    required bool active,
+  }) async {
+    await _client
+        .from('important_links')
         .update(<String, dynamic>{'status': active ? 'active' : 'inactive'})
         .eq('id', id);
   }

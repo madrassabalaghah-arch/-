@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_strings.dart';
+
 import '../../features/admin/data/admin_repository.dart';
 import '../../features/auth/application/auth_providers.dart';
+import '../../features/auth/data/course_repository.dart';
+import '../../features/community/data/community_repository.dart';
 import '../../features/graduate/data/graduate_repository.dart';
 import '../../features/mentor/data/mentor_repository.dart';
 import '../data/reference_repository.dart';
@@ -20,6 +24,23 @@ final Provider<MentorRepository> mentorRepositoryProvider =
 final Provider<AdminRepository> adminRepositoryProvider =
     Provider<AdminRepository>(
   (Ref ref) => AdminRepository(ref.watch(supabaseClientProvider)),
+);
+
+final Provider<CommunityRepository> communityRepositoryProvider =
+    Provider<CommunityRepository>(
+  (Ref ref) => CommunityRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// The عوامی تبصرے on one کارگزاری or one board post.
+final communityCommentsProvider = FutureProvider.family<List<CommunityComment>,
+    ({String? reportId, String? postId})>(
+  (Ref ref, ({String? reportId, String? postId}) target) {
+    _dependOnSession(ref);
+    return ref.watch(communityRepositoryProvider).comments(
+          reportId: target.reportId,
+          postId: target.postId,
+        );
+  },
 );
 
 /// Rebuilds every data provider when the session changes, so signing in as a
@@ -79,6 +100,32 @@ final FutureProvider<MentorFeedback?> graduateMentorFeedbackProvider =
   return ref.watch(graduateRepositoryProvider).latestFeedback();
 });
 
+/// The graduate's position in the configured follow-up cycle. Reading it also
+/// writes this cycle's reminder and grants any earned recognition, so opening
+/// the dashboard is what drives the cycle forward — both are no-ops when there
+/// is nothing new to say.
+final FutureProvider<FollowUpStatus?> followUpStatusProvider =
+    FutureProvider<FollowUpStatus?>((Ref ref) async {
+  _dependOnSession(ref);
+  final GraduateRepository repository = ref.watch(graduateRepositoryProvider);
+  final FollowUpStatus? status = await repository.followUpStatus();
+
+  // A failure here must not blank the dashboard: the cycle figure is the
+  // point, the reminder is a side effect of showing it.
+  try {
+    await repository.ensureFollowUpReminder();
+    // No اعزاز is awarded from here any more. award_earned_recognitions()
+    // granted one automatically once a count of کارگزاری crossed a
+    // threshold, and an اعزاز must not turn on a number: a مربی proposes
+    // one and an منتظم approves it. The database function and its rules
+    // table are left in place, both empty and inert, because dropping them
+    // is destructive and was not asked for.
+  } catch (_) {
+    // Left deliberately silent.
+  }
+  return status;
+});
+
 final FutureProvider<FollowUpItem?> graduateFollowUpProvider =
     FutureProvider<FollowUpItem?>((Ref ref) {
   _dependOnSession(ref);
@@ -100,10 +147,10 @@ final FutureProvider<JourneyProgress> graduateJourneyProvider =
       activities.fold<int>(0, (int sum, ActivityItem a) => sum + a.total);
 
   return JourneyProgress(
-    stageLabel: profile?.stage ?? 'تربیت کا آغاز',
+    stageLabel: profile?.stage ?? AppStrings.graduateStatus,
     statusLabel: total == 0
         ? 'ابھی کوئی عملی سرگرمی مقرر نہیں'
-        : (completed >= total ? 'تمام مراحل مکمل' : 'تربیت جاری ہے'),
+        : (completed >= total ? 'تمام مراحل مکمل' : 'عملی سرگرمیاں جاری ہیں'),
     completedSteps: completed,
     totalSteps: total,
     nextStepLabel:
@@ -121,11 +168,25 @@ final FutureProvider<List<GraduateSummary>> mentorGraduatesProvider =
   return ref.watch(mentorRepositoryProvider).assignedGraduates();
 });
 
-/// Live: a graduate submitting a report reaches the mentor without a refresh.
-final StreamProvider<List<ReportItem>> mentorReportsProvider =
+/// Emits when a report belonging to one of this mentor's graduates changes.
+///
+/// Used only as a signal. A Supabase realtime stream carries raw table rows
+/// and cannot carry an embedded profile, so its own rows have no owner name —
+/// which is what printed "null" on the review screens. The list below is
+/// re-queried on each emission instead, with the profile embedded.
+final StreamProvider<List<ReportItem>> _mentorReportChanges =
     StreamProvider<List<ReportItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(mentorRepositoryProvider).watchIncomingReports();
+});
+
+/// Live: a graduate submitting a کارگزاری reaches the مربی without a
+/// refresh, and each row carries the name of the فاضل or فاضلہ it belongs to.
+final FutureProvider<List<ReportItem>> mentorReportsProvider =
+    FutureProvider<List<ReportItem>>((Ref ref) {
+  _dependOnSession(ref);
+  ref.watch(_mentorReportChanges);
+  return ref.watch(mentorRepositoryProvider).incomingReports();
 });
 
 final FutureProvider<List<EvidenceItem>> mentorEvidenceProvider =
@@ -150,8 +211,8 @@ final StreamProvider<List<NotificationItem>> mentorNotificationsProvider =
 // Admin
 // ---------------------------------------------------------------------------
 
-final FutureProvider<Map<String, int>> adminStatisticsProvider =
-    FutureProvider<Map<String, int>>((Ref ref) {
+final FutureProvider<AdminStatistics> adminStatisticsProvider =
+    FutureProvider<AdminStatistics>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).statistics();
 });
@@ -174,6 +235,67 @@ final FutureProvider<List<WifaqItem>> adminWifaqsProvider =
   return ref.watch(adminRepositoryProvider).wifaqs();
 });
 
+/// Every uploaded evidence file, for the administration view. Row level
+/// security still decides which rows come back.
+final FutureProvider<List<EvidenceItem>> adminEvidenceProvider =
+    FutureProvider<List<EvidenceItem>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).evidence();
+});
+
+/// The evidence attached to one کارگزاری. Row level security decides whether
+/// the caller may see it, so the same provider serves every role.
+final reportEvidenceProvider =
+    FutureProvider.family<List<EvidenceItem>, String>((Ref ref, String id) {
+  _dependOnSession(ref);
+  return ref.watch(graduateRepositoryProvider).evidenceForReports(<String>[id]);
+});
+
+/// One activity's own کارگزاری and the evidence attached to them.
+final activityWorkProvider = FutureProvider.family<
+    ({List<ReportItem> reports, List<EvidenceItem> evidence}), String>(
+  (Ref ref, String activityId) async {
+    _dependOnSession(ref);
+    final GraduateRepository repository = ref.watch(graduateRepositoryProvider);
+    final List<ReportItem> reports =
+        await repository.reportsForActivity(activityId);
+    final List<EvidenceItem> evidence = await repository.evidenceForReports(
+      reports.map((ReportItem r) => r.id).toList(),
+    );
+    return (reports: reports, evidence: evidence);
+  },
+);
+
+/// Every wifaq with its institute and فاضل / فاضلہ counts.
+final FutureProvider<List<WifaqDirectoryEntry>> adminWifaqDirectoryProvider =
+    FutureProvider<List<WifaqDirectoryEntry>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).wifaqDirectory();
+});
+
+/// The institutes inside one wifaq, counted. `null` is the unassigned-wifaq
+/// bucket at the top of the hierarchy.
+final adminInstituteDirectoryProvider =
+    FutureProvider.family<List<InstituteDirectoryEntry>, String?>(
+        (Ref ref, String? wifaqId) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).instituteDirectory(wifaqId);
+});
+
+/// The graduates at one leaf of the wifaq hierarchy.
+final adminHierarchyGraduatesProvider = FutureProvider.family<
+    List<GraduateSummary>,
+    ({String? instituteId, bool includeUnassignedInstitute, String? wifaqId})>(
+  (Ref ref, ({String? instituteId, bool includeUnassignedInstitute, String? wifaqId}) target) {
+    _dependOnSession(ref);
+    return ref.watch(adminRepositoryProvider).graduatesIn(
+          instituteId: target.instituteId,
+          includeUnassignedInstitute: target.includeUnassignedInstitute,
+          wifaqId: target.wifaqId,
+        );
+  },
+);
+
 final FutureProvider<List<CourseItem>> adminCoursesProvider =
     FutureProvider<List<CourseItem>>((Ref ref) {
   _dependOnSession(ref);
@@ -186,17 +308,21 @@ final FutureProvider<List<TaskItem>> adminAssignmentsProvider =
   return ref.watch(adminRepositoryProvider).assignments();
 });
 
-final FutureProvider<List<StandardItem>> adminStandardsProvider =
-    FutureProvider<List<StandardItem>>((Ref ref) {
-  _dependOnSession(ref);
-  return ref.watch(adminRepositoryProvider).standards();
-});
-
-/// Live: the administrator's report list reflects submissions as they land.
-final StreamProvider<List<ReportItem>> adminReportsProvider =
+/// The signal behind [adminReportsProvider]; see [_mentorReportChanges] for
+/// why the rows themselves are not taken from the stream.
+final StreamProvider<List<ReportItem>> _adminReportChanges =
     StreamProvider<List<ReportItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(adminRepositoryProvider).watchReports();
+});
+
+/// Live: the منتظم's کارگزاری list reflects submissions as they land, each
+/// with the name of the فاضل or فاضلہ it belongs to.
+final FutureProvider<List<ReportItem>> adminReportsProvider =
+    FutureProvider<List<ReportItem>>((Ref ref) {
+  _dependOnSession(ref);
+  ref.watch(_adminReportChanges);
+  return ref.watch(adminRepositoryProvider).reports();
 });
 
 final FutureProvider<List<RecognitionItem>> adminRecognitionsProvider =
@@ -242,16 +368,23 @@ final graduatesOfProvider = FutureProvider.family<List<GraduateSummary>, String>
   return ref.watch(adminRepositoryProvider).graduatesOf(mentorId);
 });
 
+/// Invitations not yet used, for the staff screen.
+final FutureProvider<List<StaffInvite>> openStaffInvitesProvider =
+    FutureProvider<List<StaffInvite>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).openStaffInvites();
+});
+
 /// A profile paired with the role it currently holds.
 class AdminUserRow {
   const AdminUserRow({required this.profile, this.role});
 
   final GraduateSummary profile;
 
-  /// Null when the account holds the default graduate role.
+  /// Null when the account holds no role at all. Such an account is stuck on
+  /// the "no access" screen until an administrator grants one, so it must not
+  /// be mistaken for a graduate.
   final AppRole? role;
-
-  AppRole get effectiveRole => role ?? AppRole.graduate;
 }
 
 // ---------------------------------------------------------------------------
@@ -278,6 +411,22 @@ final instituteListProvider =
   return ref.watch(referenceRepositoryProvider).institutes(wifaqId: wifaqId);
 });
 
+/// The curated اہم لنکس list every signed-in role can read.
+final FutureProvider<List<ImportantLink>> importantLinksProvider =
+    FutureProvider<List<ImportantLink>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(referenceRepositoryProvider).importantLinks();
+});
+
+/// Every link including retired ones, for the administration view.
+final FutureProvider<List<ImportantLink>> allImportantLinksProvider =
+    FutureProvider<List<ImportantLink>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref
+      .watch(referenceRepositoryProvider)
+      .importantLinks(includeInactive: true);
+});
+
 /// The shared activity catalogue a graduate picks from when filing a report.
 final FutureProvider<List<ActivityItem>> activityCatalogueProvider =
     FutureProvider<List<ActivityItem>>((Ref ref) {
@@ -290,4 +439,130 @@ final FutureProvider<List<ActivityItem>> allActivitiesProvider =
     FutureProvider<List<ActivityItem>>((Ref ref) {
   _dependOnSession(ref);
   return ref.watch(referenceRepositoryProvider).allActivities();
+});
+
+// ---------------------------------------------------------------------------
+// Workshop register
+// ---------------------------------------------------------------------------
+
+final Provider<CourseRepository> courseRepositoryProvider =
+    Provider<CourseRepository>(
+  (Ref ref) => CourseRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// The whole register, for administration. Only an administrator can read it;
+/// applicants verify a single number through the RPC instead.
+final FutureProvider<List<CourseParticipant>> courseParticipantsProvider =
+    FutureProvider<List<CourseParticipant>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(courseRepositoryProvider).participants();
+});
+
+/// Every recorded participant-file import, newest first.
+final FutureProvider<List<ImportBatch>> importHistoryProvider =
+    FutureProvider<List<ImportBatch>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(courseRepositoryProvider).importHistory();
+});
+
+/// The organisation's configured follow-up cycle, in months.
+final FutureProvider<int> followUpIntervalProvider =
+    FutureProvider<int>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).followUpInterval();
+});
+
+/// The configurable rules that grant a recognition.
+final FutureProvider<List<RecognitionRule>> recognitionRulesProvider =
+    FutureProvider<List<RecognitionRule>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).recognitionRules();
+});
+
+/// The categories a کارگزاری can be filed under, from `report_categories`.
+final FutureProvider<List<ReportCategory>> reportCategoriesProvider =
+    FutureProvider<List<ReportCategory>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(referenceRepositoryProvider).reportCategories();
+});
+
+/// What one list of کارگزاری should contain.
+///
+/// A summary card and the list it opens use the same filter, so the number on
+/// the card is always the number of rows the reader finds behind it.
+enum KarGuzariFilter { all, social, completed }
+
+/// The graduate's own کارگزاری narrowed to [filter], plus a category key when
+/// one quick access item was chosen.
+List<ReportItem> filterKarGuzari(
+  List<ReportItem> reports,
+  List<ReportCategory> categories, {
+  KarGuzariFilter filter = KarGuzariFilter.all,
+  String? categoryKey,
+}) {
+  final Map<String, ReportCategory> byId = <String, ReportCategory>{
+    for (final ReportCategory c in categories) c.id: c,
+  };
+
+  return reports.where((ReportItem r) {
+    final ReportCategory? category =
+        r.categoryId == null ? null : byId[r.categoryId];
+    if (categoryKey != null && category?.key != categoryKey) {
+      return false;
+    }
+    switch (filter) {
+      case KarGuzariFilter.all:
+        return true;
+      case KarGuzariFilter.social:
+        return category?.groupKey == ReportCategory.socialGroup;
+      case KarGuzariFilter.completed:
+        return r.status == AppStatus.completed;
+    }
+  }).toList();
+}
+
+/// The three figures on the graduate dashboard, counted from real rows.
+final FutureProvider<({int total, int social, int completed})>
+    karGuzariSummaryProvider =
+    FutureProvider<({int total, int social, int completed})>((Ref ref) async {
+  final List<ReportItem> reports =
+      await ref.watch(graduateReportsProvider.future);
+  final List<ReportCategory> categories =
+      await ref.watch(reportCategoriesProvider.future);
+
+  int count(KarGuzariFilter f) =>
+      filterKarGuzari(reports, categories, filter: f).length;
+
+  return (
+    total: count(KarGuzariFilter.all),
+    social: count(KarGuzariFilter.social),
+    completed: count(KarGuzariFilter.completed),
+  );
+});
+
+final FutureProvider<List<InstituteDirectoryEntry>> adminInstitutesProvider =
+    FutureProvider<List<InstituteDirectoryEntry>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).allInstitutes();
+});
+
+final FutureProvider<List<EvaluationItem>> adminEvaluationsProvider =
+    FutureProvider<List<EvaluationItem>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).evaluations();
+});
+
+/// Guidance and appreciation mentors have written, for the administrator.
+final FutureProvider<List<MentorFeedback>> adminFeedbackProvider =
+    FutureProvider<List<MentorFeedback>>((Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).mentorFeedback();
+});
+
+final FutureProvider<List<({String section, String label, int total})>>
+    adminStatisticsReportProvider =
+    FutureProvider<List<({String section, String label, int total})>>(
+        (Ref ref) {
+  _dependOnSession(ref);
+  return ref.watch(adminRepositoryProvider).karGuzariStatistics();
 });

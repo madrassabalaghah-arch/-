@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'app_status.dart';
 import 'work_items.dart';
 
@@ -76,33 +78,95 @@ class CourseItem {
       );
 }
 
-/// An evaluation standard used when reviewing reports.
-class StandardItem {
-  const StandardItem({
+/// on the dashboard comes from the database rather than from this file.
+class ReportCategory {
+  const ReportCategory({
     required this.id,
+    required this.key,
+    required this.groupKey,
+    required this.groupTitle,
     required this.title,
-    this.detail,
-    this.weight = 0,
-    this.status = AppStatus.active,
+    this.sortOrder = 0,
   });
 
   final String id;
 
-  /// Urdu title of the standard.
+  /// Stable identifier, for example `teaching`.
+  final String key;
+
+  /// Which heading the category sits under, for example `social`.
+  final String groupKey;
+  final String groupTitle;
   final String title;
+  final int sortOrder;
 
-  /// Urdu explanation of what the standard measures.
-  final String? detail;
+  /// The group whose کارگزاری count as سماجی و دعوتی کردار.
+  static const String socialGroup = 'social_dawah';
 
-  /// Weight of the standard as a percentage.
-  final int weight;
-  final AppStatus status;
+  /// The icon of this sub criterion, and of the main شعبہ it sits under.
+  /// Both live with the model so the dashboard and the کارگزاری form cannot
+  /// drift apart.
+  IconData get icon => reportCategoryIcon(key);
+  IconData get groupIcon => reportGroupIcon(groupKey);
 
-  factory StandardItem.fromMap(Map<String, dynamic> row) => StandardItem(
+  factory ReportCategory.fromMap(Map<String, dynamic> row) => ReportCategory(
         id: row['id'] as String,
+        key: (row['key'] as String?) ?? '',
+        groupKey: (row['group_key'] as String?) ?? '',
+        groupTitle: (row['group_title'] as String?) ?? '',
         title: (row['title'] as String?) ?? '',
-        detail: nullableString(row, 'detail'),
-        weight: intOr(row, 'weight'),
-        status: AppStatusX.fromDb(nullableString(row, 'status')),
+        sortOrder: intOr(row, 'sort_order'),
       );
+}
+
+/// The icon of one of the twelve ذیلی معیار.
+IconData reportCategoryIcon(String key) {
+  switch (key) {
+    // ذاتی و علمی ترقی
+    case 'positive_personal_change':
+      return Icons.self_improvement_outlined;
+    case 'academic_research':
+      return Icons.menu_book_outlined;
+    case 'technical_skills':
+      return Icons.devices_outlined;
+    // مسجد و مدرسہ میں عملی کردار
+    case 'teaching_improvement':
+      return Icons.school_outlined;
+    case 'mosque_madrasa_change':
+      return Icons.mosque_outlined;
+    case 'people_building':
+      return Icons.groups_2_outlined;
+    // سماجی و دعوتی کردار
+    case 'positive_social_role':
+      return Icons.volunteer_activism_outlined;
+    case 'outreach_influence':
+      return Icons.campaign_outlined;
+    case 'unity_cooperation':
+      return Icons.handshake_outlined;
+    // عملی نتائج و اثرات
+    case 'observable_results':
+      return Icons.fact_check_outlined;
+    case 'effectiveness':
+      return Icons.trending_up;
+    case 'continuity':
+      return Icons.repeat_outlined;
+    default:
+      return Icons.category_outlined;
+  }
+}
+
+/// The icon of one of the four بنیادی شعبے.
+IconData reportGroupIcon(String groupKey) {
+  switch (groupKey) {
+    case 'personal_academic':
+      return Icons.auto_stories_outlined;
+    case 'mosque_madrasa':
+      return Icons.mosque_outlined;
+    case ReportCategory.socialGroup:
+      return Icons.groups_outlined;
+    case 'results_impact':
+      return Icons.insights_outlined;
+    default:
+      return Icons.category_outlined;
+  }
 }
