@@ -217,14 +217,6 @@ class GraduateRepository {
     return written is int ? written : 0;
   }
 
-  /// Grants any recognition the administrator's rules say has been earned.
-  /// With no rules configured this grants nothing rather than inventing one.
-  Future<int> awardEarnedRecognitions() async {
-    final Object? written =
-        await _client.rpc<Object?>('award_earned_recognitions');
-    return written is int ? written : 0;
-  }
-
   /// Deletes a draft. Row level security refuses anything already submitted.
   Future<void> deleteReport(String id) async {
     await _client.from('reports').delete().eq('id', id);

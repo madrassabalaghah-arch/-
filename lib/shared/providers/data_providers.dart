@@ -114,7 +114,12 @@ final FutureProvider<FollowUpStatus?> followUpStatusProvider =
   // point, the reminder is a side effect of showing it.
   try {
     await repository.ensureFollowUpReminder();
-    await repository.awardEarnedRecognitions();
+    // No اعزاز is awarded from here any more. award_earned_recognitions()
+    // granted one automatically once a count of کارگزاری crossed a
+    // threshold, and an اعزاز must not turn on a number: a مربی proposes
+    // one and an منتظم approves it. The database function and its rules
+    // table are left in place, both empty and inert, because dropping them
+    // is destructive and was not asked for.
   } catch (_) {
     // Left deliberately silent.
   }
